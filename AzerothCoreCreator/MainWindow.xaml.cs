@@ -566,11 +566,22 @@ namespace AzerothCoreCreator
                 ItemClassBox.SelectedIndex = 0;
 
             PopulateItemSubclassesFromClass();
+            UpdateContainerUiVisibility();
         }
 
         private void ItemClassBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             PopulateItemSubclassesFromClass();
+            UpdateContainerUiVisibility();
+
+            // Convenience: when switching to Container, automatically enable Advanced Fields
+            // so bag/container options are visible without an extra click.
+            if (ItemAdvancedToggle != null && ItemClassBox != null)
+            {
+                int cls = ComboTagInt(ItemClassBox);
+                if (cls == 1)
+                    ItemAdvancedToggle.IsChecked = true;
+            }
         }
 
         private void PopulateItemSubclassesFromClass()
@@ -609,6 +620,91 @@ namespace AzerothCoreCreator
         private void ItemSubclassBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             PopulateItemInventoryTypesFromClassSubclass();
+            UpdateContainerUiVisibility();
+        }
+
+        private void UpdateContainerUiVisibility()
+        {
+            // Trinity behavior: only show container/bag options when Class = Container (1)
+            if (ItemContainerGroup == null || ItemClassBox == null)
+                return;
+
+            int cls = ComboTagInt(ItemClassBox);
+            ItemContainerGroup.Visibility = (cls == 1) ? Visibility.Visible : Visibility.Collapsed;
+
+            if (cls != 1)
+            {
+                // If we leave container mode, clear values back to safe defaults.
+                if (ItemContainerSlotsBox != null)
+                    ItemContainerSlotsBox.Text = "0";
+
+                SetBagFamilyChecks(false);
+            }
+        }
+
+        private void SetBagFamilyChecks(bool isChecked)
+        {
+            void Set(CheckBox? cb) { if (cb != null) cb.IsChecked = isChecked; }
+
+            Set(BagFamilyArrows);
+            Set(BagFamilyBullets);
+            Set(BagFamilySoulShards);
+            Set(BagFamilyLeatherworking);
+            Set(BagFamilyInscription);
+            Set(BagFamilyHerbs);
+            Set(BagFamilyEnchanting);
+            Set(BagFamilyEngineering);
+            Set(BagFamilyKeys);
+            Set(BagFamilyGems);
+            Set(BagFamilyMining);
+            Set(BagFamilySoulbound);
+            Set(BagFamilyVanityPets);
+            Set(BagFamilyCurrency);
+            Set(BagFamilyQuestItems);
+        }
+
+        [Flags]
+        private enum BagFamilyMask
+        {
+            None = 0,
+            Arrows = 0x00000001,
+            Bullets = 0x00000002,
+            SoulShards = 0x00000004,
+            Leatherworking = 0x00000008,
+            Inscription = 0x00000010,
+            Herbs = 0x00000020,
+            Enchanting = 0x00000040,
+            Engineering = 0x00000080,
+            Keys = 0x00000100,
+            Gems = 0x00000200,
+            Mining = 0x00000400,
+            SoulboundEquipment = 0x00000800,
+            VanityPets = 0x00001000,
+            CurrencyTokens = 0x00002000,
+            QuestItems = 0x00004000,
+        }
+
+        private int BuildBagFamilyMask()
+        {
+            BagFamilyMask mask = BagFamilyMask.None;
+
+            if (BagFamilyArrows?.IsChecked == true) mask |= BagFamilyMask.Arrows;
+            if (BagFamilyBullets?.IsChecked == true) mask |= BagFamilyMask.Bullets;
+            if (BagFamilySoulShards?.IsChecked == true) mask |= BagFamilyMask.SoulShards;
+            if (BagFamilyLeatherworking?.IsChecked == true) mask |= BagFamilyMask.Leatherworking;
+            if (BagFamilyInscription?.IsChecked == true) mask |= BagFamilyMask.Inscription;
+            if (BagFamilyHerbs?.IsChecked == true) mask |= BagFamilyMask.Herbs;
+            if (BagFamilyEnchanting?.IsChecked == true) mask |= BagFamilyMask.Enchanting;
+            if (BagFamilyEngineering?.IsChecked == true) mask |= BagFamilyMask.Engineering;
+            if (BagFamilyKeys?.IsChecked == true) mask |= BagFamilyMask.Keys;
+            if (BagFamilyGems?.IsChecked == true) mask |= BagFamilyMask.Gems;
+            if (BagFamilyMining?.IsChecked == true) mask |= BagFamilyMask.Mining;
+            if (BagFamilySoulbound?.IsChecked == true) mask |= BagFamilyMask.SoulboundEquipment;
+            if (BagFamilyVanityPets?.IsChecked == true) mask |= BagFamilyMask.VanityPets;
+            if (BagFamilyCurrency?.IsChecked == true) mask |= BagFamilyMask.CurrencyTokens;
+            if (BagFamilyQuestItems?.IsChecked == true) mask |= BagFamilyMask.QuestItems;
+
+            return (int)mask;
         }
 
         // Inventory Types (INVTYPE_*) we care about for WotLK
@@ -841,6 +937,10 @@ namespace AzerothCoreCreator
 
         private void ItemOptionToggle_Changed(object sender, RoutedEventArgs e)
         {
+            // Main "Show Advanced Fields" toggle (basic advanced subset)
+            if (ItemAdvancedGrid != null)
+                ItemAdvancedGrid.Visibility = (ItemAdvancedToggle.IsChecked == true) ? Visibility.Visible : Visibility.Collapsed;
+
             if (ItemFlagsGroup != null)
                 ItemFlagsGroup.Visibility = (ItemShowFlagsCheck.IsChecked == true) ? Visibility.Visible : Visibility.Collapsed;
 
@@ -852,6 +952,9 @@ namespace AzerothCoreCreator
 
             if (ItemResistGroup != null)
                 ItemResistGroup.Visibility = (ItemShowResistsCheck.IsChecked == true) ? Visibility.Visible : Visibility.Collapsed;
+
+            // Container group lives inside ItemAdvancedGrid, but we still need to decide if it's relevant.
+            UpdateContainerUiVisibility();
         }
 
         private void ItemClassMask_Changed(object sender, RoutedEventArgs e) => UpdateItemAllowableClassMask();
@@ -1455,6 +1558,15 @@ namespace AzerothCoreCreator
             int itemLevel = ParseInt(ItemLevelBox.Text, 1);
             int stack = ParseInt(ItemStackableBox.Text, 1);
 
+            // Container-specific (bags). Safe defaults for non-container items.
+            int containerSlots = 0;
+            int bagFamily = 0;
+            if (cls == 1)
+            {
+                containerSlots = ParseInt(ItemContainerSlotsBox?.Text ?? "0", 0);
+                bagFamily = BuildBagFamilyMask();
+            }
+
             int buyPrice = ParseInt(ItemBuyPriceBox.Text, 0);
             int sellPrice = ParseInt(ItemSellPriceBox.Text, 0);
             int bonding = ComboTagInt(ItemBondingBox);
@@ -1490,12 +1602,16 @@ namespace AzerothCoreCreator
             sb.AppendLine();
 
             sb.Append("INSERT INTO `item_template` ");
-            sb.Append("(`entry`,`class`,`subclass`,`name`,`displayid`,`Quality`,`BuyPrice`,`SellPrice`,`InventoryType`,`RequiredLevel`,`ItemLevel`,`stackable`,`bonding`,`armor`,`dmg_min1`,`dmg_max1`,");
+            sb.Append("(`entry`,`class`,`subclass`,`name`,`displayid`,`Quality`,`BuyPrice`,`SellPrice`,`InventoryType`,`RequiredLevel`,`ItemLevel`,`stackable`,`bonding`,");
+            sb.Append("`ContainerSlots`,`BagFamily`,");
+            sb.Append("`armor`,`dmg_min1`,`dmg_max1`,");
             sb.Append("`Flags`,`FlagsExtra`,`AllowableClass`,`AllowableRace`,`holy_res`,`fire_res`,`nature_res`,`frost_res`,`shadow_res`,`arcane_res`) VALUES ");
 
             sb.AppendFormat(
-                "(@ENTRY,{0},{1},'{2}',{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15},{16},{17},{18},{19},{20},{21},{22},{23},{24},{25});",
-                cls, subcls, name.Replace("'", "''"), displayId, quality, buyPrice, sellPrice, inv, reqLevel, itemLevel, stack, bonding, armor, dmgMin, dmgMax,
+                "(@ENTRY,{0},{1},'{2}',{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15},{16},{17},{18},{19},{20},{21},{22},{23},{24},{25},{26});",
+                cls, subcls, name.Replace("'", "''"), displayId, quality, buyPrice, sellPrice, inv, reqLevel, itemLevel, stack, bonding,
+                containerSlots, bagFamily,
+                armor, dmgMin, dmgMax,
                 flags, flagsExtra, allowableClass, allowableRace, holyRes, fireRes, natureRes, frostRes, shadowRes, arcaneRes);
 
             sb.AppendLine();
@@ -2848,6 +2964,51 @@ namespace AzerothCoreCreator
             if (classBox != null) classBox.SelectionChanged += ItemPreview_Changed;
             if (subclassBox != null) subclassBox.SelectionChanged += ItemPreview_Changed;
             if (invBox != null) invBox.SelectionChanged += ItemPreview_Changed;
+        }
+
+        // ContainerSlots (Bag Slots) input helpers: digits only, clamp 0-255 (Trinity-like).
+        private void ItemContainerSlotsBox_PreviewTextInput(object sender, System.Windows.Input.TextCompositionEventArgs e)
+        {
+            // Only digits
+            e.Handled = e.Text.Any(ch => !char.IsDigit(ch));
+        }
+
+        private void ItemContainerSlotsBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (ItemContainerSlotsBox == null)
+                return;
+
+            // Prevent recursion while rewriting Text
+            ItemContainerSlotsBox.TextChanged -= ItemContainerSlotsBox_TextChanged;
+
+            try
+            {
+                var raw = (ItemContainerSlotsBox.Text ?? string.Empty).Trim();
+
+                if (raw.Length == 0)
+                {
+                    ItemContainerSlotsBox.Text = "0";
+                }
+                else if (int.TryParse(raw, out int value))
+                {
+                    if (value < 0) value = 0;
+                    if (value > 255) value = 255;
+
+                    var normalized = value.ToString(CultureInfo.InvariantCulture);
+                    if (!string.Equals(ItemContainerSlotsBox.Text, normalized, StringComparison.Ordinal))
+                        ItemContainerSlotsBox.Text = normalized;
+                }
+                else
+                {
+                    ItemContainerSlotsBox.Text = "0";
+                }
+
+                ItemContainerSlotsBox.CaretIndex = ItemContainerSlotsBox.Text.Length;
+            }
+            finally
+            {
+                ItemContainerSlotsBox.TextChanged += ItemContainerSlotsBox_TextChanged;
+            }
         }
 
     } // <-- closes MainWindow

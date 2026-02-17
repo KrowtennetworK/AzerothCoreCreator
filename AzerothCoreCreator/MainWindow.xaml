@@ -451,38 +451,81 @@
 
                                 <GroupBox Header="Advanced Fields (basic subset)" Padding="10" Margin="0,10,0,0"
                                           x:Name="ItemAdvancedGrid" Visibility="Collapsed">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="170"/>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="170"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                        </Grid.RowDefinitions>
+                                    <StackPanel>
 
-                                        <TextBlock Text="Buy Price (copper)" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"/>
-                                        <TextBox x:Name="ItemBuyPriceBox" Grid.Row="0" Grid.Column="1" Text="0"/>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="170"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="170"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
 
-                                        <TextBlock Text="Sell Price (copper)" Grid.Row="0" Grid.Column="2" VerticalAlignment="Center"/>
-                                        <TextBox x:Name="ItemSellPriceBox" Grid.Row="0" Grid.Column="3" Text="0"/>
+                                            <TextBlock Text="Buy Price (copper)" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"/>
+                                            <TextBox x:Name="ItemBuyPriceBox" Grid.Row="0" Grid.Column="1" Text="0"/>
 
-                                        <TextBlock Text="Binding" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center"/>
-                                        <ComboBox x:Name="ItemBondingBox" Grid.Row="1" Grid.Column="1"/>
+                                            <TextBlock Text="Sell Price (copper)" Grid.Row="0" Grid.Column="2" VerticalAlignment="Center"/>
+                                            <TextBox x:Name="ItemSellPriceBox" Grid.Row="0" Grid.Column="3" Text="0"/>
 
-                                        <TextBlock Text="Armor" Grid.Row="1" Grid.Column="2" VerticalAlignment="Center"/>
-                                        <TextBox x:Name="ItemArmorBox" Grid.Row="1" Grid.Column="3" Text="0"/>
+                                            <TextBlock Text="Binding" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center"/>
+                                            <ComboBox x:Name="ItemBondingBox" Grid.Row="1" Grid.Column="1"/>
 
-                                        <TextBlock Text="Damage Min" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center"/>
-                                        <TextBox x:Name="ItemDmgMinBox" Grid.Row="2" Grid.Column="1" Text="0"/>
+                                            <TextBlock Text="Armor" Grid.Row="1" Grid.Column="2" VerticalAlignment="Center"/>
+                                            <TextBox x:Name="ItemArmorBox" Grid.Row="1" Grid.Column="3" Text="0"/>
 
-                                        <TextBlock Text="Damage Max" Grid.Row="2" Grid.Column="2" VerticalAlignment="Center"/>
-                                        <TextBox x:Name="ItemDmgMaxBox" Grid.Row="2" Grid.Column="3" Text="0"/>
-                                    </Grid>
+                                            <TextBlock Text="Damage Min" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center"/>
+                                            <TextBox x:Name="ItemDmgMinBox" Grid.Row="2" Grid.Column="1" Text="0"/>
+
+                                            <TextBlock Text="Damage Max" Grid.Row="2" Grid.Column="2" VerticalAlignment="Center"/>
+                                            <TextBox x:Name="ItemDmgMaxBox" Grid.Row="2" Grid.Column="3" Text="0"/>
+                                        </Grid>
+
+                                        <!-- Container / Bag properties (Trinity-style). Only shown when Item Class = Container. -->
+                                        <GroupBox x:Name="ItemContainerGroup" Header="Container Properties" Padding="10" Margin="0,10,0,0" Visibility="Collapsed">
+                                            <Grid>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                </Grid.RowDefinitions>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="170"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+
+                                                <TextBlock Text="Bag Slots" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"/>
+                                                <TextBox x:Name="ItemContainerSlotsBox" Grid.Row="0" Grid.Column="1" Text="0" PreviewTextInput="ItemContainerSlotsBox_PreviewTextInput" TextChanged="ItemContainerSlotsBox_TextChanged"/>
+
+                                                <GroupBox Header="Check to add limits" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Padding="8" Margin="0,10,0,0">
+                                                    <ScrollViewer VerticalScrollBarVisibility="Auto" Height="150">
+                                                        <UniformGrid Columns="2">
+                                                            <CheckBox x:Name="BagFamilyArrows" Content="Arrows"/>
+                                                            <CheckBox x:Name="BagFamilyBullets" Content="Bullets"/>
+                                                            <CheckBox x:Name="BagFamilySoulShards" Content="Soul Shards"/>
+                                                            <CheckBox x:Name="BagFamilyLeatherworking" Content="Leatherworking Supplies"/>
+                                                            <CheckBox x:Name="BagFamilyInscription" Content="Inscription Supplies"/>
+                                                            <CheckBox x:Name="BagFamilyHerbs" Content="Herbs"/>
+                                                            <CheckBox x:Name="BagFamilyEnchanting" Content="Enchanting Supplies"/>
+                                                            <CheckBox x:Name="BagFamilyEngineering" Content="Engineering Supplies"/>
+                                                            <CheckBox x:Name="BagFamilyKeys" Content="Keys"/>
+                                                            <CheckBox x:Name="BagFamilyGems" Content="Gems"/>
+                                                            <CheckBox x:Name="BagFamilyMining" Content="Mining Supplies"/>
+                                                            <CheckBox x:Name="BagFamilySoulbound" Content="Soulbound Equipment"/>
+                                                            <CheckBox x:Name="BagFamilyVanityPets" Content="Vanity Pets"/>
+                                                            <CheckBox x:Name="BagFamilyCurrency" Content="Currency Tokens"/>
+                                                            <CheckBox x:Name="BagFamilyQuestItems" Content="Quest Items"/>
+                                                        </UniformGrid>
+                                                    </ScrollViewer>
+                                                </GroupBox>
+                                            </Grid>
+                                        </GroupBox>
+
+                                    </StackPanel>
                                 </GroupBox>
 
                                 <!-- ================= ADVANCED (Trinity-style toggles) ================= -->
