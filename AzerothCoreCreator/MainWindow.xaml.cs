@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using MySqlConnector;
 using System.Diagnostics;
@@ -1567,8 +1568,9 @@ namespace AzerothCoreCreator
                 bagFamily = BuildBagFamilyMask();
             }
 
-            int buyPrice = ParseInt(ItemBuyPriceBox.Text, 0);
-            int sellPrice = ParseInt(ItemSellPriceBox.Text, 0);
+            int buyPrice = MoneyToCopper(ItemBuyGoldBox?.Text, ItemBuySilverBox?.Text, ItemBuyCopperBox?.Text);
+            int sellPrice = MoneyToCopper(ItemSellGoldBox?.Text, ItemSellSilverBox?.Text, ItemSellCopperBox?.Text);
+            int buyCount = Math.Max(1, ParseInt(ItemBuyCountBox?.Text ?? "1", 1));
             int bonding = ComboTagInt(ItemBondingBox);
             int armor = ParseInt(ItemArmorBox.Text, 0);
             int dmgMin = ParseInt(ItemDmgMinBox.Text, 0);
@@ -1602,14 +1604,14 @@ namespace AzerothCoreCreator
             sb.AppendLine();
 
             sb.Append("INSERT INTO `item_template` ");
-            sb.Append("(`entry`,`class`,`subclass`,`name`,`displayid`,`Quality`,`BuyPrice`,`SellPrice`,`InventoryType`,`RequiredLevel`,`ItemLevel`,`stackable`,`bonding`,");
+            sb.Append("(`entry`,`class`,`subclass`,`name`,`displayid`,`Quality`,`BuyPrice`,`SellPrice`,`BuyCount`,`InventoryType`,`RequiredLevel`,`ItemLevel`,`stackable`,`bonding`,");
             sb.Append("`ContainerSlots`,`BagFamily`,");
             sb.Append("`armor`,`dmg_min1`,`dmg_max1`,");
             sb.Append("`Flags`,`FlagsExtra`,`AllowableClass`,`AllowableRace`,`holy_res`,`fire_res`,`nature_res`,`frost_res`,`shadow_res`,`arcane_res`) VALUES ");
 
             sb.AppendFormat(
-                "(@ENTRY,{0},{1},'{2}',{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15},{16},{17},{18},{19},{20},{21},{22},{23},{24},{25},{26});",
-                cls, subcls, name.Replace("'", "''"), displayId, quality, buyPrice, sellPrice, inv, reqLevel, itemLevel, stack, bonding,
+                "(@ENTRY,{0},{1},'{2}',{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15},{16},{17},{18},{19},{20},{21},{22},{23},{24},{25},{26},{27});",
+                cls, subcls, name.Replace("'", "''"), displayId, quality, buyPrice, sellPrice, buyCount, inv, reqLevel, itemLevel, stack, bonding,
                 containerSlots, bagFamily,
                 armor, dmgMin, dmgMax,
                 flags, flagsExtra, allowableClass, allowableRace, holyRes, fireRes, natureRes, frostRes, shadowRes, arcaneRes);
@@ -1840,6 +1842,99 @@ namespace AzerothCoreCreator
         {
             if (s == null) return "";
             return s.Replace("\\", "\\\\").Replace("'", "''");
+        }
+
+
+        // ===================== MONEY (Gold/Silver/Copper) =====================
+
+        private bool _updatingVendorMoneyUi;
+
+        private void MoneyBox_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            // Digits only
+            e.Handled = e.Text.Any(ch => !char.IsDigit(ch));
+        }
+
+        private static int SafeInt(string? text)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return 0;
+            return int.TryParse(text.Trim(), out var v) ? v : 0;
+        }
+
+        private static int MoneyToCopper(string? goldText, string? silverText, string? copperText)
+        {
+            int gold = SafeInt(goldText);
+            int silver = SafeInt(silverText);
+            int copper = SafeInt(copperText);
+
+            if (gold < 0) gold = 0;
+            if (silver < 0) silver = 0;
+            if (copper < 0) copper = 0;
+
+            // Normalize overflow
+            gold += silver / 100;
+            silver %= 100;
+
+            silver += copper / 100;
+            copper %= 100;
+
+            checked
+            {
+                return (gold * 10000) + (silver * 100) + copper;
+            }
+        }
+
+        private static void CopperToMoney(int totalCopper, out int gold, out int silver, out int copper)
+        {
+            if (totalCopper < 0) totalCopper = 0;
+            gold = totalCopper / 10000;
+            totalCopper %= 10000;
+            silver = totalCopper / 100;
+            copper = totalCopper % 100;
+        }
+
+        private void SetSellMoneyFromCopper(int sellCopper)
+        {
+            CopperToMoney(sellCopper, out var g, out var s, out var c);
+            ItemSellGoldBox.Text = g.ToString();
+            ItemSellSilverBox.Text = s.ToString();
+            ItemSellCopperBox.Text = c.ToString();
+        }
+
+        private void BuyMoney_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (_updatingVendorMoneyUi) return;
+            if (ItemAutoSell25Check?.IsChecked != true) return;
+
+            _updatingVendorMoneyUi = true;
+            try
+            {
+                int buy = MoneyToCopper(ItemBuyGoldBox?.Text, ItemBuySilverBox?.Text, ItemBuyCopperBox?.Text);
+                int sell = (int)Math.Floor(buy * 0.25);
+                SetSellMoneyFromCopper(sell);
+            }
+            finally
+            {
+                _updatingVendorMoneyUi = false;
+            }
+        }
+
+        private void SellMoney_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (_updatingVendorMoneyUi) return;
+
+            // If user manually edits Sell while auto is enabled, disable auto.
+            if (ItemAutoSell25Check?.IsChecked == true)
+                ItemAutoSell25Check.IsChecked = false;
+        }
+
+        private void ItemAutoSell25Check_Changed(object sender, RoutedEventArgs e)
+        {
+            if (ItemAutoSell25Check?.IsChecked == true)
+            {
+                // Apply immediately.
+                BuyMoney_TextChanged(this, null!);
+            }
         }
         private void ItemFlagCheck_Changed(object sender, RoutedEventArgs e)
         {
@@ -3021,7 +3116,4 @@ namespace AzerothCoreCreator
 
         public override string ToString() => $"{Id} - {Name}";
     }
-
-} // <-- closes namespace
-
-
+}

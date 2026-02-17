@@ -455,35 +455,115 @@
 
                                         <Grid>
                                             <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="170"/>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="170"/>
-                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="100"/>
+                                                <ColumnDefinition Width="260"/>
+                                                <ColumnDefinition Width="100"/>
+                                                <ColumnDefinition Width="260"/>
                                             </Grid.ColumnDefinitions>
+
                                             <Grid.RowDefinitions>
+                                                <RowDefinition Height="28"/>
                                                 <RowDefinition Height="Auto"/>
                                                 <RowDefinition Height="Auto"/>
-                                                <RowDefinition Height="Auto"/>
-                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="28"/>
                                             </Grid.RowDefinitions>
 
-                                            <TextBlock Text="Buy Price (copper)" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"/>
-                                            <TextBox x:Name="ItemBuyPriceBox" Grid.Row="0" Grid.Column="1" Text="0"/>
+                                            <!-- BUY PRICE -->
+                                            <TextBlock Text="Buy Price" Grid.Row="0" Grid.Column="0" VerticalAlignment="Stretch"/>
+                                            <Grid Grid.Row="0" Grid.Column="1" VerticalAlignment="Center">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="14"/>
+                                                    <ColumnDefinition Width="55"/>
+                                                    <ColumnDefinition Width="12"/>
+                                                    <ColumnDefinition Width="14"/>
+                                                    <ColumnDefinition Width="55"/>
+                                                    <ColumnDefinition Width="12"/>
+                                                    <ColumnDefinition Width="14"/>
+                                                    <ColumnDefinition Width="55"/>
+                                                </Grid.ColumnDefinitions>
 
-                                            <TextBlock Text="Sell Price (copper)" Grid.Row="0" Grid.Column="2" VerticalAlignment="Center"/>
-                                            <TextBox x:Name="ItemSellPriceBox" Grid.Row="0" Grid.Column="3" Text="0"/>
+                                                <Ellipse Grid.Column="0" Width="10" Height="10" VerticalAlignment="Center" Fill="#D4AF37"/>
+                                                <TextBox Grid.Column="1" x:Name="ItemBuyGoldBox" Height="22" VerticalContentAlignment="Center" Padding="4,0,4,0"                                                         
+                                                         PreviewTextInput="MoneyBox_PreviewTextInput"
+                                                         TextChanged="BuyMoney_TextChanged"/>
 
+                                                <Ellipse Grid.Column="3" Width="10" Height="10" VerticalAlignment="Center" Fill="#C0C0C0"/>
+                                                <TextBox Grid.Column="4" x:Name="ItemBuySilverBox" Height="22" VerticalContentAlignment="Center" Padding="4,0,4,0"                                                         
+                                                         PreviewTextInput="MoneyBox_PreviewTextInput"
+                                                         TextChanged="BuyMoney_TextChanged"/>
+
+                                                <Ellipse Grid.Column="6" Width="10" Height="10" VerticalAlignment="Center" Fill="#B87333"/>
+                                                <TextBox Grid.Column="7" x:Name="ItemBuyCopperBox" Height="22" VerticalContentAlignment="Center" Padding="4,0,4,0"                                                         
+                                                         PreviewTextInput="MoneyBox_PreviewTextInput"
+                                                         TextChanged="BuyMoney_TextChanged"/>
+                                            </Grid>
+
+                                            <!-- SELL PRICE -->
+                                            <TextBlock Text="Sell Price" Grid.Row="0" Grid.Column="2" VerticalAlignment="Stretch"/>
+                                            <Grid Grid.Row="0" Grid.Column="3" VerticalAlignment="Center">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="14"/>
+                                                    <ColumnDefinition Width="55"/>
+                                                    <ColumnDefinition Width="12"/>
+                                                    <ColumnDefinition Width="14"/>
+                                                    <ColumnDefinition Width="55"/>
+                                                    <ColumnDefinition Width="12"/>
+                                                    <ColumnDefinition Width="14"/>
+                                                    <ColumnDefinition Width="55"/>
+                                                </Grid.ColumnDefinitions>
+
+                                                <Ellipse Grid.Column="0" Width="10" Height="10" VerticalAlignment="Center" Fill="#D4AF37"/>
+                                                <TextBox Grid.Column="1" x:Name="ItemSellGoldBox" Height="22" VerticalContentAlignment="Center" Padding="4,0,4,0"  
+                                                         PreviewTextInput="MoneyBox_PreviewTextInput"
+                                                         TextChanged="SellMoney_TextChanged"/>
+
+                                                <Ellipse Grid.Column="3" Width="10" Height="10" VerticalAlignment="Center" Fill="#C0C0C0"/>
+                                                <TextBox Grid.Column="4" x:Name="ItemSellSilverBox" Height="22" VerticalContentAlignment="Center" Padding="4,0,4,0"  
+                                                         PreviewTextInput="MoneyBox_PreviewTextInput"
+                                                         TextChanged="SellMoney_TextChanged"/>
+
+                                                <Ellipse Grid.Column="6" Width="10" Height="10" VerticalAlignment="Center" Fill="#B87333"/>
+                                                <TextBox Grid.Column="7" x:Name="ItemSellCopperBox" Height="22" VerticalContentAlignment="Center" Padding="4,0,4,0"  
+                                                         PreviewTextInput="MoneyBox_PreviewTextInput"
+                                                         TextChanged="SellMoney_TextChanged"/>
+                                            </Grid>
+
+                                            <!-- Binding / Armor -->
                                             <TextBlock Text="Binding" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center"/>
                                             <ComboBox x:Name="ItemBondingBox" Grid.Row="1" Grid.Column="1"/>
 
                                             <TextBlock Text="Armor" Grid.Row="1" Grid.Column="2" VerticalAlignment="Center"/>
                                             <TextBox x:Name="ItemArmorBox" Grid.Row="1" Grid.Column="3" Text="0"/>
 
+                                            <!-- Damage Min / Max -->
                                             <TextBlock Text="Damage Min" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center"/>
                                             <TextBox x:Name="ItemDmgMinBox" Grid.Row="2" Grid.Column="1" Text="0"/>
 
                                             <TextBlock Text="Damage Max" Grid.Row="2" Grid.Column="2" VerticalAlignment="Center"/>
                                             <TextBox x:Name="ItemDmgMaxBox" Grid.Row="2" Grid.Column="3" Text="0"/>
+
+                                            <!-- Buy Count + Auto 25% -->
+                                            <TextBlock Text="Buy Count" Grid.Row="3" Grid.Column="0" VerticalAlignment="Center"/>
+
+                                            <TextBox x:Name="ItemBuyCountBox"
+                                                     Grid.Row="3" Grid.Column="1"
+                                                     Width="260" Height="22"
+                                                     HorizontalAlignment="Left"
+                                                     VerticalContentAlignment="Center"
+                                                     Padding="4,0,4,0"
+                                                     Text="1"
+                                                     PreviewTextInput="MoneyBox_PreviewTextInput"/>
+
+
+                                            <CheckBox x:Name="ItemAutoSell25Check"
+                                                      Grid.Row="3" Grid.Column="2" Grid.ColumnSpan="2"
+                                                      VerticalAlignment="Center"
+                                                      Margin="0,0,0,0"
+                                                      Content="Automatically set sell price to 25%"
+                                                      Checked="ItemAutoSell25Check_Changed"
+                                                      Unchecked="ItemAutoSell25Check_Changed"/>
+
+
                                         </Grid>
 
                                         <!-- Container / Bag properties (Trinity-style). Only shown when Item Class = Container. -->
