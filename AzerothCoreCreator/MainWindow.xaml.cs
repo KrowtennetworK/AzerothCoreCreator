@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -17,6 +18,13 @@ namespace AzerothCoreCreator
         private bool _connected = false;
         private string _lastSql = "";
 
+
+
+        // Cached faction (Faction.dbc / faction_dbc) lookup list for fast searching
+        private List<LookupRow> _factionCache = null;
+        private string _factionCacheTable = null;
+        private string _factionCacheIdCol = null;
+        private string _factionCacheNameCol = null;
         // checkbox -> bit value maps
         private Dictionary<CheckBox, uint> _npcFlags = new Dictionary<CheckBox, uint>();
         private Dictionary<CheckBox, uint> _unitFlags = new Dictionary<CheckBox, uint>();
@@ -57,6 +65,10 @@ namespace AzerothCoreCreator
             BuildFlagCheckboxes();
             SetDisconnectedUI("Ready.");
             InitItemClassAndSubclasses();
+            HookItemPreviewEvents();
+            UpdateItemPreview();
+            LockQuestSectionsToSingleRow();
+
 
 
             // Item tab extras (safe defaults)
@@ -130,6 +142,9 @@ namespace AzerothCoreCreator
                     CreatureNextIdHint.Text = "(auto: MAX(entry)+1)";
                     ItemNextIdHint.Text = "(auto: MAX(entry)+1)";
                     QuestNextIdHint.Text = "(auto: MAX(ID)+1)";
+
+                    // Pre-load faction name list for quest lookups (Faction.dbc)
+                    EnsureFactionCache(conn);
                 }
 
                 SetConnectedUI("Connected + loaded next IDs.");
@@ -604,14 +619,15 @@ namespace AzerothCoreCreator
 
         // ===================== TOGGLES =====================
 
-        private void ItemAdvancedToggle_Changed(object sender, RoutedEventArgs e)
-        {
-            ItemAdvancedGrid.Visibility = (ItemAdvancedToggle.IsChecked == true) ? Visibility.Visible : Visibility.Collapsed;
-        }
-
         private void QuestAdvancedToggle_Changed(object sender, RoutedEventArgs e)
         {
-            QuestAdvancedGrid.Visibility = (QuestAdvancedToggle.IsChecked == true) ? Visibility.Visible : Visibility.Collapsed;
+            QuestAdvancedGrid.Visibility =
+                QuestAdvancedToggle.IsChecked == true
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+
+            if (QuestAdvancedToggle.IsChecked == true)
+                LockQuestSectionsToSingleRow();
         }
 
 
@@ -746,22 +762,64 @@ namespace AzerothCoreCreator
 
         private void UpdateItemPreview()
         {
-            if (ItemPreviewName == null || ItemPreviewMeta == null) return;
+            // Preview textblocks (these must exist in XAML)
+            var previewName = FindFirstByName<TextBlock>("ItemPreviewName");
+            var previewMeta = FindFirstByName<TextBlock>("ItemPreviewMeta");
+            if (previewName == null || previewMeta == null) return;
 
-            string name = string.IsNullOrWhiteSpace(ItemNameBox?.Text) ? "(name)" : ItemNameBox.Text.Trim();
-            int displayId = ParseInt(ItemDisplayIdBox?.Text ?? "0", 0);
+            // Item inputs (try a wider set of possible names)
+            var nameBox = FindFirstByName<TextBox>(
+                "ItemNameBox", "ItemNameTextBox", "ItemName", "ItemNameTxt", "ItemNameField");
 
-            int quality = 0;
+            var displayBox = FindFirstByName<TextBox>(
+                "ItemDisplayIdBox", "ItemDisplayIDBox", "ItemDisplayId", "ItemDisplayID",
+                "DisplayIdBox", "DisplayIDBox", "ItemDisplayTextBox", "ItemDisplayIdTextBox");
+
+            var qualityBox = FindFirstByName<ComboBox>(
+                "ItemQualityBox", "ItemQuality", "ItemQualityCombo", "ItemQualityComboBox");
+
+            var classBox = FindFirstByName<ComboBox>(
+                "ItemClassBox", "ItemClass", "ItemClassCombo", "ItemClassComboBox");
+
+            var subclassBox = FindFirstByName<ComboBox>(
+                "ItemSubclassBox", "ItemSubclass", "ItemSubclassCombo", "ItemSubclassComboBox");
+
+            var invBox = FindFirstByName<ComboBox>(
+                "ItemInventoryTypeBox", "ItemInventoryType", "ItemEquipSlotBox", "ItemEquipSlot");
+
+            string name = (nameBox?.Text ?? "").Trim();
+            if (string.IsNullOrWhiteSpace(name)) name = "(name)";
+
+            int displayId = ParseInt(displayBox?.Text ?? "0", 0);
+
             string qualityText = "Unknown";
-            var qItem = ItemQualityBox?.SelectedItem as ComboBoxItem;
-            if (qItem != null)
+            int quality = 0;
+            if (qualityBox?.SelectedItem is ComboBoxItem qItem)
             {
                 int.TryParse(qItem.Tag?.ToString() ?? "0", out quality);
                 qualityText = qItem.Content?.ToString() ?? "Unknown";
             }
 
-            ItemPreviewName.Text = name;
-            ItemPreviewMeta.Text = $"DisplayID: {displayId} | Quality: {quality} ({qualityText})";
+            string clsText = "";
+            if (classBox?.SelectedItem is ComboBoxItem cItem)
+                clsText = cItem.Content?.ToString() ?? "";
+
+            string subText = "";
+            if (subclassBox?.SelectedItem is ComboBoxItem sItem)
+                subText = sItem.Content?.ToString() ?? "";
+
+            string invText = "";
+            if (invBox?.SelectedItem is ComboBoxItem iItem)
+                invText = iItem.Content?.ToString() ?? "";
+
+            previewName.Text = name;
+
+            // More informative preview line (like Trinity vibe)
+            previewMeta.Text =
+                $"DisplayID: {displayId} | Quality: {quality} ({qualityText})"
+                + (string.IsNullOrWhiteSpace(clsText) ? "" : $" | Class: {clsText}")
+                + (string.IsNullOrWhiteSpace(subText) ? "" : $" | Sub: {subText}")
+                + (string.IsNullOrWhiteSpace(invText) ? "" : $" | Slot: {invText}");
         }
 
         // ===================== CREATURE TEMPLATE =====================
@@ -1357,6 +1415,12 @@ namespace AzerothCoreCreator
             int prevQuestId = ParseInt(QuestPrevQuestIdBox.Text, 0);
             int nextQuestId = ParseInt(QuestNextQuestIdBox.Text, 0);
 
+            int reqMinRepFaction = ParseInt(QuestReqMinRepFactionBox.Text, 0);
+            int reqMinRepValue = ParseInt(QuestReqMinRepValueBox.Text, 0);
+            int reqMaxRepFaction = ParseInt(QuestReqMaxRepFactionBox.Text, 0);
+            int reqMaxRepValue = ParseInt(QuestReqMaxRepValueBox.Text, 0);
+
+
             // required items
             int r1 = ParseInt(ReqItemId1.Text, 0); int rc1 = ParseInt(ReqItemCount1.Text, 0);
             int r2 = ParseInt(ReqItemId2.Text, 0); int rc2 = ParseInt(ReqItemCount2.Text, 0);
@@ -1440,8 +1504,9 @@ namespace AzerothCoreCreator
             sb.AppendLine();
             sb.AppendLine();
 
-            sb.AppendLine("INSERT INTO `quest_template_addon` (`ID`,`SpecialFlags`,`AllowableClasses`,`PrevQuestID`,`NextQuestID`) VALUES (@ID,"
-                          + specialFlags + "," + allowableClasses + "," + prevQuestId + "," + nextQuestId + ");");
+            sb.AppendLine("INSERT INTO `quest_template_addon` (`ID`,`SpecialFlags`,`AllowableClasses`,`PrevQuestID`,`NextQuestID`,`RequiredMinRepFaction`,`RequiredMinRepValue`,`RequiredMaxRepFaction`,`RequiredMaxRepValue`) VALUES (@ID,"
+                          + specialFlags + "," + allowableClasses + "," + prevQuestId + "," + nextQuestId + ","
+                          + reqMinRepFaction + "," + reqMinRepValue + "," + reqMaxRepFaction + "," + reqMaxRepValue + ");");
             sb.AppendLine("COMMIT;");
             return sb.ToString();
         }
@@ -1775,6 +1840,859 @@ namespace AzerothCoreCreator
                 UseShellExecute = true
             });
         }
+
+
+        // ===================== QUEST LOOKUP (Finder helpers) =====================
+        private TextBox _questLookupTarget;
+
+        private void QuestLookupTarget_GotFocus(object sender, RoutedEventArgs e)
+        {
+            _questLookupTarget = sender as TextBox;
+        }
+
+        private void QuestFindItem_Click(object sender, RoutedEventArgs e)
+        {
+            OpenLookupWindow(LookupKind.Item, _questLookupTarget);
+        }
+
+        private void QuestFindNpc_Click(object sender, RoutedEventArgs e)
+        {
+            OpenLookupWindow(LookupKind.Creature, _questLookupTarget);
+        }
+
+        private void QuestFindGo_Click(object sender, RoutedEventArgs e)
+        {
+            OpenLookupWindow(LookupKind.GameObject, _questLookupTarget);
+        }
+
+        private void QuestFindFaction_Click(object sender, RoutedEventArgs e)
+        {
+            OpenLookupWindow(LookupKind.FactionTemplate, _questLookupTarget);
+        }
+
+        private enum LookupKind
+        {
+            Item,
+            Creature,
+            GameObject,
+            FactionTemplate
+        }
+
+        private sealed class LookupRow
+        {
+            public long Id { get; set; }
+            public string Name { get; set; }
+        }
+
+        private void OpenLookupWindow(LookupKind kind, TextBox target)
+        {
+            if (!_connected)
+            {
+                MessageBox.Show("Connect to the database first.", "Not connected", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            if (target == null)
+            {
+                MessageBox.Show("Click inside an ID box first, then use a Find button.", "Select a target", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            var w = new Window
+            {
+                Title = kind == LookupKind.Item ? "Find Item" :
+                        kind == LookupKind.Creature ? "Find NPC" :
+                        kind == LookupKind.GameObject ? "Find GameObject" :
+                        "Find Faction (Template)",
+                Owner = this,
+                Width = 720,
+                Height = 520,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
+            };
+
+            var root = new Grid { Margin = new Thickness(10) };
+            root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            root.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+            root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+
+            var top = new DockPanel { LastChildFill = true };
+            var searchBox = new TextBox { MinWidth = 360, Margin = new Thickness(0, 0, 8, 0) };
+            var hint = new TextBlock
+            {
+                Foreground = Brushes.Gray,
+                VerticalAlignment = VerticalAlignment.Center,
+                Text = "Type at least 2 characters (or an ID)"
+            };
+            DockPanel.SetDock(hint, Dock.Right);
+            top.Children.Add(hint);
+            top.Children.Add(searchBox);
+
+            var list = new DataGrid
+            {
+                AutoGenerateColumns = false,
+                IsReadOnly = true,
+                SelectionMode = DataGridSelectionMode.Single,
+                SelectionUnit = DataGridSelectionUnit.FullRow,
+                HeadersVisibility = DataGridHeadersVisibility.Column,
+                CanUserAddRows = false
+            };
+            list.Columns.Add(new DataGridTextColumn { Header = "ID", Binding = new System.Windows.Data.Binding("Id"), Width = 100 });
+            list.Columns.Add(new DataGridTextColumn { Header = "Name", Binding = new System.Windows.Data.Binding("Name"), Width = new DataGridLength(1, DataGridLengthUnitType.Star) });
+
+            var bottom = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right };
+            var ok = new Button { Content = "Use Selected", Width = 110, Margin = new Thickness(0, 0, 8, 0) };
+            var cancel = new Button { Content = "Cancel", Width = 90 };
+            bottom.Children.Add(ok);
+            bottom.Children.Add(cancel);
+
+            Grid.SetRow(top, 0);
+            Grid.SetRow(list, 1);
+            Grid.SetRow(bottom, 2);
+            root.Children.Add(top);
+            root.Children.Add(list);
+            root.Children.Add(bottom);
+            w.Content = root;
+
+            var timer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(250) };
+            timer.Tick += (s, e) =>
+            {
+                timer.Stop();
+                try
+                {
+                    list.ItemsSource = RunLookup(kind, searchBox.Text.Trim());
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message, "Lookup failed", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            };
+
+            searchBox.TextChanged += (s, e) =>
+            {
+                timer.Stop();
+                timer.Start();
+            };
+
+            void acceptSelection()
+            {
+                if (list.SelectedItem is LookupRow row)
+                {
+                    target.Text = row.Id.ToString(CultureInfo.InvariantCulture);
+                    target.Focus();
+                    target.CaretIndex = target.Text.Length;
+                    UpdateQuestPreview();
+                    w.Close();
+                }
+            }
+
+            ok.Click += (s, e) => acceptSelection();
+            cancel.Click += (s, e) => w.Close();
+            list.MouseDoubleClick += (s, e) => acceptSelection();
+
+            // Prime with current value if numeric
+            searchBox.Text = target.Text;
+            searchBox.SelectAll();
+            w.ShowDialog();
+        }
+        private void EnsureFactionCache(MySqlConnection openConn)
+        {
+            if (_factionCache != null && _factionCache.Count > 0)
+                return;
+
+            // 1) Optional local override: <app>\Factions.txt (ID<TAB>Name) or (ID,Name)
+            var fromFile = LoadFactionsFromFile();
+            if (fromFile.Count > 0)
+            {
+                // convert LookupEntry -> LookupRow
+                _factionCache = fromFile
+                    .Select(e => new LookupRow { Id = e.Id, Name = e.Name })
+                    .ToList();
+                _factionCacheTable = "FILE:Factions.txt";
+                _factionCacheIdCol = "ID";
+                _factionCacheNameCol = "Name";
+                return;
+            }
+
+            // 2) Built-in starter list (covers common factions; users can extend via Factions.txt)
+            var builtIn = GetBuiltInFactions();
+            // convert LookupEntry -> LookupRow
+            _factionCache = builtIn
+                .Select(e => new LookupRow { Id = e.Id, Name = e.Name })
+                .ToList();
+
+            // 3) If the DB has a usable source with names, merge it in (best-effort)
+            try
+            {
+                if (openConn != null)
+                {
+                    var src = GetBestFactionLookupSource(openConn);
+                    if (!string.IsNullOrEmpty(src.table) && !string.IsNullOrEmpty(src.idCol) && !string.IsNullOrEmpty(src.nameCol))
+                    {
+                        var list = new List<LookupEntry>();
+                        using (var cmd = new MySqlCommand($"SELECT `{src.idCol}`, `{src.nameCol}` FROM `{src.table}` ORDER BY `{src.idCol}`", openConn))
+                        using (var r = cmd.ExecuteReader())
+                        {
+                            while (r.Read())
+                            {
+                                var id = r.IsDBNull(0) ? 0 : Convert.ToInt64(r.GetValue(0));
+                                var name = r.IsDBNull(1) ? "" : r.GetString(1);
+                                if (id > 0 && !string.IsNullOrWhiteSpace(name))
+                                    list.Add(new LookupEntry { Id = (int)id, Name = name });
+                            }
+                        }
+
+                        if (list.Count > 0)
+                        {
+                            // Merge by Id (DB wins if it provides a name for an existing Id)
+                            var map = _factionCache.ToDictionary(x => x.Id, x => x.Name);
+                            foreach (var e in list)
+                                map[e.Id] = e.Name;
+
+                            // produce LookupRow entries (not LookupEntry)
+                            _factionCache = map
+                                .OrderBy(k => k.Key)
+                                .Select(k => new LookupRow { Id = k.Key, Name = k.Value })
+                                .ToList();
+
+                            _factionCacheTable = src.table;
+                            _factionCacheIdCol = src.idCol;
+                            _factionCacheNameCol = src.nameCol;
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // swallow; we already have a usable built-in list
+            }
+        }
+
+        private List<LookupEntry> LoadFactionsFromFile()
+        {
+            try
+            {
+                var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+                var path = System.IO.Path.Combine(baseDir, "Factions.txt");
+                if (!System.IO.File.Exists(path))
+                    return new List<LookupEntry>();
+
+                var lines = System.IO.File.ReadAllLines(path);
+                var list = new List<LookupEntry>();
+
+                foreach (var raw in lines)
+                {
+                    var line = (raw ?? "").Trim();
+                    if (line.Length == 0) continue;
+                    if (line.StartsWith("#")) continue;
+
+                    // Accept: "123<TAB>Name" or "123,Name"
+                    string[] parts = line.Contains("\t") ? line.Split('\t') : line.Split(',');
+                    if (parts.Length < 2) continue;
+
+                    if (!int.TryParse(parts[0].Trim(), out int id)) continue;
+                    var name = string.Join(" ", parts.Skip(1)).Trim();
+                    if (id <= 0 || string.IsNullOrWhiteSpace(name)) continue;
+
+                    list.Add(new LookupEntry { Id = id, Name = name });
+                }
+
+                return list
+                    .GroupBy(x => x.Id)
+                    .Select(g => g.Last())
+                    .OrderBy(x => x.Id)
+                    .ToList();
+            }
+            catch
+            {
+                return new List<LookupEntry>();
+            }
+        }
+
+        private List<LookupEntry> GetBuiltInFactions()
+        {
+            // This is a starter set so "Find Faction" always works even when faction_dbc is empty.
+            // If you want the FULL 3.3.5 list, drop a "Factions.txt" next to the EXE with lines like:
+            // 69<TAB>Darnassus
+            // 72<TAB>Stormwind
+            // (ID,Name also works)
+
+            return new List<LookupEntry>
+    {
+        new LookupEntry{ Id=1, Name="PLAYER, Human"},
+        new LookupEntry{ Id=2, Name="PLAYER, Orc"},
+        new LookupEntry{ Id=3, Name="PLAYER, Dwarf"},
+        new LookupEntry{ Id=4, Name="PLAYER, Night Elf"},
+        new LookupEntry{ Id=5, Name="PLAYER, Undead"},
+        new LookupEntry{ Id=6, Name="PLAYER, Tauren"},
+        new LookupEntry{ Id=7, Name="Creature"},
+        new LookupEntry{ Id=8, Name="PLAYER, Gnome"},
+        new LookupEntry{ Id=9, Name="PLAYER, Troll"},
+        new LookupEntry{ Id=14, Name="Monster"},
+        new LookupEntry{ Id=15, Name="Defias Brotherhood"},
+        new LookupEntry{ Id=16, Name="Gnoll - Riverpaw"},
+        new LookupEntry{ Id=17, Name="Gnoll - Redridge"},
+        new LookupEntry{ Id=18, Name="Gnoll - Shadowhide"},
+        new LookupEntry{ Id=19, Name="Murloc"},
+        new LookupEntry{ Id=20, Name="Undead, Scourge"},
+        new LookupEntry{ Id=21, Name="Booty Bay"},
+        new LookupEntry{ Id=22, Name="Beast - Spider"},
+        new LookupEntry{ Id=23, Name="Beast - Boar"},
+        new LookupEntry{ Id=24, Name="Worgen"},
+        new LookupEntry{ Id=25, Name="Kobold"},
+        new LookupEntry{ Id=26, Name="Troll, Bloodscalp"},
+        new LookupEntry{ Id=27, Name="Troll, Skullsplitter"},
+        new LookupEntry{ Id=28, Name="Prey"},
+        new LookupEntry{ Id=29, Name="Beast - Wolf"},
+        new LookupEntry{ Id=30, Name="Defias Brotherhood Traitor"},
+        new LookupEntry{ Id=31, Name="Friendly"},
+        new LookupEntry{ Id=32, Name="Trogg"},
+        new LookupEntry{ Id=33, Name="Troll, Frostmane"},
+        new LookupEntry{ Id=34, Name="Orc, Blackrock"},
+        new LookupEntry{ Id=35, Name="Villain"},
+        new LookupEntry{ Id=36, Name="Victim"},
+        new LookupEntry{ Id=37, Name="Beast - Bear"},
+        new LookupEntry{ Id=38, Name="Ogre"},
+        new LookupEntry{ Id=39, Name="Kurzen's Mercenaries"},
+        new LookupEntry{ Id=40, Name="Escortee"},
+        new LookupEntry{ Id=41, Name="Venture Company"},
+        new LookupEntry{ Id=42, Name="Beast - Raptor"},
+        new LookupEntry{ Id=43, Name="Basilisk"},
+        new LookupEntry{ Id=44, Name="Dragonflight, Green"},
+        new LookupEntry{ Id=45, Name="Lost Ones"},
+        new LookupEntry{ Id=46, Name="Blacksmithing - Armorsmithing"},
+        new LookupEntry{ Id=47, Name="Ironforge"},
+        new LookupEntry{ Id=48, Name="Dark Iron Dwarves"},
+        new LookupEntry{ Id=49, Name="Human, Night Watch"},
+        new LookupEntry{ Id=50, Name="Dragonflight, Red"},
+        new LookupEntry{ Id=51, Name="Gnoll - Mosshide"},
+        new LookupEntry{ Id=52, Name="Orc, Dragonmaw"},
+        new LookupEntry{ Id=53, Name="Gnome - Leper"},
+        new LookupEntry{ Id=54, Name="Gnomeregan Exiles"},
+        new LookupEntry{ Id=55, Name="Leopard"},
+        new LookupEntry{ Id=56, Name="Scarlet Crusade"},
+        new LookupEntry{ Id=57, Name="Gnoll - Rothide"},
+        new LookupEntry{ Id=58, Name="Beast - Gorilla"},
+        new LookupEntry{ Id=59, Name="Thorium Brotherhood"},
+        new LookupEntry{ Id=60, Name="Naga"},
+        new LookupEntry{ Id=61, Name="Dalaran"},
+        new LookupEntry{ Id=62, Name="Forlorn Spirit"},
+        new LookupEntry{ Id=63, Name="Darkhowl"},
+        new LookupEntry{ Id=64, Name="Grell"},
+        new LookupEntry{ Id=65, Name="Furbolg"},
+        new LookupEntry{ Id=66, Name="Horde Generic"},
+        new LookupEntry{ Id=67, Name="Horde"},
+        new LookupEntry{ Id=68, Name="Undercity"},
+        new LookupEntry{ Id=69, Name="Darnassus"},
+        new LookupEntry{ Id=70, Name="Syndicate"},
+        new LookupEntry{ Id=71, Name="Hillsbrad Militia"},
+        new LookupEntry{ Id=72, Name="Stormwind"},
+        new LookupEntry{ Id=73, Name="Demon"},
+        new LookupEntry{ Id=74, Name="Elemental"},
+        new LookupEntry{ Id=75, Name="Spirit"},
+        new LookupEntry{ Id=76, Name="Orgrimmar"},
+        new LookupEntry{ Id=77, Name="Orgrimmar"},
+        new LookupEntry{ Id=78, Name="Gnoll - Mudsnout"},
+        new LookupEntry{ Id=79, Name="Hillsbrad, Southshore Mayor"},
+        new LookupEntry{ Id=80, Name="Dragonflight, Black"},
+        new LookupEntry{ Id=81, Name="Thunder Bluff"},
+        new LookupEntry{ Id=82, Name="Troll, Witherbark"},
+        new LookupEntry{ Id=83, Name="Leatherworking - Elemental"},
+        new LookupEntry{ Id=84, Name="Quilboar, Razormane"},
+        new LookupEntry{ Id=85, Name="Quilboar, Bristleback"},
+        new LookupEntry{ Id=86, Name="Leatherworking - Dragonscale"},
+        new LookupEntry{ Id=87, Name="Bloodsail Buccaneers"},
+        new LookupEntry{ Id=88, Name="Blackfathom"},
+        new LookupEntry{ Id=89, Name="Makrura"},
+        new LookupEntry{ Id=90, Name="Centaur, Kolkar"},
+        new LookupEntry{ Id=91, Name="Centaur, Galak"},
+        new LookupEntry{ Id=92, Name="Gelkis Clan Centaur"},
+        new LookupEntry{ Id=93, Name="Magram Clan Centaur"},
+        new LookupEntry{ Id=94, Name="Maraudine"},
+        new LookupEntry{ Id=108, Name="Theramore"},
+        new LookupEntry{ Id=109, Name="Quilboar, Razorfen"},
+        new LookupEntry{ Id=110, Name="Quilboar, Razormane 2"},
+        new LookupEntry{ Id=111, Name="Quilboar, Deathshead"},
+        new LookupEntry{ Id=128, Name="Enemy"},
+        new LookupEntry{ Id=148, Name="Ambient"},
+        new LookupEntry{ Id=168, Name="Nethergarde Caravan"},
+        new LookupEntry{ Id=169, Name="Steamwheedle Cartel"},
+        new LookupEntry{ Id=189, Name="Alliance Generic"},
+        new LookupEntry{ Id=209, Name="Nethergarde"},
+        new LookupEntry{ Id=229, Name="Wailing Caverns"},
+        new LookupEntry{ Id=249, Name="Silithid"},
+        new LookupEntry{ Id=269, Name="Silvermoon Remnant"},
+        new LookupEntry{ Id=270, Name="Zandalar Tribe"},
+        new LookupEntry{ Id=289, Name="Blacksmithing - Weaponsmithing"},
+        new LookupEntry{ Id=309, Name="Scorpid"},
+        new LookupEntry{ Id=310, Name="Beast - Bat"},
+        new LookupEntry{ Id=311, Name="Titan"},
+        new LookupEntry{ Id=329, Name="Taskmaster Fizzule"},
+        new LookupEntry{ Id=349, Name="Ravenholdt"},
+        new LookupEntry{ Id=369, Name="Gadgetzan"},
+        new LookupEntry{ Id=389, Name="Gnomeregan Bug"},
+        new LookupEntry{ Id=409, Name="Harpy"},
+        new LookupEntry{ Id=429, Name="Burning Blade"},
+        new LookupEntry{ Id=449, Name="Shadowsilk Poacher"},
+        new LookupEntry{ Id=450, Name="Searing Spider"},
+        new LookupEntry{ Id=469, Name="Alliance"},
+        new LookupEntry{ Id=470, Name="Ratchet"},
+        new LookupEntry{ Id=471, Name="Wildhammer Clan"},
+        new LookupEntry{ Id=489, Name="Goblin, Dark Iron Bar Patron"},
+        new LookupEntry{ Id=509, Name="The League of Arathor"},
+        new LookupEntry{ Id=510, Name="The Defilers"},
+        new LookupEntry{ Id=511, Name="Giant"},
+        new LookupEntry{ Id=529, Name="Argent Dawn"},
+        new LookupEntry{ Id=530, Name="Darkspear Trolls"},
+        new LookupEntry{ Id=531, Name="Dragonflight, Bronze"},
+        new LookupEntry{ Id=532, Name="Dragonflight, Blue"},
+        new LookupEntry{ Id=549, Name="Leatherworking - Tribal"},
+        new LookupEntry{ Id=550, Name="Engineering - Goblin"},
+        new LookupEntry{ Id=551, Name="Engineering - Gnome"},
+        new LookupEntry{ Id=569, Name="Blacksmithing - Hammersmithing"},
+        new LookupEntry{ Id=570, Name="Blacksmithing - Axesmithing"},
+        new LookupEntry{ Id=571, Name="Blacksmithing - Swordsmithing"},
+        new LookupEntry{ Id=572, Name="Troll, Vilebranch"},
+        new LookupEntry{ Id=573, Name="Southsea Freebooters"},
+        new LookupEntry{ Id=574, Name="Caer Darrow"},
+        new LookupEntry{ Id=575, Name="Furbolg, Uncorrupted"},
+        new LookupEntry{ Id=576, Name="Timbermaw Hold"},
+        new LookupEntry{ Id=577, Name="Everlook"},
+        new LookupEntry{ Id=589, Name="Wintersaber Trainers"},
+        new LookupEntry{ Id=609, Name="Cenarion Circle"},
+        new LookupEntry{ Id=629, Name="Shatterspear Trolls"},
+        new LookupEntry{ Id=630, Name="Ravasaur Trainers"},
+        new LookupEntry{ Id=649, Name="Majordomo Executus"},
+        new LookupEntry{ Id=669, Name="Beast - Carrion Bird"},
+        new LookupEntry{ Id=670, Name="Beast - Cat"},
+        new LookupEntry{ Id=671, Name="Beast - Crab"},
+        new LookupEntry{ Id=672, Name="Beast - Crocolisk"},
+        new LookupEntry{ Id=673, Name="Beast - Hyena"},
+        new LookupEntry{ Id=674, Name="Beast - Owl"},
+        new LookupEntry{ Id=675, Name="Beast - Scorpid"},
+        new LookupEntry{ Id=676, Name="Beast - Tallstrider"},
+        new LookupEntry{ Id=677, Name="Beast - Turtle"},
+        new LookupEntry{ Id=678, Name="Beast - Wind Serpent"},
+        new LookupEntry{ Id=679, Name="Training Dummy"},
+        new LookupEntry{ Id=689, Name="Dragonflight, Black - Bait"},
+        new LookupEntry{ Id=709, Name="Battleground Neutral"},
+        new LookupEntry{ Id=729, Name="Frostwolf Clan"},
+        new LookupEntry{ Id=730, Name="Stormpike Guard"},
+        new LookupEntry{ Id=749, Name="Hydraxian Waterlords"},
+        new LookupEntry{ Id=750, Name="Sulfuron Firelords"},
+        new LookupEntry{ Id=769, Name="Gizlock's Dummy"},
+        new LookupEntry{ Id=770, Name="Gizlock's Charm"},
+        new LookupEntry{ Id=771, Name="Gizlock"},
+        new LookupEntry{ Id=789, Name="Moro'gai"},
+        new LookupEntry{ Id=790, Name="Spirit Guide - Alliance"},
+        new LookupEntry{ Id=809, Name="Shen'dralar"},
+        new LookupEntry{ Id=829, Name="Ogre (Captain Kromcrush)"},
+        new LookupEntry{ Id=849, Name="Spirit Guide - Horde"},
+        new LookupEntry{ Id=869, Name="Jaedenar"},
+        new LookupEntry{ Id=889, Name="Warsong Outriders"},
+        new LookupEntry{ Id=890, Name="Silverwing Sentinels"},
+        new LookupEntry{ Id=891, Name="Alliance Forces"},
+        new LookupEntry{ Id=892, Name="Horde Forces"},
+        new LookupEntry{ Id=893, Name="Revantusk Trolls"},
+        new LookupEntry{ Id=909, Name="Darkmoon Faire"},
+        new LookupEntry{ Id=910, Name="Brood of Nozdormu"},
+        new LookupEntry{ Id=911, Name="Silvermoon City"},
+        new LookupEntry{ Id=912, Name="Might of Kalimdor"},
+        new LookupEntry{ Id=914, Name="PLAYER, Blood Elf"},
+        new LookupEntry{ Id=916, Name="Silithid Attackers"},
+        new LookupEntry{ Id=917, Name="The Ironforge Brigade"},
+        new LookupEntry{ Id=919, Name="RC Enemies"},
+        new LookupEntry{ Id=920, Name="RC Objects"},
+        new LookupEntry{ Id=921, Name="Red"},
+        new LookupEntry{ Id=922, Name="Blue"},
+        new LookupEntry{ Id=923, Name="Tranquillien"},
+        new LookupEntry{ Id=924, Name="Farstriders"},
+        new LookupEntry{ Id=925, Name="DEPRECATED"},
+        new LookupEntry{ Id=926, Name="Sunstriders"},
+        new LookupEntry{ Id=927, Name="Magister's Guild"},
+        new LookupEntry{ Id=928, Name="PLAYER, Draenei"},
+        new LookupEntry{ Id=929, Name="Scourge Invaders"},
+        new LookupEntry{ Id=930, Name="Bloodmaul Clan"},
+        new LookupEntry{ Id=931, Name="Exodar"},
+        new LookupEntry{ Id=932, Name="Test Faction (not a real faction)"},
+        new LookupEntry{ Id=933, Name="The Aldor"},
+        new LookupEntry{ Id=934, Name="The Consortium"},
+        new LookupEntry{ Id=935, Name="The Scryers"},
+        new LookupEntry{ Id=936, Name="The Sha'tar"},
+        new LookupEntry{ Id=937, Name="Shattrath City"},
+        new LookupEntry{ Id=942, Name="Cenarion Expedition"},
+        new LookupEntry{ Id=946, Name="Honor Hold"},
+        new LookupEntry{ Id=947, Name="Thrallmar"},
+        new LookupEntry{ Id=967, Name="The Violet Eye"},
+        new LookupEntry{ Id=970, Name="Sporeggar"},
+        new LookupEntry{ Id=978, Name="Kurenai"},
+        new LookupEntry{ Id=980, Name="The Burning Crusade"},
+        new LookupEntry{ Id=1011, Name="Lower City"},
+        new LookupEntry{ Id=1031, Name="Sha'tari Skyguard"},
+        new LookupEntry{ Id=1037, Name="Alliance Vanguard"},
+        new LookupEntry{ Id=1041, Name="Frenzy"},
+        new LookupEntry{ Id=1052, Name="Valgarde Combatant"},
+        new LookupEntry{ Id=1073, Name="The Kalu'ak"},
+        new LookupEntry{ Id=1077, Name="Shattered Sun Offensive"},
+        new LookupEntry{ Id=1090, Name="Kirin Tor"},
+        new LookupEntry{ Id=1091, Name="The Wyrmrest Accord"},
+        new LookupEntry{ Id=1094, Name="The Silver Covenant"},
+        new LookupEntry{ Id=1098, Name="Knights of the Ebon Blade"},
+        new LookupEntry{ Id=1104, Name="Frenzyheart Tribe"},
+        new LookupEntry{ Id=1105, Name="The Oracles"},
+        new LookupEntry{ Id=1117, Name="CTF Flag - Alliance"},
+        new LookupEntry{ Id=1118, Name="CTF Flag - Horde"},
+        new LookupEntry{ Id=1120, Name="Mount - Taxi - Alliance"},
+        new LookupEntry{ Id=1121, Name="Mount - Taxi - Horde"},
+        new LookupEntry{ Id=1122, Name="Mount - Taxi - Neutral"},
+        new LookupEntry{ Id=1124, Name="The Sunreavers"},
+        new LookupEntry{ Id=1156, Name="The Ashen Verdict"},
+        new LookupEntry{ Id=1168, Name="Knockback"}
+    };
+        }
+
+
+
+        private List<LookupRow> RunLookup(LookupKind kind, string term)
+        {
+            var results = new List<LookupRow>();
+            if (term == null) term = string.Empty;
+
+
+            // Use cached faction list if available (fast + avoids repeated DB hits)
+            if (kind == LookupKind.FactionTemplate && _factionCache != null && _factionCache.Count > 0)
+            {
+                string t = term.Trim();
+                bool has = t.Length >= 2;
+                bool idq = long.TryParse(t, out long qid);
+
+                var filtered = new List<LookupRow>();
+
+                if (idq)
+                {
+                    for (int i = 0; i < _factionCache.Count; i++)
+                    {
+                        if (_factionCache[i].Id == qid)
+                        {
+                            filtered.Add(_factionCache[i]);
+                            break;
+                        }
+                    }
+                }
+                else if (has)
+                {
+                    string low = t.ToLowerInvariant();
+                    for (int i = 0; i < _factionCache.Count; i++)
+                    {
+                        var row = _factionCache[i];
+                        if (!string.IsNullOrEmpty(row.Name) && row.Name.ToLowerInvariant().Contains(low))
+                        {
+                            filtered.Add(row);
+                            if (filtered.Count >= 200) break;
+                        }
+                        else if (row.Id.ToString(CultureInfo.InvariantCulture).Contains(low))
+                        {
+                            filtered.Add(row);
+                            if (filtered.Count >= 200) break;
+                        }
+                    }
+                }
+                else
+                {
+                    // empty search: show first 200
+                    for (int i = 0; i < _factionCache.Count && filtered.Count < 200; i++)
+                        filtered.Add(_factionCache[i]);
+                }
+
+                return filtered;
+            }
+
+            // allow empty search to show a few entries
+            bool hasText = term.Length >= 2;
+            bool isId = long.TryParse(term, out long id);
+
+            string table;
+            string idCol;
+            string nameCol;
+            string where;
+            var cmdText = "";
+
+            switch (kind)
+            {
+                case LookupKind.Item:
+                    table = "item_template";
+                    idCol = "entry";
+                    nameCol = "name";
+                    break;
+                case LookupKind.Creature:
+                    table = "creature_template";
+                    idCol = "entry";
+                    nameCol = "name";
+                    break;
+                case LookupKind.GameObject:
+                    table = "gameobject_template";
+                    idCol = "entry";
+                    nameCol = "name";
+                    break;
+                default:
+                    // Faction lookups vary by AzerothCore DB:
+                    // - Some setups have dbc tables like faction_dbc / factiontemplate_dbc with localized names.
+                    // - Others only have world.faction_template (numeric fields only).
+                    // We'll auto-detect the best available source.
+                    (table, idCol, nameCol) = GetBestFactionLookupSource();
+                    break;
+            }
+
+            if (isId)
+            {
+                where = string.Format("`{0}` = @id", idCol);
+            }
+            else if (hasText)
+            {
+                if (kind == LookupKind.FactionTemplate)
+                {
+                    // Faction sources can be numeric-only; safe to always CAST.
+                    where = string.Format("CAST(`{0}` AS CHAR) LIKE @like OR CAST(`{1}` AS CHAR) LIKE @like", idCol, nameCol);
+                }
+                else
+                {
+                    where = string.Format("CAST(`{0}` AS CHAR) LIKE @like OR `{1}` LIKE @like", idCol, nameCol);
+                }
+            }
+            else
+            {
+                where = "1=1";
+            }
+
+            cmdText = string.Format("SELECT `{0}` AS Id, `{1}` AS Name FROM `{2}` WHERE {3} ORDER BY `{0}` DESC LIMIT 200;", idCol, nameCol, table, where);
+
+            using (var conn = new MySqlConnection(BuildConnString()))
+            {
+                conn.Open();
+                using (var cmd = new MySqlCommand(cmdText, conn))
+                {
+                    if (isId)
+                    {
+                        cmd.Parameters.AddWithValue("@id", id);
+                    }
+                    else if (hasText)
+                    {
+                        cmd.Parameters.AddWithValue("@like", "%" + term + "%");
+                    }
+
+                    using (var r = cmd.ExecuteReader())
+                    {
+                        while (r.Read())
+                        {
+                            results.Add(new LookupRow
+                            {
+                                Id = r.IsDBNull(0) ? 0 : Convert.ToInt64(r.GetValue(0)),
+                                Name = r.IsDBNull(1) ? "" : r.GetString(1)
+                            });
+                        }
+                    }
+                }
+            }
+
+            return results;
+        }
+
+        private (string table, string idCol, string nameCol) GetBestFactionLookupSource()
+        {
+            try
+            {
+                using (var conn = new MySqlConnection(BuildConnString()))
+                {
+                    conn.Open();
+                    return GetBestFactionLookupSource(conn);
+                }
+            }
+            catch
+            {
+                return ("faction_template", "ID", "faction");
+            }
+        }
+
+        private (string table, string idCol, string nameCol) GetBestFactionLookupSource(MySqlConnection openConn)
+        {
+            // Prefer DBC-derived tables with readable names if present.
+            // AzerothCore commonly has faction_dbc with columns like mname_lang_1.
+            try
+            {
+                // 1) faction_dbc (best)
+                if (TableExists(openConn, "faction_dbc"))
+                {
+                    var factionDbcNameCol =
+                        FindFirstColumnLike(openConn, "faction_dbc", "mname_lang_%")
+                        ?? FindFirstColumnLike(openConn, "faction_dbc", "mname_lang%")
+                        ?? FindFirstColumnLike(openConn, "faction_dbc", "Name_Lang%")
+                        ?? FindFirstColumnLike(openConn, "faction_dbc", "Name%")
+                        ?? FindFirstColumnLike(openConn, "faction_dbc", "name%");
+
+                    if (!string.IsNullOrEmpty(factionDbcNameCol))
+                        return ("faction_dbc", "ID", factionDbcNameCol);
+                }
+
+                // 2) factiontemplate_dbc
+                if (TableExists(openConn, "factiontemplate_dbc"))
+                {
+                    // Some builds may have a name column, many don't; fall back to "Faction" or "ID".
+                    var ftName =
+                        FindFirstColumnLike(openConn, "factiontemplate_dbc", "mname_lang_%")
+                        ?? FindFirstColumnLike(openConn, "factiontemplate_dbc", "Name_Lang%")
+                        ?? FindFirstColumnLike(openConn, "factiontemplate_dbc", "name%")
+                        ?? (ColumnExists(openConn, "factiontemplate_dbc", "Faction") ? "Faction" :
+                            ColumnExists(openConn, "factiontemplate_dbc", "faction") ? "faction" : "ID");
+
+                    var id = ColumnExists(openConn, "factiontemplate_dbc", "ID") ? "ID" : "FactionTemplateID";
+                    if (!ColumnExists(openConn, "factiontemplate_dbc", ftName)) ftName = "ID";
+                    return ("factiontemplate_dbc", id, ftName);
+                }
+
+                // 3) fallback: world.faction_template (numeric only)
+                if (TableExists(openConn, "faction_template"))
+                {
+                    var name = ColumnExists(openConn, "faction_template", "faction") ? "faction" : "ID";
+                    return ("faction_template", "ID", name);
+                }
+            }
+            catch
+            {
+                // ignore and fall back
+            }
+
+            return ("faction_template", "ID", "faction");
+        }
+
+
+        private bool TableExists(MySqlConnection conn, string table)
+        {
+            using (var cmd = new MySqlCommand(
+                       "SELECT 1 FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = @t LIMIT 1;",
+                       conn))
+            {
+                cmd.Parameters.AddWithValue("@t", table);
+                return cmd.ExecuteScalar() != null;
+            }
+        }
+
+        private bool ColumnExists(MySqlConnection conn, string table, string column)
+        {
+            using (var cmd = new MySqlCommand(
+                       "SELECT 1 FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = @t AND column_name = @c LIMIT 1;",
+                       conn))
+            {
+                cmd.Parameters.AddWithValue("@t", table);
+                cmd.Parameters.AddWithValue("@c", column);
+                return cmd.ExecuteScalar() != null;
+            }
+        }
+
+        private string FindFirstColumnLike(MySqlConnection conn, string table, string likePattern)
+        {
+            using (var cmd = new MySqlCommand(
+                       "SELECT column_name FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = @t AND column_name LIKE @p ORDER BY ordinal_position LIMIT 1;",
+                       conn))
+            {
+                cmd.Parameters.AddWithValue("@t", table);
+                cmd.Parameters.AddWithValue("@p", likePattern);
+                var v = cmd.ExecuteScalar();
+                return v == null ? null : v.ToString();
+            }
+        }
+
+
+        // ===================== QUEST SECTION VISIBILITY LOCK =====================
+        // IMPORTANT: this must be INSIDE MainWindow, and it uses FindName so you do NOT
+        // need code-behind fields like ReqItemRow2, RewardItemRow3, etc.
+        private void LockQuestSectionsToSingleRow()
+        {
+            void Collapse(string elementName)
+            {
+                if (FindName(elementName) is FrameworkElement fe)
+                    fe.Visibility = Visibility.Collapsed;
+            }
+
+            // Required Items (rows 2–6)
+            Collapse("ReqItemRow2");
+            Collapse("ReqItemRow3");
+            Collapse("ReqItemRow4");
+            Collapse("ReqItemRow5");
+            Collapse("ReqItemRow6");
+
+            // Reward Items (rows 2–4)
+            Collapse("RewardItemRow2");
+            Collapse("RewardItemRow3");
+            Collapse("RewardItemRow4");
+
+            // Choice Rewards (rows 2–6)
+            Collapse("ChoiceItemRow2");
+            Collapse("ChoiceItemRow3");
+            Collapse("ChoiceItemRow4");
+            Collapse("ChoiceItemRow5");
+            Collapse("ChoiceItemRow6");
+
+            // Required NPC/GO (rows 2–4)
+            Collapse("ReqNpcGoRow2");
+            Collapse("ReqNpcGoRow3");
+            Collapse("ReqNpcGoRow4");
+
+            // Reputation Rewards (rows 2–5)
+            Collapse("RepFactionRow2");
+            Collapse("RepFactionRow3");
+            Collapse("RepFactionRow4");
+            Collapse("RepFactionRow5");
+        }
+        private T FindFirstByName<T>(params string[] names) where T : class
+        {
+            foreach (var n in names)
+            {
+                if (string.IsNullOrWhiteSpace(n)) continue;
+                if (FindName(n) is T t) return t;
+            }
+            return null;
+        }
+
+        private void HookItemPreviewEvents()
+        {
+            // Attach events in code so the preview still updates even if XAML hookups drift.
+            var nameBox = FindFirstByName<TextBox>(
+                "ItemNameBox", "ItemNameTextBox", "ItemName", "ItemNameTxt", "ItemNameField");
+
+            var displayBox = FindFirstByName<TextBox>(
+                "ItemDisplayIdBox", "ItemDisplayIDBox", "ItemDisplayId", "ItemDisplayID",
+                "DisplayIdBox", "DisplayIDBox", "ItemDisplayTextBox", "ItemDisplayIdTextBox");
+
+            var qualityBox = FindFirstByName<ComboBox>(
+                "ItemQualityBox", "ItemQuality", "ItemQualityCombo", "ItemQualityComboBox");
+
+            var classBox = FindFirstByName<ComboBox>(
+                "ItemClassBox", "ItemClass", "ItemClassCombo", "ItemClassComboBox");
+
+            var subclassBox = FindFirstByName<ComboBox>(
+                "ItemSubclassBox", "ItemSubclass", "ItemSubclassCombo", "ItemSubclassComboBox");
+
+            var invBox = FindFirstByName<ComboBox>(
+                "ItemInventoryTypeBox", "ItemInventoryType", "ItemEquipSlotBox", "ItemEquipSlot");
+
+            if (nameBox != null) nameBox.TextChanged += ItemPreview_Changed;
+            if (displayBox != null) displayBox.TextChanged += ItemPreview_Changed;
+            if (qualityBox != null) qualityBox.SelectionChanged += ItemPreview_Changed;
+            if (classBox != null) classBox.SelectionChanged += ItemPreview_Changed;
+            if (subclassBox != null) subclassBox.SelectionChanged += ItemPreview_Changed;
+            if (invBox != null) invBox.SelectionChanged += ItemPreview_Changed;
+        }
+
+    } // <-- closes MainWindow
+
+    // Keep LookupEntry OUTSIDE MainWindow (but still inside the namespace)
+    public class LookupEntry
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = "";
+
+        public override string ToString() => $"{Id} - {Name}";
     }
 
-}
+} // <-- closes namespace
+
+

@@ -447,7 +447,7 @@
 
 
                                 <CheckBox x:Name="ItemAdvancedToggle" Content="Show Advanced Fields" Margin="0,10,0,0"
-                                          Checked="ItemAdvancedToggle_Changed" Unchecked="ItemAdvancedToggle_Changed"/>
+                                          Checked="ItemOptionToggle_Changed" Unchecked="ItemOptionToggle_Changed"/>
 
                                 <GroupBox Header="Advanced Fields (basic subset)" Padding="10" Margin="0,10,0,0"
                                           x:Name="ItemAdvancedGrid" Visibility="Collapsed">
@@ -833,8 +833,48 @@
                                         <TextBox x:Name="QuestSortBox" Grid.Column="3" Text="0"/>
                                     </Grid>
 
+                                    <GroupBox Header="Reputation Requirements (quest_template_addon)" Padding="10" Margin="0,10,0,0">
+                                        <StackPanel>
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,0,6">
+                                                <Button Content="Find Faction ID" Width="120" Height="24" Click="QuestFindFaction_Click"/>
+                                            </StackPanel>
+
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="170"/>
+                                                    <ColumnDefinition Width="140"/>
+                                                    <ColumnDefinition Width="70"/>
+                                                    <ColumnDefinition Width="110"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                </Grid.RowDefinitions>
+
+                                                <TextBlock Text="Required Min Rep Faction" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"/>
+                                                <TextBox x:Name="QuestReqMinRepFactionBox" Grid.Row="0" Grid.Column="1" Text="0"
+                                                     TextChanged="QuestPreview_Changed" GotFocus="QuestLookupTarget_GotFocus"/>
+                                                <TextBlock Text="Value" Grid.Row="0" Grid.Column="2" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                                                <TextBox x:Name="QuestReqMinRepValueBox" Grid.Row="0" Grid.Column="3" Text="0"
+                                                     TextChanged="QuestPreview_Changed"/>
+
+                                                <TextBlock Text="Required Max Rep Faction" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Margin="0,6,0,0"/>
+                                                <TextBox x:Name="QuestReqMaxRepFactionBox" Grid.Row="1" Grid.Column="1" Text="0"
+                                                     Margin="0,6,0,0" TextChanged="QuestPreview_Changed" GotFocus="QuestLookupTarget_GotFocus"/>
+                                                <TextBlock Text="Value" Grid.Row="1" Grid.Column="2" VerticalAlignment="Center" Margin="10,6,0,0"/>
+                                                <TextBox x:Name="QuestReqMaxRepValueBox" Grid.Row="1" Grid.Column="3" Text="0"
+                                                     Margin="0,6,0,0" TextChanged="QuestPreview_Changed"/>
+                                            </Grid>
+                                        </StackPanel>
+                                    </GroupBox>
+
+
                                     <GroupBox Header="Required Items (RequiredItemId / RequiredItemCount) 1-6" Padding="10" Margin="0,10,0,0">
                                         <StackPanel>
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,0,6">
+                                                <Button Content="Find Item" Width="90" Height="24" Margin="0,0,0,0" Click="QuestFindItem_Click"/>
+                                            </StackPanel>
+
                                             <Grid x:Name="ReqItemRow1" Margin="0,0,0,6">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="60"/>
@@ -844,7 +884,7 @@
                                                     <ColumnDefinition Width="Auto"/>
                                                 </Grid.ColumnDefinitions>
                                                 <TextBlock Text="Item1" Grid.Column="0" VerticalAlignment="Center"/>
-                                                <TextBox x:Name="ReqItemId1" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged"/>
+                                                <TextBox x:Name="ReqItemId1" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged" GotFocus="QuestLookupTarget_GotFocus"/>
                                                 <TextBlock Text="Cnt1" Grid.Column="2" VerticalAlignment="Center" Margin="10,0,0,0"/>
                                                 <TextBox x:Name="ReqItemCount1" Grid.Column="3" Text="0" TextChanged="QuestRowValueChanged"/>
                                                 <Button Grid.Column="4" Content="✕" Width="26" Height="24" Margin="10,0,0,0"
@@ -860,7 +900,7 @@
                                                     <ColumnDefinition Width="Auto"/>
                                                 </Grid.ColumnDefinitions>
                                                 <TextBlock Text="Item2" Grid.Column="0" VerticalAlignment="Center"/>
-                                                <TextBox x:Name="ReqItemId2" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged"/>
+                                                <TextBox x:Name="ReqItemId2" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged" GotFocus="QuestLookupTarget_GotFocus"/>
                                                 <TextBlock Text="Cnt2" Grid.Column="2" VerticalAlignment="Center" Margin="10,0,0,0"/>
                                                 <TextBox x:Name="ReqItemCount2" Grid.Column="3" Text="0" TextChanged="QuestRowValueChanged"/>
                                                 <Button Grid.Column="4" Content="✕" Width="26" Height="24" Margin="10,0,0,0"
@@ -876,7 +916,7 @@
                                                     <ColumnDefinition Width="Auto"/>
                                                 </Grid.ColumnDefinitions>
                                                 <TextBlock Text="Item3" Grid.Column="0" VerticalAlignment="Center"/>
-                                                <TextBox x:Name="ReqItemId3" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged"/>
+                                                <TextBox x:Name="ReqItemId3" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged" GotFocus="QuestLookupTarget_GotFocus"/>
                                                 <TextBlock Text="Cnt3" Grid.Column="2" VerticalAlignment="Center" Margin="10,0,0,0"/>
                                                 <TextBox x:Name="ReqItemCount3" Grid.Column="3" Text="0" TextChanged="QuestRowValueChanged"/>
                                                 <Button Grid.Column="4" Content="✕" Width="26" Height="24" Margin="10,0,0,0"
@@ -892,7 +932,7 @@
                                                     <ColumnDefinition Width="Auto"/>
                                                 </Grid.ColumnDefinitions>
                                                 <TextBlock Text="Item4" Grid.Column="0" VerticalAlignment="Center"/>
-                                                <TextBox x:Name="ReqItemId4" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged"/>
+                                                <TextBox x:Name="ReqItemId4" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged" GotFocus="QuestLookupTarget_GotFocus"/>
                                                 <TextBlock Text="Cnt4" Grid.Column="2" VerticalAlignment="Center" Margin="10,0,0,0"/>
                                                 <TextBox x:Name="ReqItemCount4" Grid.Column="3" Text="0" TextChanged="QuestRowValueChanged"/>
                                                 <Button Grid.Column="4" Content="✕" Width="26" Height="24" Margin="10,0,0,0"
@@ -908,7 +948,7 @@
                                                     <ColumnDefinition Width="Auto"/>
                                                 </Grid.ColumnDefinitions>
                                                 <TextBlock Text="Item5" Grid.Column="0" VerticalAlignment="Center"/>
-                                                <TextBox x:Name="ReqItemId5" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged"/>
+                                                <TextBox x:Name="ReqItemId5" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged" GotFocus="QuestLookupTarget_GotFocus"/>
                                                 <TextBlock Text="Cnt5" Grid.Column="2" VerticalAlignment="Center" Margin="10,0,0,0"/>
                                                 <TextBox x:Name="ReqItemCount5" Grid.Column="3" Text="0" TextChanged="QuestRowValueChanged"/>
                                                 <Button Grid.Column="4" Content="✕" Width="26" Height="24" Margin="10,0,0,0"
@@ -924,7 +964,7 @@
                                                     <ColumnDefinition Width="Auto"/>
                                                 </Grid.ColumnDefinitions>
                                                 <TextBlock Text="Item6" Grid.Column="0" VerticalAlignment="Center"/>
-                                                <TextBox x:Name="ReqItemId6" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged"/>
+                                                <TextBox x:Name="ReqItemId6" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged" GotFocus="QuestLookupTarget_GotFocus"/>
                                                 <TextBlock Text="Cnt6" Grid.Column="2" VerticalAlignment="Center" Margin="10,0,0,0"/>
                                                 <TextBox x:Name="ReqItemCount6" Grid.Column="3" Text="0" TextChanged="QuestRowValueChanged"/>
                                                 <Button Grid.Column="4" Content="✕" Width="26" Height="24" Margin="10,0,0,0"
@@ -938,6 +978,10 @@
 
                                     <GroupBox Header="Reward Items (RewardItemId / RewardItemCount) 1-4" Padding="10" Margin="0,10,0,0">
                                         <StackPanel>
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,0,6">
+                                                <Button Content="Find Item" Width="90" Height="24" Margin="0,0,0,0" Click="QuestFindItem_Click"/>
+                                            </StackPanel>
+
                                             <Grid x:Name="RewardItemRow1" Margin="0,0,0,6">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="60"/>
@@ -947,7 +991,7 @@
                                                     <ColumnDefinition Width="Auto"/>
                                                 </Grid.ColumnDefinitions>
                                                 <TextBlock Text="Item1" Grid.Column="0" VerticalAlignment="Center"/>
-                                                <TextBox x:Name="RewardItemId1" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged"/>
+                                                <TextBox x:Name="RewardItemId1" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged" GotFocus="QuestLookupTarget_GotFocus"/>
                                                 <TextBlock Text="Cnt1" Grid.Column="2" VerticalAlignment="Center" Margin="10,0,0,0"/>
                                                 <TextBox x:Name="RewardItemCount1" Grid.Column="3" Text="0" TextChanged="QuestRowValueChanged"/>
                                                 <Button Grid.Column="4" Content="✕" Width="26" Height="24" Margin="10,0,0,0"
@@ -963,7 +1007,7 @@
                                                     <ColumnDefinition Width="Auto"/>
                                                 </Grid.ColumnDefinitions>
                                                 <TextBlock Text="Item2" Grid.Column="0" VerticalAlignment="Center"/>
-                                                <TextBox x:Name="RewardItemId2" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged"/>
+                                                <TextBox x:Name="RewardItemId2" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged" GotFocus="QuestLookupTarget_GotFocus"/>
                                                 <TextBlock Text="Cnt2" Grid.Column="2" VerticalAlignment="Center" Margin="10,0,0,0"/>
                                                 <TextBox x:Name="RewardItemCount2" Grid.Column="3" Text="0" TextChanged="QuestRowValueChanged"/>
                                                 <Button Grid.Column="4" Content="✕" Width="26" Height="24" Margin="10,0,0,0"
@@ -979,7 +1023,7 @@
                                                     <ColumnDefinition Width="Auto"/>
                                                 </Grid.ColumnDefinitions>
                                                 <TextBlock Text="Item3" Grid.Column="0" VerticalAlignment="Center"/>
-                                                <TextBox x:Name="RewardItemId3" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged"/>
+                                                <TextBox x:Name="RewardItemId3" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged" GotFocus="QuestLookupTarget_GotFocus"/>
                                                 <TextBlock Text="Cnt3" Grid.Column="2" VerticalAlignment="Center" Margin="10,0,0,0"/>
                                                 <TextBox x:Name="RewardItemCount3" Grid.Column="3" Text="0" TextChanged="QuestRowValueChanged"/>
                                                 <Button Grid.Column="4" Content="✕" Width="26" Height="24" Margin="10,0,0,0"
@@ -995,7 +1039,7 @@
                                                     <ColumnDefinition Width="Auto"/>
                                                 </Grid.ColumnDefinitions>
                                                 <TextBlock Text="Item4" Grid.Column="0" VerticalAlignment="Center"/>
-                                                <TextBox x:Name="RewardItemId4" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged"/>
+                                                <TextBox x:Name="RewardItemId4" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged" GotFocus="QuestLookupTarget_GotFocus"/>
                                                 <TextBlock Text="Cnt4" Grid.Column="2" VerticalAlignment="Center" Margin="10,0,0,0"/>
                                                 <TextBox x:Name="RewardItemCount4" Grid.Column="3" Text="0" TextChanged="QuestRowValueChanged"/>
                                                 <Button Grid.Column="4" Content="✕" Width="26" Height="24" Margin="10,0,0,0"
@@ -1009,6 +1053,10 @@
 
                                     <GroupBox Header="Choice Rewards (RewardChoiceItemId / RewardChoiceItemCount) 1-6" Padding="10" Margin="0,10,0,0">
                                         <StackPanel>
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,0,6">
+                                                <Button Content="Find Item" Width="90" Height="24" Margin="0,0,0,0" Click="QuestFindItem_Click"/>
+                                            </StackPanel>
+
                                             <Grid x:Name="ChoiceItemRow1" Margin="0,0,0,6">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="60"/>
@@ -1018,7 +1066,7 @@
                                                     <ColumnDefinition Width="Auto"/>
                                                 </Grid.ColumnDefinitions>
                                                 <TextBlock Text="Item1" Grid.Column="0" VerticalAlignment="Center"/>
-                                                <TextBox x:Name="ChoiceItemId1" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged"/>
+                                                <TextBox x:Name="ChoiceItemId1" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged" GotFocus="QuestLookupTarget_GotFocus"/>
                                                 <TextBlock Text="Cnt1" Grid.Column="2" VerticalAlignment="Center" Margin="10,0,0,0"/>
                                                 <TextBox x:Name="ChoiceItemCount1" Grid.Column="3" Text="0" TextChanged="QuestRowValueChanged"/>
                                                 <Button Grid.Column="4" Content="✕" Width="26" Height="24" Margin="10,0,0,0"
@@ -1034,7 +1082,7 @@
                                                     <ColumnDefinition Width="Auto"/>
                                                 </Grid.ColumnDefinitions>
                                                 <TextBlock Text="Item2" Grid.Column="0" VerticalAlignment="Center"/>
-                                                <TextBox x:Name="ChoiceItemId2" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged"/>
+                                                <TextBox x:Name="ChoiceItemId2" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged" GotFocus="QuestLookupTarget_GotFocus"/>
                                                 <TextBlock Text="Cnt2" Grid.Column="2" VerticalAlignment="Center" Margin="10,0,0,0"/>
                                                 <TextBox x:Name="ChoiceItemCount2" Grid.Column="3" Text="0" TextChanged="QuestRowValueChanged"/>
                                                 <Button Grid.Column="4" Content="✕" Width="26" Height="24" Margin="10,0,0,0"
@@ -1050,7 +1098,7 @@
                                                     <ColumnDefinition Width="Auto"/>
                                                 </Grid.ColumnDefinitions>
                                                 <TextBlock Text="Item3" Grid.Column="0" VerticalAlignment="Center"/>
-                                                <TextBox x:Name="ChoiceItemId3" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged"/>
+                                                <TextBox x:Name="ChoiceItemId3" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged" GotFocus="QuestLookupTarget_GotFocus"/>
                                                 <TextBlock Text="Cnt3" Grid.Column="2" VerticalAlignment="Center" Margin="10,0,0,0"/>
                                                 <TextBox x:Name="ChoiceItemCount3" Grid.Column="3" Text="0" TextChanged="QuestRowValueChanged"/>
                                                 <Button Grid.Column="4" Content="✕" Width="26" Height="24" Margin="10,0,0,0"
@@ -1066,7 +1114,7 @@
                                                     <ColumnDefinition Width="Auto"/>
                                                 </Grid.ColumnDefinitions>
                                                 <TextBlock Text="Item4" Grid.Column="0" VerticalAlignment="Center"/>
-                                                <TextBox x:Name="ChoiceItemId4" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged"/>
+                                                <TextBox x:Name="ChoiceItemId4" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged" GotFocus="QuestLookupTarget_GotFocus"/>
                                                 <TextBlock Text="Cnt4" Grid.Column="2" VerticalAlignment="Center" Margin="10,0,0,0"/>
                                                 <TextBox x:Name="ChoiceItemCount4" Grid.Column="3" Text="0" TextChanged="QuestRowValueChanged"/>
                                                 <Button Grid.Column="4" Content="✕" Width="26" Height="24" Margin="10,0,0,0"
@@ -1082,7 +1130,7 @@
                                                     <ColumnDefinition Width="Auto"/>
                                                 </Grid.ColumnDefinitions>
                                                 <TextBlock Text="Item5" Grid.Column="0" VerticalAlignment="Center"/>
-                                                <TextBox x:Name="ChoiceItemId5" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged"/>
+                                                <TextBox x:Name="ChoiceItemId5" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged" GotFocus="QuestLookupTarget_GotFocus"/>
                                                 <TextBlock Text="Cnt5" Grid.Column="2" VerticalAlignment="Center" Margin="10,0,0,0"/>
                                                 <TextBox x:Name="ChoiceItemCount5" Grid.Column="3" Text="0" TextChanged="QuestRowValueChanged"/>
                                                 <Button Grid.Column="4" Content="✕" Width="26" Height="24" Margin="10,0,0,0"
@@ -1098,7 +1146,7 @@
                                                     <ColumnDefinition Width="Auto"/>
                                                 </Grid.ColumnDefinitions>
                                                 <TextBlock Text="Item6" Grid.Column="0" VerticalAlignment="Center"/>
-                                                <TextBox x:Name="ChoiceItemId6" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged"/>
+                                                <TextBox x:Name="ChoiceItemId6" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged" GotFocus="QuestLookupTarget_GotFocus"/>
                                                 <TextBlock Text="Cnt6" Grid.Column="2" VerticalAlignment="Center" Margin="10,0,0,0"/>
                                                 <TextBox x:Name="ChoiceItemCount6" Grid.Column="3" Text="0" TextChanged="QuestRowValueChanged"/>
                                                 <Button Grid.Column="4" Content="✕" Width="26" Height="24" Margin="10,0,0,0"
@@ -1111,6 +1159,11 @@
                                     </GroupBox>
                                     <GroupBox Header="Required NPC or GameObject (RequiredNpcOrGo / RequiredNpcOrGoCount) 1-4" Padding="10" Margin="0,10,0,0">
                                         <StackPanel>
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,0,6">
+                                                <Button Content="Find NPC" Width="90" Height="24" Margin="0,0,6,0" Click="QuestFindNpc_Click"/>
+                                                <Button Content="Find GO" Width="90" Height="24" Click="QuestFindGo_Click"/>
+                                            </StackPanel>
+
                                             <Grid x:Name="ReqNpcGoRow1" Margin="0,0,0,6">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="80"/>
@@ -1120,7 +1173,7 @@
                                                     <ColumnDefinition Width="Auto"/>
                                                 </Grid.ColumnDefinitions>
                                                 <TextBlock Text="Entry1" Grid.Column="0" VerticalAlignment="Center"/>
-                                                <TextBox x:Name="ReqNpcGoId1" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged"/>
+                                                <TextBox x:Name="ReqNpcGoId1" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged" GotFocus="QuestLookupTarget_GotFocus"/>
                                                 <TextBlock Text="Cnt1" Grid.Column="2" VerticalAlignment="Center" Margin="10,0,0,0"/>
                                                 <TextBox x:Name="ReqNpcGoCount1" Grid.Column="3" Text="0" TextChanged="QuestRowValueChanged"/>
                                                 <Button Grid.Column="4" Content="✕" Width="26" Height="24" Margin="10,0,0,0"
@@ -1136,7 +1189,7 @@
                                                     <ColumnDefinition Width="Auto"/>
                                                 </Grid.ColumnDefinitions>
                                                 <TextBlock Text="Entry2" Grid.Column="0" VerticalAlignment="Center"/>
-                                                <TextBox x:Name="ReqNpcGoId2" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged"/>
+                                                <TextBox x:Name="ReqNpcGoId2" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged" GotFocus="QuestLookupTarget_GotFocus"/>
                                                 <TextBlock Text="Cnt2" Grid.Column="2" VerticalAlignment="Center" Margin="10,0,0,0"/>
                                                 <TextBox x:Name="ReqNpcGoCount2" Grid.Column="3" Text="0" TextChanged="QuestRowValueChanged"/>
                                                 <Button Grid.Column="4" Content="✕" Width="26" Height="24" Margin="10,0,0,0"
@@ -1152,7 +1205,7 @@
                                                     <ColumnDefinition Width="Auto"/>
                                                 </Grid.ColumnDefinitions>
                                                 <TextBlock Text="Entry3" Grid.Column="0" VerticalAlignment="Center"/>
-                                                <TextBox x:Name="ReqNpcGoId3" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged"/>
+                                                <TextBox x:Name="ReqNpcGoId3" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged" GotFocus="QuestLookupTarget_GotFocus"/>
                                                 <TextBlock Text="Cnt3" Grid.Column="2" VerticalAlignment="Center" Margin="10,0,0,0"/>
                                                 <TextBox x:Name="ReqNpcGoCount3" Grid.Column="3" Text="0" TextChanged="QuestRowValueChanged"/>
                                                 <Button Grid.Column="4" Content="✕" Width="26" Height="24" Margin="10,0,0,0"
@@ -1168,7 +1221,7 @@
                                                     <ColumnDefinition Width="Auto"/>
                                                 </Grid.ColumnDefinitions>
                                                 <TextBlock Text="Entry4" Grid.Column="0" VerticalAlignment="Center"/>
-                                                <TextBox x:Name="ReqNpcGoId4" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged"/>
+                                                <TextBox x:Name="ReqNpcGoId4" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged" GotFocus="QuestLookupTarget_GotFocus"/>
                                                 <TextBlock Text="Cnt4" Grid.Column="2" VerticalAlignment="Center" Margin="10,0,0,0"/>
                                                 <TextBox x:Name="ReqNpcGoCount4" Grid.Column="3" Text="0" TextChanged="QuestRowValueChanged"/>
                                                 <Button Grid.Column="4" Content="✕" Width="26" Height="24" Margin="10,0,0,0"
@@ -1182,6 +1235,10 @@
 
                                     <GroupBox Header="Reward Reputation (RewardFactionID / RewardFactionValue) 1-5" Padding="10" Margin="0,10,0,0">
                                         <StackPanel>
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,0,6">
+                                                <Button Content="Find Faction ID" Width="120" Height="24" Click="QuestFindFaction_Click"/>
+                                            </StackPanel>
+
                                             <Grid x:Name="RepFactionRow1" Margin="0,0,0,6">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="90"/>
@@ -1191,7 +1248,7 @@
                                                     <ColumnDefinition Width="Auto"/>
                                                 </Grid.ColumnDefinitions>
                                                 <TextBlock Text="Faction1" Grid.Column="0" VerticalAlignment="Center"/>
-                                                <TextBox x:Name="RewardFactionId1" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged"/>
+                                                <TextBox x:Name="RewardFactionId1" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged" GotFocus="QuestLookupTarget_GotFocus"/>
                                                 <TextBlock Text="Value1" Grid.Column="2" VerticalAlignment="Center" Margin="10,0,0,0"/>
                                                 <TextBox x:Name="RewardFactionValue1" Grid.Column="3" Text="0" TextChanged="QuestRowValueChanged"/>
                                                 <Button Grid.Column="4" Content="✕" Width="26" Height="24" Margin="10,0,0,0"
@@ -1207,7 +1264,7 @@
                                                     <ColumnDefinition Width="Auto"/>
                                                 </Grid.ColumnDefinitions>
                                                 <TextBlock Text="Faction2" Grid.Column="0" VerticalAlignment="Center"/>
-                                                <TextBox x:Name="RewardFactionId2" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged"/>
+                                                <TextBox x:Name="RewardFactionId2" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged" GotFocus="QuestLookupTarget_GotFocus"/>
                                                 <TextBlock Text="Value2" Grid.Column="2" VerticalAlignment="Center" Margin="10,0,0,0"/>
                                                 <TextBox x:Name="RewardFactionValue2" Grid.Column="3" Text="0" TextChanged="QuestRowValueChanged"/>
                                                 <Button Grid.Column="4" Content="✕" Width="26" Height="24" Margin="10,0,0,0"
@@ -1223,7 +1280,7 @@
                                                     <ColumnDefinition Width="Auto"/>
                                                 </Grid.ColumnDefinitions>
                                                 <TextBlock Text="Faction3" Grid.Column="0" VerticalAlignment="Center"/>
-                                                <TextBox x:Name="RewardFactionId3" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged"/>
+                                                <TextBox x:Name="RewardFactionId3" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged" GotFocus="QuestLookupTarget_GotFocus"/>
                                                 <TextBlock Text="Value3" Grid.Column="2" VerticalAlignment="Center" Margin="10,0,0,0"/>
                                                 <TextBox x:Name="RewardFactionValue3" Grid.Column="3" Text="0" TextChanged="QuestRowValueChanged"/>
                                                 <Button Grid.Column="4" Content="✕" Width="26" Height="24" Margin="10,0,0,0"
@@ -1239,7 +1296,7 @@
                                                     <ColumnDefinition Width="Auto"/>
                                                 </Grid.ColumnDefinitions>
                                                 <TextBlock Text="Faction4" Grid.Column="0" VerticalAlignment="Center"/>
-                                                <TextBox x:Name="RewardFactionId4" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged"/>
+                                                <TextBox x:Name="RewardFactionId4" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged" GotFocus="QuestLookupTarget_GotFocus"/>
                                                 <TextBlock Text="Value4" Grid.Column="2" VerticalAlignment="Center" Margin="10,0,0,0"/>
                                                 <TextBox x:Name="RewardFactionValue4" Grid.Column="3" Text="0" TextChanged="QuestRowValueChanged"/>
                                                 <Button Grid.Column="4" Content="✕" Width="26" Height="24" Margin="10,0,0,0"
@@ -1255,7 +1312,7 @@
                                                     <ColumnDefinition Width="Auto"/>
                                                 </Grid.ColumnDefinitions>
                                                 <TextBlock Text="Faction5" Grid.Column="0" VerticalAlignment="Center"/>
-                                                <TextBox x:Name="RewardFactionId5" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged"/>
+                                                <TextBox x:Name="RewardFactionId5" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged" GotFocus="QuestLookupTarget_GotFocus"/>
                                                 <TextBlock Text="Value5" Grid.Column="2" VerticalAlignment="Center" Margin="10,0,0,0"/>
                                                 <TextBox x:Name="RewardFactionValue5" Grid.Column="3" Text="0" TextChanged="QuestRowValueChanged"/>
                                                 <Button Grid.Column="4" Content="✕" Width="26" Height="24" Margin="10,0,0,0"
