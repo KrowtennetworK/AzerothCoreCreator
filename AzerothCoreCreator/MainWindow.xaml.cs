@@ -240,8 +240,10 @@ namespace AzerothCoreCreator
             CreatureFamilyCombo.SelectedIndex = 0;
         }
 
+
         private void PopulateItemCombos()
         {
+            // Quality
             ItemQualityBox.Items.Clear();
             ItemQualityBox.Items.Add(new ComboBoxItem { Content = "Poor (0)", Tag = 0 });
             ItemQualityBox.Items.Add(new ComboBoxItem { Content = "Common (1)", Tag = 1 });
@@ -252,40 +254,20 @@ namespace AzerothCoreCreator
             ItemQualityBox.Items.Add(new ComboBoxItem { Content = "Artifact (6)", Tag = 6 });
             ItemQualityBox.SelectedIndex = 1;
 
-            ItemClassBox.Items.Clear();
-            ItemClassBox.Items.Add(new ComboBoxItem { Content = "Armor (4)", Tag = 4 });
-            ItemClassBox.Items.Add(new ComboBoxItem { Content = "Weapon (2)", Tag = 2 });
-            ItemClassBox.Items.Add(new ComboBoxItem { Content = "Consumable (0)", Tag = 0 });
-            ItemClassBox.Items.Add(new ComboBoxItem { Content = "Misc (15)", Tag = 15 });
-            ItemClassBox.SelectedIndex = 0;
+            // Item Class/Subclass (dynamic like Trinity Creator)
+            InitItemClassAndSubclasses();
 
-            // We keep subclass simple at first (we can make it dynamic based on class later)
-            ItemSubclassBox.Items.Clear();
-            ItemSubclassBox.Items.Add(new ComboBoxItem { Content = "Cloth (1)", Tag = 1 });
-            ItemSubclassBox.Items.Add(new ComboBoxItem { Content = "Leather (2)", Tag = 2 });
-            ItemSubclassBox.Items.Add(new ComboBoxItem { Content = "Mail (3)", Tag = 3 });
-            ItemSubclassBox.Items.Add(new ComboBoxItem { Content = "Plate (4)", Tag = 4 });
-            ItemSubclassBox.Items.Add(new ComboBoxItem { Content = "Shield (6)", Tag = 6 });
-            ItemSubclassBox.SelectedIndex = 0;
+            // Inventory Type (Equip Slot) options depend on Class/Subclass
+            PopulateItemInventoryTypesFromClassSubclass();
 
-            ItemInventoryTypeBox.Items.Clear();
-            ItemInventoryTypeBox.Items.Add(new ComboBoxItem { Content = "Head (1)", Tag = 1 });
-            ItemInventoryTypeBox.Items.Add(new ComboBoxItem { Content = "Neck (2)", Tag = 2 });
-            ItemInventoryTypeBox.Items.Add(new ComboBoxItem { Content = "Shoulder (3)", Tag = 3 });
-            ItemInventoryTypeBox.Items.Add(new ComboBoxItem { Content = "Chest (5)", Tag = 5 });
-            ItemInventoryTypeBox.Items.Add(new ComboBoxItem { Content = "Waist (6)", Tag = 6 });
-            ItemInventoryTypeBox.Items.Add(new ComboBoxItem { Content = "Legs (7)", Tag = 7 });
-            ItemInventoryTypeBox.Items.Add(new ComboBoxItem { Content = "Feet (8)", Tag = 8 });
-            ItemInventoryTypeBox.Items.Add(new ComboBoxItem { Content = "Wrist (9)", Tag = 9 });
-            ItemInventoryTypeBox.Items.Add(new ComboBoxItem { Content = "Hands (10)", Tag = 10 });
-            ItemInventoryTypeBox.Items.Add(new ComboBoxItem { Content = "Finger (11)", Tag = 11 });
-            ItemInventoryTypeBox.Items.Add(new ComboBoxItem { Content = "Trinket (12)", Tag = 12 });
-            ItemInventoryTypeBox.Items.Add(new ComboBoxItem { Content = "One-Hand (13)", Tag = 13 });
-            ItemInventoryTypeBox.Items.Add(new ComboBoxItem { Content = "Two-Hand (17)", Tag = 17 });
-            ItemInventoryTypeBox.Items.Add(new ComboBoxItem { Content = "Off-Hand (23)", Tag = 23 });
-            ItemInventoryTypeBox.Items.Add(new ComboBoxItem { Content = "Back (16)", Tag = 16 });
-            ItemInventoryTypeBox.SelectedIndex = 0;
+            // Hook dropdown change events (do this in code-behind so XAML stays simple)
+            ItemClassBox.SelectionChanged -= ItemClassBox_SelectionChanged;
+            ItemSubclassBox.SelectionChanged -= ItemSubclassBox_SelectionChanged;
 
+            ItemClassBox.SelectionChanged += ItemClassBox_SelectionChanged;
+            ItemSubclassBox.SelectionChanged += ItemSubclassBox_SelectionChanged;
+
+            // Bonding
             ItemBondingBox.Items.Clear();
             ItemBondingBox.Items.Add(new ComboBoxItem { Content = "None (0)", Tag = 0 });
             ItemBondingBox.Items.Add(new ComboBoxItem { Content = "Bind on Pickup (1)", Tag = 1 });
@@ -608,13 +590,199 @@ namespace AzerothCoreCreator
                 // Default to first subclass
                 if (ItemSubclassBox.Items.Count > 0)
                     ItemSubclassBox.SelectedIndex = 0;
+
+
+                PopulateItemInventoryTypesFromClassSubclass();
             }
             else
             {
                 // Fallback: at least provide 0
                 ItemSubclassBox.Items.Add(new ComboBoxItem { Content = "0", Tag = 0 });
                 ItemSubclassBox.SelectedIndex = 0;
+
+
+                PopulateItemInventoryTypesFromClassSubclass();
             }
+        }
+
+
+        private void ItemSubclassBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            PopulateItemInventoryTypesFromClassSubclass();
+        }
+
+        // Inventory Types (INVTYPE_*) we care about for WotLK
+        private static readonly Dictionary<int, string> _inventoryTypeNames = new()
+{
+    { 0,  "Non-equipable (0)" },
+    { 1,  "Head (1)" },
+    { 2,  "Neck (2)" },
+    { 3,  "Shoulder (3)" },
+    { 4,  "Shirt (4)" },
+    { 5,  "Chest (5)" },
+    { 6,  "Waist (6)" },
+    { 7,  "Legs (7)" },
+    { 8,  "Feet (8)" },
+    { 9,  "Wrist (9)" },
+    { 10, "Hands (10)" },
+    { 11, "Finger (11)" },
+    { 12, "Trinket (12)" },
+    { 13, "One-Hand (13)" },              // INVTYPE_WEAPON
+    { 14, "Shield (14)" },
+    { 15, "Ranged (15)" },                // bows/guns/crossbows
+    { 16, "Back (16)" },                  // cloak
+    { 17, "Two-Hand (17)" },
+    { 18, "Bag (18)" },
+    { 19, "Tabard (19)" },
+    { 20, "Robe (20)" },
+    { 21, "Main Hand (21)" },             // INVTYPE_WEAPONMAINHAND
+    { 22, "Off Hand (22)" },              // INVTYPE_WEAPONOFFHAND
+    { 23, "Holdable (23)" },              // INVTYPE_HOLDABLE
+    { 24, "Ammo (24)" },
+    { 25, "Thrown (25)" },
+    { 26, "Ranged (Right) (26)" },        // wands
+    { 27, "Quiver (27)" },
+    { 28, "Relic (28)" },
+};
+
+        private void PopulateItemInventoryTypesFromClassSubclass()
+        {
+            if (ItemInventoryTypeBox == null || ItemClassBox == null || ItemSubclassBox == null)
+                return;
+
+            int cls = ComboTagInt(ItemClassBox);
+            int sub = ComboTagInt(ItemSubclassBox);
+
+            ItemInventoryTypeBox.Items.Clear();
+
+            void AddInv(int id)
+            {
+                if (_inventoryTypeNames.TryGetValue(id, out var label))
+                    ItemInventoryTypeBox.Items.Add(new ComboBoxItem { Content = label, Tag = id });
+                else
+                    ItemInventoryTypeBox.Items.Add(new ComboBoxItem { Content = id.ToString(), Tag = id });
+            }
+
+            // Defaults: non-equipable unless class/subclass implies otherwise
+            bool any = false;
+
+            if (cls == 4) // Armor
+            {
+                // Armor subclasses (WotLK): 0 misc, 1 cloth, 2 leather, 3 mail, 4 plate, 5 buckler, 6 shield, 7-10 relics
+                if (sub == 5 || sub == 6)
+                {
+                    AddInv(14); // Shield
+                    any = true;
+                }
+                else if (sub >= 7 && sub <= 10)
+                {
+                    AddInv(28); // Relic
+                    any = true;
+                }
+                else if (sub == 0)
+                {
+                    // Armor Misc in Trinity is mostly jewelry + cloak
+                    AddInv(2);  // Neck
+                    AddInv(11); // Finger
+                    AddInv(12); // Trinket
+                    AddInv(16); // Back (cloak)
+                    any = true;
+                }
+                else
+                {
+                    // Wearable armor pieces
+                    AddInv(1);  // Head
+                    AddInv(3);  // Shoulder
+                    AddInv(5);  // Chest
+                    AddInv(6);  // Waist
+                    AddInv(7);  // Legs
+                    AddInv(8);  // Feet
+                    AddInv(9);  // Wrist
+                    AddInv(10); // Hands
+                                // (Cloaks are handled by sub==0; shirt/tabard are separate classes in DB)
+                    any = true;
+                }
+            }
+            else if (cls == 2) // Weapon
+            {
+                // Weapon subclasses (WotLK): see ItemSubclassesByClass mapping above
+                // 0 1h Axe, 1 2h Axe, 2 Bow, 3 Gun, 4 1h Mace, 5 2h Mace, 6 Polearm, 7 1h Sword, 8 2h Sword, 10 Staff,
+                // 13 Fist, 14 Misc, 15 Dagger, 16 Thrown, 18 Crossbow, 19 Wand, 20 Fishing Pole
+                switch (sub)
+                {
+                    case 2:  // Bow
+                    case 3:  // Gun
+                    case 18: // Crossbow
+                        AddInv(15); // Ranged
+                        any = true;
+                        break;
+
+                    case 19: // Wand
+                        AddInv(26); // Ranged (Right)
+                        any = true;
+                        break;
+
+                    case 16: // Thrown
+                        AddInv(25); // Thrown
+                        any = true;
+                        break;
+
+                    case 1:  // 2h Axe
+                    case 5:  // 2h Mace
+                    case 6:  // Polearm
+                    case 8:  // 2h Sword
+                    case 10: // Staff
+                    case 20: // Fishing Pole
+                        AddInv(17); // Two-Hand
+                        any = true;
+                        break;
+
+                    case 14: // Misc
+                             // Trinity shows a broader list here
+                        AddInv(13); // One-Hand
+                        AddInv(17); // Two-Hand
+                        AddInv(21); // Main Hand
+                        AddInv(22); // Off Hand
+                        AddInv(23); // Holdable
+                        AddInv(15); // Ranged
+                        AddInv(25); // Thrown
+                        AddInv(26); // Ranged (Right)
+                        any = true;
+                        break;
+
+                    default:
+                        // Most 1H weapons & daggers/fist can be weapon/mainhand/offhand
+                        AddInv(13); // One-Hand
+                        AddInv(21); // Main Hand
+                        AddInv(22); // Off Hand
+                        any = true;
+                        break;
+                }
+            }
+            else if (cls == 1) // Container
+            {
+                AddInv(18); // Bag
+                any = true;
+            }
+            else if (cls == 11) // Quiver
+            {
+                AddInv(27); // Quiver
+                any = true;
+            }
+            else
+            {
+                // Most other classes aren't equippable in inventory slot terms
+                AddInv(0);
+                any = true;
+            }
+
+            if (!any)
+            {
+                AddInv(0);
+            }
+
+            if (ItemInventoryTypeBox.Items.Count > 0)
+                ItemInventoryTypeBox.SelectedIndex = 0;
         }
 
         // ===================== TOGGLES =====================
