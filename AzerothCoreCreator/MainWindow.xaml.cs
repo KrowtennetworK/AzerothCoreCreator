@@ -1342,6 +1342,8 @@ namespace AzerothCoreCreator
             try
             {
                 _lastSql = BuildCreatureSql();
+                // Always replace whatever is currently in the preview.
+                SqlPreviewBox.Clear();
                 SqlPreviewBox.Text = _lastSql;
             }
             catch (Exception ex)
@@ -1495,6 +1497,8 @@ namespace AzerothCoreCreator
             try
             {
                 _lastSql = BuildItemSql();
+                // Always replace whatever is currently in the preview.
+                SqlPreviewBox.Clear();
                 SqlPreviewBox.Text = _lastSql;
             }
             catch (Exception ex)
@@ -1629,12 +1633,20 @@ namespace AzerothCoreCreator
             try
             {
                 _lastSql = BuildQuestSql();
+                // Always replace whatever is currently in the preview.
+                SqlPreviewBox.Clear();
                 SqlPreviewBox.Text = _lastSql;
             }
             catch (Exception ex)
             {
                 MessageBox.Show("Quest SQL failed: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        private void SqlPreviewClear_Click(object sender, RoutedEventArgs e)
+        {
+            SqlPreviewBox.Clear();
+            _lastSql = string.Empty;
         }
 
         private void QuestApplyDb_Click(object sender, RoutedEventArgs e)
@@ -3107,8 +3119,7 @@ namespace AzerothCoreCreator
         }
 
     } // <-- closes MainWindow
-
-    // Keep LookupEntry OUTSIDE MainWindow (but still inside the namespace)
+      // Keep LookupEntry OUTSIDE MainWindow (but still inside the namespace)
     public class LookupEntry
     {
         public int Id { get; set; }
