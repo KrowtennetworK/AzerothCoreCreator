@@ -1127,6 +1127,8 @@ namespace AzerothCoreCreator
             var ilvlTb = FindFirstByName<TextBlock>("ItemTooltipItemLevel");
             var statsCtl = FindFirstByName<ItemsControl>("ItemTooltipStats");
             var flavorTb = FindFirstByName<TextBlock>("ItemTooltipFlavor");
+            var classesTb = FindFirstByName<TextBlock>("ItemTooltipClasses");
+            var durTb = FindFirstByName<TextBlock>("ItemTooltipDurability");
 
             if (nameTb == null) return; // preview not present
 
@@ -1190,6 +1192,8 @@ namespace AzerothCoreCreator
             int reqLevel = ParseInt(reqLevelBox?.Text ?? "0", 0);
             int itemLevel = ParseInt(itemLevelBox?.Text ?? "0", 0);
             int stackCount = ParseInt(stackBox?.Text ?? "0", 0);
+            int maxDurability = ParseInt(FindFirstByName<TextBox>("ItemDurabilityBox")?.Text ?? "0", 0);
+            int allowableClassMask = ParseInt(FindFirstByName<TextBox>("ItemAllowableClassMaskBox")?.Text ?? "0", 0);
             double speedRaw = ParseDoubleSafe(speedBox?.Text ?? "0");
             double speedSeconds = 0;
             if (speedRaw > 0)
@@ -1332,7 +1336,38 @@ namespace AzerothCoreCreator
                 }
             }
 
-            // STATS (from Stats UI)
+            // CLASSES (allowed) — only show when restricted
+            if (classesTb != null)
+            {
+                string classesLine = BuildAllowedClassesLine(allowableClassMask);
+                if (!string.IsNullOrWhiteSpace(classesLine))
+                {
+                    classesTb.Text = classesLine;
+                    classesTb.Visibility = Visibility.Visible;
+                }
+                else
+                {
+                    classesTb.Text = "";
+                    classesTb.Visibility = Visibility.Collapsed;
+                }
+            }
+
+            // DURABILITY (template preview shows X / X)
+            if (durTb != null)
+            {
+                if (maxDurability > 0)
+                {
+                    durTb.Text = $"Durability {maxDurability} / {maxDurability}";
+                    durTb.Visibility = Visibility.Visible;
+                }
+                else
+                {
+                    durTb.Text = "";
+                    durTb.Visibility = Visibility.Collapsed;
+                }
+            }
+
+            // STATS (from Stats UI) + MAGIC RESISTANCES
             if (statsCtl != null)
             {
                 var statLines = _itemStats
@@ -1340,33 +1375,51 @@ namespace AzerothCoreCreator
                     .Select(s => $"+{s.Value} {s.Name}")
                     .ToList();
 
+                // ---- MAGIC RESISTANCES ----
+                // Pull from common AC/TC item_template resistance field names.
+                // This will work even if your XAML uses slightly different control names.
+                int resHoly = ParseInt(FindFirstByName<TextBox>(
+                    "ItemHolyResBox", "ItemResHolyBox", "ItemHolyResistBox", "ItemHolyResistanceBox", "ItemHolyResistance")?.Text ?? "0", 0);
+
+                int resFire = ParseInt(FindFirstByName<TextBox>(
+                    "ItemFireResBox", "ItemResFireBox", "ItemFireResistBox", "ItemFireResistanceBox", "ItemFireResistance")?.Text ?? "0", 0);
+
+                int resNature = ParseInt(FindFirstByName<TextBox>(
+                    "ItemNatureResBox", "ItemResNatureBox", "ItemNatureResistBox", "ItemNatureResistanceBox", "ItemNatureResistance")?.Text ?? "0", 0);
+
+                int resFrost = ParseInt(FindFirstByName<TextBox>(
+                    "ItemFrostResBox", "ItemResFrostBox", "ItemFrostResistBox", "ItemFrostResistanceBox", "ItemFrostResistance")?.Text ?? "0", 0);
+
+                int resShadow = ParseInt(FindFirstByName<TextBox>(
+                    "ItemShadowResBox", "ItemResShadowBox", "ItemShadowResistBox", "ItemShadowResistanceBox", "ItemShadowResistance")?.Text ?? "0", 0);
+
+                int resArcane = ParseInt(FindFirstByName<TextBox>(
+                    "ItemArcaneResBox", "ItemResArcaneBox", "ItemArcaneResistBox", "ItemArcaneResistanceBox", "ItemArcaneResistance")?.Text ?? "0", 0);
+
+                void AddRes(int value, string school)
+                {
+                    if (value <= 0) return; // WoW tooltips show positive resists; keep it clean
+                    statLines.Add($"+{value} {school} Resistance");
+                }
+
+                AddRes(resHoly, "Holy");
+                AddRes(resFire, "Fire");
+                AddRes(resNature, "Nature");
+                AddRes(resFrost, "Frost");
+                AddRes(resShadow, "Shadow");
+                AddRes(resArcane, "Arcane");
+                // ---------------------------
+
                 statsCtl.ItemsSource = statLines;
                 statsCtl.Visibility = statLines.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
             }
+
 
             // FLAVOR (optional)
             if (flavorTb != null)
             {
                 flavorTb.Text = "";
                 flavorTb.Visibility = Visibility.Collapsed;
-            }
-
-            // If stack count is meaningful, show it as a "meta" line via Item Level block
-            // without cluttering the tooltip (TrinityCreator shows stack in some contexts).
-            // We'll only append if item is stackable (>1).
-            if (ilvlTb != null && stackCount > 1)
-            {
-                // If item level is not shown, reuse this line for stack count.
-                if (ilvlTb.Visibility != Visibility.Visible)
-                {
-                    ilvlTb.Text = $"Stack: {stackCount}";
-                    ilvlTb.Visibility = Visibility.Visible;
-                }
-                else
-                {
-                    // Append in same line to keep UI compact.
-                    ilvlTb.Text = $"{ilvlTb.Text}   (Stack: {stackCount})";
-                }
             }
         }
 
@@ -2139,6 +2192,33 @@ namespace AzerothCoreCreator
         }
 
         // ===================== HELPERS =====================
+
+
+        private static string BuildAllowedClassesLine(int mask)
+        {
+            // In AzerothCore/TrinityCore: -1 or 0 commonly means "all classes" (no restriction)
+            if (mask == -1 || mask == 0)
+                return null;
+
+            var names = new List<string>(12);
+
+            // Standard class masks (WotLK era)
+            if ((mask & 1) != 0) names.Add("Warrior");
+            if ((mask & 2) != 0) names.Add("Paladin");
+            if ((mask & 4) != 0) names.Add("Hunter");
+            if ((mask & 8) != 0) names.Add("Rogue");
+            if ((mask & 16) != 0) names.Add("Priest");
+            if ((mask & 64) != 0) names.Add("Shaman");
+            if ((mask & 128) != 0) names.Add("Mage");
+            if ((mask & 256) != 0) names.Add("Warlock");
+            if ((mask & 1024) != 0) names.Add("Druid");
+            if ((mask & 2048) != 0) names.Add("Death Knight");
+
+            if (names.Count == 0)
+                return null;
+
+            return "Classes: " + string.Join(", ", names);
+        }
 
         private static int ParseInt(string s, int fallback)
         {

@@ -1,7 +1,7 @@
 <Window x:Class="AzerothCoreCreator.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="AzerothCore Creator v0.1.0"
+        Title="AzerothCore Creator v1.0.0"
         Height="780" Width="1200"
         MinWidth="1200" MinHeight="780"
         Loaded="Window_Loaded"
@@ -920,22 +920,28 @@
                                         </Grid.RowDefinitions>
 
                                         <TextBlock Text="Holy" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"/>
-                                        <TextBox x:Name="ItemHolyResBox" Grid.Row="0" Grid.Column="1" Text="0"/>
+                                        <TextBox x:Name="ItemHolyResBox" Grid.Row="0" Grid.Column="1" Text="0"
+                                                 TextChanged="ItemPreview_Changed"/>
 
                                         <TextBlock Text="Fire" Grid.Row="0" Grid.Column="2" VerticalAlignment="Center"/>
-                                        <TextBox x:Name="ItemFireResBox" Grid.Row="0" Grid.Column="3" Text="0"/>
+                                        <TextBox x:Name="ItemFireResBox" Grid.Row="0" Grid.Column="3" Text="0"
+                                                 TextChanged="ItemPreview_Changed"/>
 
                                         <TextBlock Text="Nature" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center"/>
-                                        <TextBox x:Name="ItemNatureResBox" Grid.Row="1" Grid.Column="1" Text="0"/>
+                                        <TextBox x:Name="ItemNatureResBox" Grid.Row="1" Grid.Column="1" Text="0"
+                                                 TextChanged="ItemPreview_Changed"/>
 
                                         <TextBlock Text="Frost" Grid.Row="1" Grid.Column="2" VerticalAlignment="Center"/>
-                                        <TextBox x:Name="ItemFrostResBox" Grid.Row="1" Grid.Column="3" Text="0"/>
+                                        <TextBox x:Name="ItemFrostResBox" Grid.Row="1" Grid.Column="3" Text="0"
+                                                 TextChanged="ItemPreview_Changed"/>
 
                                         <TextBlock Text="Shadow" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center"/>
-                                        <TextBox x:Name="ItemShadowResBox" Grid.Row="2" Grid.Column="1" Text="0"/>
+                                        <TextBox x:Name="ItemShadowResBox" Grid.Row="2" Grid.Column="1" Text="0"
+                                                 TextChanged="ItemPreview_Changed"/>
 
                                         <TextBlock Text="Arcane" Grid.Row="2" Grid.Column="2" VerticalAlignment="Center"/>
-                                        <TextBox x:Name="ItemArcaneResBox" Grid.Row="2" Grid.Column="3" Text="0"/>
+                                        <TextBox x:Name="ItemArcaneResBox" Grid.Row="2" Grid.Column="3" Text="0"
+                                                 TextChanged="ItemPreview_Changed"/>
                                     </Grid>
                                 </GroupBox>
 
@@ -961,6 +967,14 @@
                        FontWeight="SemiBold"
                        Foreground="White"
                        Text="(name)"/>
+
+                                            <!-- Item level (under name) -->
+                                            <TextBlock x:Name="ItemTooltipItemLevel"
+                       Margin="0,4,0,0"
+                       Foreground="White"
+                       Opacity="0.85"
+                       Visibility="Collapsed"
+                       Text=""/>
 
                                             <!-- Binding line -->
                                             <TextBlock x:Name="ItemTooltipBind"
@@ -1010,11 +1024,16 @@
                        Foreground="White"
                        Visibility="Collapsed"
                        Text=""/>
-                                            <TextBlock x:Name="ItemTooltipItemLevel"
+                                            <TextBlock x:Name="ItemTooltipClasses"
+                       Margin="0,2,0,0"
                        Foreground="White"
                        Visibility="Collapsed"
                        Text=""/>
-
+                                            <TextBlock x:Name="ItemTooltipDurability"
+                       Margin="0,2,0,0"
+                       Foreground="White"
+                       Visibility="Collapsed"
+                       Text=""/>
                                             <!-- Stat lines (optional; green) -->
                                             <ItemsControl x:Name="ItemTooltipStats" Margin="0,6,0,0" Visibility="Collapsed">
                                                 <ItemsControl.ItemTemplate>
@@ -1131,18 +1150,12 @@
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
 
-                                        <TextBlock Text="Quest Type (QuestInfoID)" Grid.Column="0" VerticalAlignment="Center"/>
-                                        <ComboBox x:Name="QuestTypeCombo" Grid.Column="1" MinWidth="140" SelectionChanged="QuestTypeCombo_SelectionChanged"/>
+                                        <TextBlock Text="Quest Type" Grid.Column="0" VerticalAlignment="Center"/>
+                                        <ComboBox x:Name="QuestTypeCombo" Grid.Column="1" MinWidth="140"
+                                                  SelectionChanged="QuestTypeCombo_SelectionChanged"/>
 
-                                        <TextBlock Text="Quest Sort (QuestSortID)" Grid.Column="2" VerticalAlignment="Center"/>
-                                        <Grid Grid.Column="3">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
-                                            <TextBox x:Name="QuestSortBox" Grid.Column="0" Text="0"/>
-                                            <Button x:Name="QuestSortFindButton" Grid.Column="1" Content="Find..." Width="70" Margin="6,0,0,0" Height="24" Click="QuestSortFind_Click"/>
-                                        </Grid>
+                                        <TextBlock Text="QuestSort" Grid.Column="2" VerticalAlignment="Center"/>
+                                        <TextBox x:Name="QuestSortBox" Grid.Column="3" Text="0"/>
                                     </Grid>
 
                                     <GroupBox Header="Reputation Requirements (quest_template_addon)" Padding="10" Margin="0,10,0,0">
@@ -1641,20 +1654,15 @@
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="170"/>
                                                 <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="70"/>
-                                                <ColumnDefinition Width="20"/>
                                                 <ColumnDefinition Width="170"/>
                                                 <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="70"/>
                                             </Grid.ColumnDefinitions>
 
                                             <TextBlock Text="Previous Quest ID" Grid.Column="0" VerticalAlignment="Center"/>
                                             <TextBox x:Name="QuestPrevQuestIdBox" Grid.Column="1" Text="0"/>
-                                            <Button Content="Find..." Grid.Column="2" Margin="5,0,0,0" Click="QuestFindPrev_Click"/>
 
-                                            <TextBlock Text="Next Quest ID" Grid.Column="4" VerticalAlignment="Center"/>
-                                            <TextBox x:Name="QuestNextQuestIdBox" Grid.Column="5" Text="0"/>
-                                            <Button Content="Find..." Grid.Column="6" Margin="5,0,0,0" Click="QuestFindNext_Click"/>
+                                            <TextBlock Text="Next Quest ID" Grid.Column="2" VerticalAlignment="Center"/>
+                                            <TextBox x:Name="QuestNextQuestIdBox" Grid.Column="3" Text="0"/>
                                         </Grid>
                                     </GroupBox>
 
