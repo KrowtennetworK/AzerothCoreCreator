@@ -33,6 +33,9 @@ Every change generates clean, structured SQL with transactional safety. You can 
 ---
 
 ### 🎒 Item Editor (Trinity-Style Layout)
+<p align="center">
+  <img src="assets/itempreview.png" width="95%" />
+</p>
 
 <p align="center">
   <img src="assets/ItemTab.png" width="95%" />
