@@ -79,6 +79,10 @@ namespace AzerothCoreCreator
             UpdateItemPreview();
 
         }
+        private void ItemPreview_Changed(object sender, RoutedEventArgs e)
+        {
+            UpdateItemPreview();
+        }
 
         // ===================== CONNECTION =====================
 
@@ -1028,11 +1032,6 @@ namespace AzerothCoreCreator
             ItemAllowableRaceMaskBox.Text = mask.ToString(CultureInfo.InvariantCulture);
         }
 
-        private void ItemPreview_Changed(object sender, TextChangedEventArgs e) => UpdateItemPreview();
-        private void ItemPreview_Changed(object sender, SelectionChangedEventArgs e) => UpdateItemPreview();
-
-
-
         private void UpdateItemPreview()
         {
             // TrinityCreator-style tooltip preview controls (must exist in XAML)
@@ -1041,6 +1040,8 @@ namespace AzerothCoreCreator
             var slotTb = FindFirstByName<TextBlock>("ItemTooltipSlot");
             var rightTb = FindFirstByName<TextBlock>("ItemTooltipRight");
             var dmgTb = FindFirstByName<TextBlock>("ItemTooltipDamage");
+            var dpsTb = FindFirstByName<TextBlock>("ItemTooltipDps");        
+            var speedTb = FindFirstByName<TextBlock>("ItemTooltipSpeed");    
             var armorTb = FindFirstByName<TextBlock>("ItemTooltipArmor");
             var reqTb = FindFirstByName<TextBlock>("ItemTooltipReqLevel");
             var ilvlTb = FindFirstByName<TextBlock>("ItemTooltipItemLevel");
@@ -1068,9 +1069,17 @@ namespace AzerothCoreCreator
             var bondingBox = FindFirstByName<ComboBox>(
                 "ItemBondingBox", "ItemBonding", "ItemBondingCombo", "ItemBondingComboBox");
 
+            var dmgTypeBox = FindFirstByName<ComboBox>(
+                "ItemDamageTypeBox", "ItemDamageType", "ItemDmgTypeBox", "ItemDmgType");
+
             var armorBox = FindFirstByName<TextBox>("ItemArmorBox", "ItemArmor");
             var dmgMinBox = FindFirstByName<TextBox>("ItemDmgMinBox", "ItemDamageMinBox");
             var dmgMaxBox = FindFirstByName<TextBox>("ItemDmgMaxBox", "ItemDamageMaxBox");
+
+            // Speed can be named various ways; TrinityCreator shows "Speed (ms)" in UI
+            var speedBox = FindFirstByName<TextBox>(
+                "ItemSpeedBox", "ItemSpeedMsBox", "ItemSpeed", "ItemSpeedMs", "ItemWeaponSpeedBox");
+
             var reqLevelBox = FindFirstByName<TextBox>("ItemReqLevelBox", "ItemRequiredLevelBox");
             var itemLevelBox = FindFirstByName<TextBox>("ItemLevelBox", "ItemItemLevelBox");
             var stackBox = FindFirstByName<TextBox>("ItemStackableBox", "ItemStackCountBox");
@@ -1079,12 +1088,8 @@ namespace AzerothCoreCreator
             if (string.IsNullOrWhiteSpace(name)) name = "(name)";
 
             int quality = 0;
-            string qualityText = "";
             if (qualityBox?.SelectedItem is ComboBoxItem qItem)
-            {
                 int.TryParse(qItem.Tag?.ToString() ?? "0", out quality);
-                qualityText = qItem.Content?.ToString() ?? "";
-            }
 
             string clsText = "";
             if (classBox?.SelectedItem is ComboBoxItem cItem)
@@ -1102,12 +1107,26 @@ namespace AzerothCoreCreator
             if (bondingBox?.SelectedItem is ComboBoxItem bItem)
                 bindText = bItem.Content?.ToString() ?? "";
 
+            string dmgTypeText = "";
+            if (dmgTypeBox?.SelectedItem is ComboBoxItem dtItem)
+                dmgTypeText = dtItem.Content?.ToString() ?? "";
+            else
+                dmgTypeText = dmgTypeBox?.SelectedItem?.ToString() ?? "";
+
             int armor = ParseInt(armorBox?.Text ?? "0", 0);
             int dmgMin = ParseInt(dmgMinBox?.Text ?? "0", 0);
             int dmgMax = ParseInt(dmgMaxBox?.Text ?? "0", 0);
             int reqLevel = ParseInt(reqLevelBox?.Text ?? "0", 0);
             int itemLevel = ParseInt(itemLevelBox?.Text ?? "0", 0);
             int stackCount = ParseInt(stackBox?.Text ?? "0", 0);
+
+            double speedRaw = ParseDoubleSafe(speedBox?.Text ?? "0");
+            // Heuristic:
+            // - If value looks like milliseconds (common: 500, 2000), convert to seconds.
+            // - If it's already a small number (0.5, 2.0), treat as seconds.
+            double speedSeconds = 0;
+            if (speedRaw > 0)
+                speedSeconds = (speedRaw > 50) ? (speedRaw / 1000.0) : speedRaw;
 
             // NAME (quality-colored)
             nameTb.Text = name;
@@ -1135,19 +1154,66 @@ namespace AzerothCoreCreator
                 rightTb.Visibility = string.IsNullOrWhiteSpace(right) ? Visibility.Collapsed : Visibility.Visible;
             }
 
-            // DAMAGE
+            // DAMAGE + DPS
             if (dmgTb != null)
             {
                 if (dmgMin > 0 || dmgMax > 0)
                 {
                     if (dmgMax <= 0) dmgMax = dmgMin;
-                    dmgTb.Text = $"{dmgMin} - {dmgMax} Damage";
+
+                    string typeSuffix = "";
+                    if (!string.IsNullOrWhiteSpace(dmgTypeText))
+                    {
+                        // Normalize common choices like "Physical", "Holy"
+                        // Output format: "Holy Damage"
+                        typeSuffix = $" {dmgTypeText.Trim()}";
+                    }
+
+                    dmgTb.Text = $"{dmgMin} - {dmgMax}{typeSuffix} Damage";
                     dmgTb.Visibility = Visibility.Visible;
+
+                    // DPS only if speed is valid and damage is valid
+                    if (dpsTb != null)
+                    {
+                        if (speedSeconds > 0)
+                        {
+                            double avg = (dmgMin + dmgMax) / 2.0;
+                            double dps = avg / speedSeconds;
+                            dpsTb.Text = $"({dps:0.0} damage per second)";
+                            dpsTb.Visibility = Visibility.Visible;
+                        }
+                        else
+                        {
+                            dpsTb.Text = "";
+                            dpsTb.Visibility = Visibility.Collapsed;
+                        }
+                    }
                 }
                 else
                 {
                     dmgTb.Text = "";
                     dmgTb.Visibility = Visibility.Collapsed;
+
+                    if (dpsTb != null)
+                    {
+                        dpsTb.Text = "";
+                        dpsTb.Visibility = Visibility.Collapsed;
+                    }
+                }
+            }
+
+            // SPEED line
+            if (speedTb != null)
+            {
+                if (speedSeconds > 0)
+                {
+                    speedTb.Text = $"Speed {speedSeconds:0.00}";
+                    speedTb.Visibility = Visibility.Visible;
+                }
+                else
+                {
+                    speedTb.Text = "";
+                    speedTb.Visibility = Visibility.Collapsed;
                 }
             }
 
@@ -1195,7 +1261,7 @@ namespace AzerothCoreCreator
                 }
             }
 
-            // STATS (optional; currently no dedicated stat editor in the UI)
+            // STATS (still optional – will be wired once we know your stats UI element names)
             if (statsCtl != null)
             {
                 statsCtl.ItemsSource = null;
@@ -1209,12 +1275,9 @@ namespace AzerothCoreCreator
                 flavorTb.Visibility = Visibility.Collapsed;
             }
 
-            // If stack count is meaningful, show it as a "meta" line via Item Level block
-            // without cluttering the tooltip (TrinityCreator shows stack in some contexts).
-            // We'll only append if item is stackable (>1).
+            // Stack count appended / shown compactly
             if (ilvlTb != null && stackCount > 1)
             {
-                // If item level is not shown, reuse this line for stack count.
                 if (ilvlTb.Visibility != Visibility.Visible)
                 {
                     ilvlTb.Text = $"Stack: {stackCount}";
@@ -1222,28 +1285,24 @@ namespace AzerothCoreCreator
                 }
                 else
                 {
-                    // Append in same line to keep UI compact.
                     ilvlTb.Text = $"{ilvlTb.Text}   (Stack: {stackCount})";
                 }
             }
         }
 
-        private Brush GetItemQualityBrush(int quality)
+        private static double ParseDoubleSafe(string s)
         {
-            // WoW-ish quality colors
-            switch (quality)
-            {
-                case 0: return new SolidColorBrush(Color.FromRgb(0x9D, 0x9D, 0x9D)); // Poor (gray)
-                case 1: return Brushes.White;                                         // Common
-                case 2: return new SolidColorBrush(Color.FromRgb(0x1E, 0xFF, 0x00)); // Uncommon (green)
-                case 3: return new SolidColorBrush(Color.FromRgb(0x00, 0x70, 0xDD)); // Rare (blue)
-                case 4: return new SolidColorBrush(Color.FromRgb(0xA3, 0x35, 0xEE)); // Epic (purple)
-                case 5: return new SolidColorBrush(Color.FromRgb(0xFF, 0x80, 0x00)); // Legendary (orange)
-                case 6: return new SolidColorBrush(Color.FromRgb(0xE6, 0xCC, 0x80)); // Artifact-ish (pale gold)
-                case 7: return new SolidColorBrush(Color.FromRgb(0x00, 0xCC, 0xFF)); // Heirloom-ish (cyan)
-                default: return Brushes.White;
-            }
+            if (double.TryParse(s, System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture, out double v))
+                return v;
+
+            // fallback: current culture
+            if (double.TryParse(s, out v))
+                return v;
+
+            return 0;
         }
+
 
         // ===================== CREATURE TEMPLATE =====================
 
@@ -3267,6 +3326,21 @@ namespace AzerothCoreCreator
             finally
             {
                 ItemContainerSlotsBox.TextChanged += ItemContainerSlotsBox_TextChanged;
+            }
+        }
+        private Brush GetItemQualityBrush(int quality)
+        {
+            switch (quality)
+            {
+                case 0: return new SolidColorBrush(Color.FromRgb(0x9D, 0x9D, 0x9D)); // Poor
+                case 1: return Brushes.White;                                         // Common
+                case 2: return new SolidColorBrush(Color.FromRgb(0x1E, 0xFF, 0x00)); // Uncommon
+                case 3: return new SolidColorBrush(Color.FromRgb(0x00, 0x70, 0xDD)); // Rare
+                case 4: return new SolidColorBrush(Color.FromRgb(0xA3, 0x35, 0xEE)); // Epic
+                case 5: return new SolidColorBrush(Color.FromRgb(0xFF, 0x80, 0x00)); // Legendary
+                case 6: return new SolidColorBrush(Color.FromRgb(0xE6, 0xCC, 0x80)); // Artifact-ish
+                case 7: return new SolidColorBrush(Color.FromRgb(0x00, 0xCC, 0xFF)); // Heirloom-ish
+                default: return Brushes.White;
             }
         }
 
