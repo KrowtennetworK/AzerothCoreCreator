@@ -9,7 +9,7 @@ permissions:
 env:
   # ✅ CHANGE THESE 3 VALUES to match your project
   PROJECT_PATH: AzerothCoreCreator/AzerothCoreCreator.csproj
-  PACK_ID: KrowtenNetwork.AzerothCoreCreator
+  PACK_ID: KrowtennetworK.AzerothCoreCreator
   MAIN_EXE: AzerothCoreCreator.exe
 
   # build settings
