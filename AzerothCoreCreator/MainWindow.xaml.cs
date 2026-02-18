@@ -1032,20 +1032,26 @@ namespace AzerothCoreCreator
         private void ItemPreview_Changed(object sender, SelectionChangedEventArgs e) => UpdateItemPreview();
 
 
+
         private void UpdateItemPreview()
         {
-            // Preview textblocks (these must exist in XAML)
-            var previewName = FindFirstByName<TextBlock>("ItemPreviewName");
-            var previewMeta = FindFirstByName<TextBlock>("ItemPreviewMeta");
-            if (previewName == null || previewMeta == null) return;
+            // TrinityCreator-style tooltip preview controls (must exist in XAML)
+            var nameTb = FindFirstByName<TextBlock>("ItemTooltipName");
+            var bindTb = FindFirstByName<TextBlock>("ItemTooltipBind");
+            var slotTb = FindFirstByName<TextBlock>("ItemTooltipSlot");
+            var rightTb = FindFirstByName<TextBlock>("ItemTooltipRight");
+            var dmgTb = FindFirstByName<TextBlock>("ItemTooltipDamage");
+            var armorTb = FindFirstByName<TextBlock>("ItemTooltipArmor");
+            var reqTb = FindFirstByName<TextBlock>("ItemTooltipReqLevel");
+            var ilvlTb = FindFirstByName<TextBlock>("ItemTooltipItemLevel");
+            var statsCtl = FindFirstByName<ItemsControl>("ItemTooltipStats");
+            var flavorTb = FindFirstByName<TextBlock>("ItemTooltipFlavor");
 
-            // Item inputs (try a wider set of possible names)
+            if (nameTb == null) return; // preview not present
+
+            // Item inputs
             var nameBox = FindFirstByName<TextBox>(
                 "ItemNameBox", "ItemNameTextBox", "ItemName", "ItemNameTxt", "ItemNameField");
-
-            var displayBox = FindFirstByName<TextBox>(
-                "ItemDisplayIdBox", "ItemDisplayIDBox", "ItemDisplayId", "ItemDisplayID",
-                "DisplayIdBox", "DisplayIDBox", "ItemDisplayTextBox", "ItemDisplayIdTextBox");
 
             var qualityBox = FindFirstByName<ComboBox>(
                 "ItemQualityBox", "ItemQuality", "ItemQualityCombo", "ItemQualityComboBox");
@@ -1059,17 +1065,25 @@ namespace AzerothCoreCreator
             var invBox = FindFirstByName<ComboBox>(
                 "ItemInventoryTypeBox", "ItemInventoryType", "ItemEquipSlotBox", "ItemEquipSlot");
 
+            var bondingBox = FindFirstByName<ComboBox>(
+                "ItemBondingBox", "ItemBonding", "ItemBondingCombo", "ItemBondingComboBox");
+
+            var armorBox = FindFirstByName<TextBox>("ItemArmorBox", "ItemArmor");
+            var dmgMinBox = FindFirstByName<TextBox>("ItemDmgMinBox", "ItemDamageMinBox");
+            var dmgMaxBox = FindFirstByName<TextBox>("ItemDmgMaxBox", "ItemDamageMaxBox");
+            var reqLevelBox = FindFirstByName<TextBox>("ItemReqLevelBox", "ItemRequiredLevelBox");
+            var itemLevelBox = FindFirstByName<TextBox>("ItemLevelBox", "ItemItemLevelBox");
+            var stackBox = FindFirstByName<TextBox>("ItemStackableBox", "ItemStackCountBox");
+
             string name = (nameBox?.Text ?? "").Trim();
             if (string.IsNullOrWhiteSpace(name)) name = "(name)";
 
-            int displayId = ParseInt(displayBox?.Text ?? "0", 0);
-
-            string qualityText = "Unknown";
             int quality = 0;
+            string qualityText = "";
             if (qualityBox?.SelectedItem is ComboBoxItem qItem)
             {
                 int.TryParse(qItem.Tag?.ToString() ?? "0", out quality);
-                qualityText = qItem.Content?.ToString() ?? "Unknown";
+                qualityText = qItem.Content?.ToString() ?? "";
             }
 
             string clsText = "";
@@ -1084,14 +1098,151 @@ namespace AzerothCoreCreator
             if (invBox?.SelectedItem is ComboBoxItem iItem)
                 invText = iItem.Content?.ToString() ?? "";
 
-            previewName.Text = name;
+            string bindText = "";
+            if (bondingBox?.SelectedItem is ComboBoxItem bItem)
+                bindText = bItem.Content?.ToString() ?? "";
 
-            // More informative preview line (like Trinity vibe)
-            previewMeta.Text =
-                $"DisplayID: {displayId} | Quality: {quality} ({qualityText})"
-                + (string.IsNullOrWhiteSpace(clsText) ? "" : $" | Class: {clsText}")
-                + (string.IsNullOrWhiteSpace(subText) ? "" : $" | Sub: {subText}")
-                + (string.IsNullOrWhiteSpace(invText) ? "" : $" | Slot: {invText}");
+            int armor = ParseInt(armorBox?.Text ?? "0", 0);
+            int dmgMin = ParseInt(dmgMinBox?.Text ?? "0", 0);
+            int dmgMax = ParseInt(dmgMaxBox?.Text ?? "0", 0);
+            int reqLevel = ParseInt(reqLevelBox?.Text ?? "0", 0);
+            int itemLevel = ParseInt(itemLevelBox?.Text ?? "0", 0);
+            int stackCount = ParseInt(stackBox?.Text ?? "0", 0);
+
+            // NAME (quality-colored)
+            nameTb.Text = name;
+            nameTb.Foreground = GetItemQualityBrush(quality);
+
+            // BINDING line
+            if (bindTb != null)
+            {
+                bindTb.Text = bindText;
+                bindTb.Visibility = string.IsNullOrWhiteSpace(bindText) ? Visibility.Collapsed : Visibility.Visible;
+            }
+
+            // SLOT + RIGHT TEXT
+            if (slotTb != null)
+            {
+                slotTb.Text = invText;
+                slotTb.Visibility = string.IsNullOrWhiteSpace(invText) ? Visibility.Collapsed : Visibility.Visible;
+            }
+
+            if (rightTb != null)
+            {
+                // Prefer subclass (e.g., "1h Sword") and fall back to class.
+                string right = !string.IsNullOrWhiteSpace(subText) ? subText : clsText;
+                rightTb.Text = right;
+                rightTb.Visibility = string.IsNullOrWhiteSpace(right) ? Visibility.Collapsed : Visibility.Visible;
+            }
+
+            // DAMAGE
+            if (dmgTb != null)
+            {
+                if (dmgMin > 0 || dmgMax > 0)
+                {
+                    if (dmgMax <= 0) dmgMax = dmgMin;
+                    dmgTb.Text = $"{dmgMin} - {dmgMax} Damage";
+                    dmgTb.Visibility = Visibility.Visible;
+                }
+                else
+                {
+                    dmgTb.Text = "";
+                    dmgTb.Visibility = Visibility.Collapsed;
+                }
+            }
+
+            // ARMOR
+            if (armorTb != null)
+            {
+                if (armor > 0)
+                {
+                    armorTb.Text = $"{armor} Armor";
+                    armorTb.Visibility = Visibility.Visible;
+                }
+                else
+                {
+                    armorTb.Text = "";
+                    armorTb.Visibility = Visibility.Collapsed;
+                }
+            }
+
+            // REQ LEVEL + ITEM LEVEL
+            if (reqTb != null)
+            {
+                if (reqLevel > 0)
+                {
+                    reqTb.Text = $"Requires Level {reqLevel}";
+                    reqTb.Visibility = Visibility.Visible;
+                }
+                else
+                {
+                    reqTb.Text = "";
+                    reqTb.Visibility = Visibility.Collapsed;
+                }
+            }
+
+            if (ilvlTb != null)
+            {
+                if (itemLevel > 0)
+                {
+                    ilvlTb.Text = $"Item Level {itemLevel}";
+                    ilvlTb.Visibility = Visibility.Visible;
+                }
+                else
+                {
+                    ilvlTb.Text = "";
+                    ilvlTb.Visibility = Visibility.Collapsed;
+                }
+            }
+
+            // STATS (optional; currently no dedicated stat editor in the UI)
+            if (statsCtl != null)
+            {
+                statsCtl.ItemsSource = null;
+                statsCtl.Visibility = Visibility.Collapsed;
+            }
+
+            // FLAVOR (optional)
+            if (flavorTb != null)
+            {
+                flavorTb.Text = "";
+                flavorTb.Visibility = Visibility.Collapsed;
+            }
+
+            // If stack count is meaningful, show it as a "meta" line via Item Level block
+            // without cluttering the tooltip (TrinityCreator shows stack in some contexts).
+            // We'll only append if item is stackable (>1).
+            if (ilvlTb != null && stackCount > 1)
+            {
+                // If item level is not shown, reuse this line for stack count.
+                if (ilvlTb.Visibility != Visibility.Visible)
+                {
+                    ilvlTb.Text = $"Stack: {stackCount}";
+                    ilvlTb.Visibility = Visibility.Visible;
+                }
+                else
+                {
+                    // Append in same line to keep UI compact.
+                    ilvlTb.Text = $"{ilvlTb.Text}   (Stack: {stackCount})";
+                }
+            }
+        }
+
+        private Brush GetItemQualityBrush(int quality)
+        {
+            // WoW-ish quality colors
+            switch (quality)
+            {
+                case 0: return new SolidColorBrush(Color.FromRgb(0x9D, 0x9D, 0x9D)); // Poor (gray)
+                case 1: return Brushes.White;                                         // Common
+                case 2: return new SolidColorBrush(Color.FromRgb(0x1E, 0xFF, 0x00)); // Uncommon (green)
+                case 3: return new SolidColorBrush(Color.FromRgb(0x00, 0x70, 0xDD)); // Rare (blue)
+                case 4: return new SolidColorBrush(Color.FromRgb(0xA3, 0x35, 0xEE)); // Epic (purple)
+                case 5: return new SolidColorBrush(Color.FromRgb(0xFF, 0x80, 0x00)); // Legendary (orange)
+                case 6: return new SolidColorBrush(Color.FromRgb(0xE6, 0xCC, 0x80)); // Artifact-ish (pale gold)
+                case 7: return new SolidColorBrush(Color.FromRgb(0x00, 0xCC, 0xFF)); // Heirloom-ish (cyan)
+                default: return Brushes.White;
+            }
         }
 
         // ===================== CREATURE TEMPLATE =====================
@@ -2923,37 +3074,39 @@ namespace AzerothCoreCreator
                         return ("faction_dbc", "ID", factionDbcNameCol);
                 }
 
-                // 2) factiontemplate_dbc
+                // 2) factiontemplate_dbc (optional)
                 if (TableExists(openConn, "factiontemplate_dbc"))
                 {
-                    // Some builds may have a name column, many don't; fall back to "Faction" or "ID".
+                    // Many builds do not include a readable name here; if a name-like column exists, use it.
                     var ftName =
-                        FindFirstColumnLike(openConn, "factiontemplate_dbc", "mname_lang_%")
-                        ?? FindFirstColumnLike(openConn, "factiontemplate_dbc", "Name_Lang%")
+                        FindFirstColumnLike(openConn, "factiontemplate_dbc", "Name%")
                         ?? FindFirstColumnLike(openConn, "factiontemplate_dbc", "name%")
-                        ?? (ColumnExists(openConn, "factiontemplate_dbc", "Faction") ? "Faction" :
-                            ColumnExists(openConn, "factiontemplate_dbc", "faction") ? "faction" : "ID");
+                        ?? FindFirstColumnLike(openConn, "factiontemplate_dbc", "mname_lang_%")
+                        ?? FindFirstColumnLike(openConn, "factiontemplate_dbc", "mname_lang%");
 
-                    var id = ColumnExists(openConn, "factiontemplate_dbc", "ID") ? "ID" : "FactionTemplateID";
-                    if (!ColumnExists(openConn, "factiontemplate_dbc", ftName)) ftName = "ID";
-                    return ("factiontemplate_dbc", id, ftName);
+                    if (!string.IsNullOrEmpty(ftName))
+                        return ("factiontemplate_dbc", "ID", ftName);
+
+                    // If no readable name column exists, allow numeric-only searching.
+                    return ("factiontemplate_dbc", "ID", "Faction");
                 }
 
-                // 3) fallback: world.faction_template (numeric only)
+                // 3) faction_template (AzerothCore world table)
                 if (TableExists(openConn, "faction_template"))
                 {
-                    var name = ColumnExists(openConn, "faction_template", "faction") ? "faction" : "ID";
-                    return ("faction_template", "ID", name);
+                    // No name column in most schemas; use ID and faction as numeric search targets.
+                    return ("faction_template", "ID", "faction");
                 }
             }
             catch
             {
-                // ignore and fall back
+                // ignore and fall through
             }
 
             return ("faction_template", "ID", "faction");
         }
 
+        // ===================== DB COLUMN HELPERS =====================
 
         private bool TableExists(MySqlConnection conn, string table)
         {
@@ -2990,7 +3143,6 @@ namespace AzerothCoreCreator
                 return v == null ? null : v.ToString();
             }
         }
-
 
         // ===================== QUEST SECTION VISIBILITY LOCK =====================
         // IMPORTANT: this must be INSIDE MainWindow, and it uses FindName so you do NOT

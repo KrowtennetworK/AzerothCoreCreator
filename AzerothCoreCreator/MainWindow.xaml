@@ -841,14 +841,80 @@
                             <StackPanel Grid.Column="1">
 
                                 <GroupBox Header="Item Preview" Padding="10">
-                                    <Border BorderBrush="#444" BorderThickness="1" CornerRadius="6" Padding="10">
+                                    <!-- TrinityCreator-style tooltip (pure WPF; no client assets required) -->
+                                    <Border CornerRadius="8" BorderThickness="1" BorderBrush="#2E3545" Padding="12">
+                                        <Border.Background>
+                                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                <GradientStop Color="#111827" Offset="0"/>
+                                                <GradientStop Color="#0B1220" Offset="1"/>
+                                            </LinearGradientBrush>
+                                        </Border.Background>
+
                                         <StackPanel>
-                                            <TextBlock x:Name="ItemPreviewName" FontSize="16" FontWeight="SemiBold" Text="(name)"/>
-                                            <TextBlock x:Name="ItemPreviewMeta" Margin="0,6,0,0" Foreground="#777" TextWrapping="Wrap"
-                                                       Text="DisplayID: 0 | Quality: 1 (Common)"/>
-                                            <TextBlock Margin="0,10,0,0" Foreground="#777"
-                                                       Text="(Note: True 3D preview requires client assets; this is a quick in-app summary.)"
-                                                       TextWrapping="Wrap"/>
+                                            <!-- Item name (quality-colored in code-behind) -->
+                                            <TextBlock x:Name="ItemTooltipName"
+                       FontSize="18"
+                       FontWeight="SemiBold"
+                       Foreground="White"
+                       Text="(name)"/>
+
+                                            <!-- Binding line -->
+                                            <TextBlock x:Name="ItemTooltipBind"
+                       Margin="0,6,0,0"
+                       Foreground="White"
+                       Text=""/>
+
+                                            <!-- Slot (left) + subclass/type (right) -->
+                                            <Grid Margin="0,2,0,0">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock x:Name="ItemTooltipSlot" Grid.Column="0" Foreground="White" Text=""/>
+                                                <TextBlock x:Name="ItemTooltipRight" Grid.Column="1" Foreground="White" Text=""/>
+                                            </Grid>
+
+                                            <!-- Weapon damage (optional) -->
+                                            <TextBlock x:Name="ItemTooltipDamage"
+                       Margin="0,6,0,0"
+                       Foreground="White"
+                       Visibility="Collapsed"
+                       Text=""/>
+
+                                            <!-- Armor (optional) -->
+                                            <TextBlock x:Name="ItemTooltipArmor"
+                       Margin="0,6,0,0"
+                       Foreground="White"
+                       Visibility="Collapsed"
+                       Text=""/>
+
+                                            <!-- Requirements / Item level -->
+                                            <TextBlock x:Name="ItemTooltipReqLevel"
+                       Margin="0,6,0,0"
+                       Foreground="White"
+                       Visibility="Collapsed"
+                       Text=""/>
+                                            <TextBlock x:Name="ItemTooltipItemLevel"
+                       Foreground="White"
+                       Visibility="Collapsed"
+                       Text=""/>
+
+                                            <!-- Stat lines (optional; green) -->
+                                            <ItemsControl x:Name="ItemTooltipStats" Margin="0,6,0,0" Visibility="Collapsed">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <TextBlock Foreground="#00FF00" Text="{Binding}"/>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+
+                                            <!-- Flavor text (optional; green italics) -->
+                                            <TextBlock x:Name="ItemTooltipFlavor"
+                       Margin="0,8,0,0"
+                       Foreground="#00FF00"
+                       FontStyle="Italic"
+                       Visibility="Collapsed"
+                       Text=""/>
                                         </StackPanel>
                                     </Border>
                                 </GroupBox>
