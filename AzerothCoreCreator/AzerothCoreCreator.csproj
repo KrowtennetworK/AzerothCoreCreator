@@ -6,7 +6,9 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
- <StartupObject>AzerothCoreCreator.App</StartupObject>
+	  <Version>0.1.2-beta</Version>
+
+	  <StartupObject>AzerothCoreCreator.App</StartupObject>
 
   </PropertyGroup>
 
