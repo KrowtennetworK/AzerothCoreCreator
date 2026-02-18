@@ -1,3 +1,8 @@
+<h1 align="center">
+  <img src="assets/logo-acore.png" width="48" height="48" style="vertical-align: middle;" />
+  AzerothCore Creator
+</h1>
+
 ---
 
 ## 🖼 Interface Preview
@@ -53,9 +58,3 @@ Built-in item search allows quick lookup by name or ID, streamlining quest rewar
 The Quest Editor provides structured quest_template support with organized reward handling, requirement configuration, and a live quest preview panel.
 
 ---
-
-<img width="2551" height="1388" alt="QuestTab" src="https://github.com/user-attachments/assets/726131b8-280d-4efe-bb7c-e3faf8656689" />
-<img width="2554" height="1390" alt="ItemTab" src="https://github.com/user-attachments/assets/63798fc0-540f-4c68-b186-29bea9ff15ee" />
-<img width="2558" height="1390" alt="FindItem" src="https://github.com/user-attachments/assets/9a840f4a-6196-406a-bb05-23487da91088" />
-<img width="1182" height="767" alt="CreatureTabSQL" src="https://github.com/user-attachments/assets/021e1a41-18b4-4fa7-bb3c-98225718084d" />
-<img width="1182" height="768" alt="CreatureTab" src="https://github.com/user-attachments/assets/3b2b5b1d-d34a-418f-a0f8-4aba12e3f299" />
