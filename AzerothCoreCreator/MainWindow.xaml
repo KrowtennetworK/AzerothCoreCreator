@@ -1,7 +1,7 @@
 <Window x:Class="AzerothCoreCreator.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="AzerothCore Creator v0.1.1"
+        Title="AzerothCore Creator v0.1.2"
         Height="780" Width="1200"
         MinWidth="1200" MinHeight="780"
         Loaded="Window_Loaded"

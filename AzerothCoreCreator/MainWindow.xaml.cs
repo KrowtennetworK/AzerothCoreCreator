@@ -78,6 +78,8 @@ namespace AzerothCoreCreator
             UpdateItemAllowableClassMask();
             UpdateItemAllowableRaceMask();
             UpdateItemPreview();
+            _ = UpdateService.CheckAndUpdateAsync(includePrereleases: true);
+
 
         }
 

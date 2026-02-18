@@ -1,14 +1,18 @@
-﻿using System.Configuration;
-using System.Data;
-using System.Windows;
+﻿using System.Windows;
+using Velopack;
 
 namespace AzerothCoreCreator
 {
-    /// <summary>
-    /// Interaction logic for App.xaml
-    /// </summary>
     public partial class App : Application
     {
-    }
+        protected override void OnStartup(StartupEventArgs e)
+        {
+            // Initialize Velopack updater
+            // This must run early in the app lifecycle
+            VelopackApp.Build().Run();
 
+            base.OnStartup(e);
+        }
+    }
 }
+
