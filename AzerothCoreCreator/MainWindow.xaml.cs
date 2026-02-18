@@ -283,8 +283,30 @@ namespace AzerothCoreCreator
             QuestLevelBox.Text = "1";
             QuestRewardXpBox.Text = "0";
             QuestRewardMoneyBox.Text = "0";
-            QuestTypeBox.Text = "0";
             QuestSortBox.Text = "0";
+
+            // Quest Type dropdown (QuestInfoID)
+            if (QuestTypeCombo != null && QuestTypeCombo.Items.Count == 0)
+            {
+                void AddType(int id, string name)
+                {
+                    QuestTypeCombo.Items.Add(new ComboBoxItem { Content = $"{id} - {name}", Tag = id });
+                }
+
+                AddType(0, "Normal");
+                AddType(1, "Group");
+                AddType(21, "Life");
+                AddType(41, "PvP");
+                AddType(62, "Raid");
+                AddType(81, "Dungeon");
+                AddType(82, "World Event");
+                AddType(83, "Legendary");
+                AddType(84, "Escort");
+                AddType(85, "Heroic");
+                AddType(88, "Raid (10/25)");
+
+                QuestTypeCombo.SelectedIndex = 0;
+            }
         }
 
         private void BuildFlagCheckboxes()
@@ -348,6 +370,15 @@ namespace AzerothCoreCreator
             int v = 0;
             int.TryParse(tag.ToString(), out v);
             return v;
+        }
+
+        // Returns ComboBoxItem.Tag as int (used when Tag stores DB values).
+        // Falls back to defaultValue if nothing is selected or Tag isn't parseable.
+        private int GetSelectedComboTagInt(ComboBox cb, int defaultValue)
+        {
+            if (cb?.SelectedItem is not ComboBoxItem item) return defaultValue;
+            if (item.Tag == null) return defaultValue;
+            return int.TryParse(item.Tag.ToString(), out int v) ? v : defaultValue;
         }
         // ===================== ITEM CLASS + SUBCLASS TABLES =====================
 
@@ -1974,7 +2005,7 @@ namespace AzerothCoreCreator
             int rewardXp = ParseInt(QuestRewardXpBox.Text, 0);
             int rewardMoney = ParseInt(QuestRewardMoneyBox.Text, 0);
 
-            int qType = ParseInt(QuestTypeBox.Text, 0);
+            int qType = GetSelectedComboTagInt(QuestTypeCombo, 0);
             int qSort = ParseInt(QuestSortBox.Text, 0);
 
             int questFlags = ParseInt(QuestFlagsBox.Text, 0);
@@ -2035,7 +2066,7 @@ namespace AzerothCoreCreator
             sb.AppendLine();
 
             sb.Append("INSERT INTO `quest_template` ");
-            sb.Append("(`ID`,`LogTitle`,`QuestDescription`,`Objectives`,`MinLevel`,`QuestLevel`,`QuestType`,`QuestSortID`,`Flags`,`AllowableRaces`,");
+            sb.Append("(`ID`,`LogTitle`,`QuestDescription`,`Objectives`,`MinLevel`,`QuestLevel`,`QuestInfoID`,`QuestSortID`,`Flags`,`AllowableRaces`,");
             sb.Append("`RewardXPId`,`RewardMoney`,");
             sb.Append("`RequiredItemId1`,`RequiredItemId2`,`RequiredItemId3`,`RequiredItemId4`,`RequiredItemId5`,`RequiredItemId6`,");
             sb.Append("`RequiredItemCount1`,`RequiredItemCount2`,`RequiredItemCount3`,`RequiredItemCount4`,`RequiredItemCount5`,`RequiredItemCount6`,");
@@ -2404,6 +2435,12 @@ namespace AzerothCoreCreator
             UpdateQuestPreview();
         }
 
+
+        private void QuestTypeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            UpdateQuestPreview();
+        }
+
         private void UpdateQuestPreview()
         {
             if (QuestPreviewTitle == null) return; // XAML not loaded yet
@@ -2505,6 +2542,171 @@ namespace AzerothCoreCreator
         }
 
 
+
+
+        // ===================== QUEST SORT FINDER =====================
+        private static readonly List<LookupEntry> _questSortEntries = new List<LookupEntry>
+{
+    new LookupEntry { Id = 1, Name = "Epic" },
+    new LookupEntry { Id = 21, Name = "Exiled Enclave" },
+    new LookupEntry { Id = 22, Name = "Seasonal" },
+    new LookupEntry { Id = 23, Name = "REFUSE - old undercity one" },
+    new LookupEntry { Id = 24, Name = "Herbalism" },
+    new LookupEntry { Id = 25, Name = "Battlegrounds" },
+    new LookupEntry { Id = 41, Name = "Day of the Dead" },
+    new LookupEntry { Id = 61, Name = "Warlock" },
+    new LookupEntry { Id = 81, Name = "Warrior" },
+    new LookupEntry { Id = 82, Name = "Shaman" },
+    new LookupEntry { Id = 101, Name = "Fishing" },
+    new LookupEntry { Id = 121, Name = "Blacksmithing" },
+    new LookupEntry { Id = 141, Name = "Paladin" },
+    new LookupEntry { Id = 161, Name = "Mage" },
+    new LookupEntry { Id = 162, Name = "Rogue" },
+    new LookupEntry { Id = 181, Name = "Alchemy" },
+    new LookupEntry { Id = 182, Name = "Leatherworking" },
+    new LookupEntry { Id = 201, Name = "Engineering" },
+    new LookupEntry { Id = 221, Name = "Treasure Map" },
+    new LookupEntry { Id = 241, Name = "Tournament" },
+    new LookupEntry { Id = 261, Name = "Hunter" },
+    new LookupEntry { Id = 262, Name = "Priest" },
+    new LookupEntry { Id = 263, Name = "Druid" },
+    new LookupEntry { Id = 264, Name = "Tailoring" },
+    new LookupEntry { Id = 284, Name = "Special" },
+    new LookupEntry { Id = 304, Name = "Cooking" },
+    new LookupEntry { Id = 324, Name = "First Aid" },
+    new LookupEntry { Id = 344, Name = "Legendary" },
+    new LookupEntry { Id = 364, Name = "Darkmoon Faire" },
+    new LookupEntry { Id = 365, Name = "Ahn'Qiraj War" },
+    new LookupEntry { Id = 366, Name = "Lunar Festival" },
+    new LookupEntry { Id = 367, Name = "Reputation" },
+    new LookupEntry { Id = 368, Name = "Invasion" },
+    new LookupEntry { Id = 369, Name = "Midsummer" },
+    new LookupEntry { Id = 370, Name = "Brewfest" },
+    new LookupEntry { Id = 371, Name = "Inscription" },
+    new LookupEntry { Id = 372, Name = "Death Knight" },
+    new LookupEntry { Id = 373, Name = "Jewelcrafting" },
+    new LookupEntry { Id = 374, Name = "Noblegarden" },
+    new LookupEntry { Id = 375, Name = "Pilgrim's Bounty" },
+    new LookupEntry { Id = 376, Name = "Love is in the Air" },
+    new LookupEntry { Id = 377, Name = "Scourge Invasion" },
+    new LookupEntry { Id = 378, Name = "Exiled Enclave" },
+    new LookupEntry { Id = 379, Name = "Stormwind City" },
+};
+
+        private void QuestSortFind_Click(object sender, RoutedEventArgs e)
+        {
+            OpenSimpleListLookupWindow(
+                title: "Find Quest Sort (QuestSortID)",
+                entries: _questSortEntries,
+                onPick: picked =>
+                {
+                    QuestSortBox.Text = picked.Id.ToString(CultureInfo.InvariantCulture);
+                    UpdateQuestPreview();
+                });
+        }
+
+        private void OpenSimpleListLookupWindow(string title, List<LookupEntry> entries, Action<LookupEntry> onPick)
+        {
+            var w = new Window
+            {
+                Title = title,
+                Owner = this,
+                Width = 720,
+                Height = 520,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
+            };
+
+            var root = new Grid { Margin = new Thickness(10) };
+            root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            root.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+            root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+
+            var searchBox = new TextBox { MinWidth = 360, Margin = new Thickness(0, 0, 8, 0) };
+            var hint = new TextBlock
+            {
+                Foreground = Brushes.Gray,
+                VerticalAlignment = VerticalAlignment.Center,
+                Text = "Search by name or ID"
+            };
+
+            var top = new DockPanel { LastChildFill = true };
+            DockPanel.SetDock(hint, Dock.Right);
+            top.Children.Add(hint);
+            top.Children.Add(searchBox);
+
+            var list = new DataGrid
+            {
+                AutoGenerateColumns = false,
+                IsReadOnly = true,
+                SelectionMode = DataGridSelectionMode.Single,
+                SelectionUnit = DataGridSelectionUnit.FullRow,
+                HeadersVisibility = DataGridHeadersVisibility.Column,
+                CanUserAddRows = false
+            };
+            list.Columns.Add(new DataGridTextColumn { Header = "ID", Binding = new System.Windows.Data.Binding("Id"), Width = 100 });
+            list.Columns.Add(new DataGridTextColumn { Header = "Name", Binding = new System.Windows.Data.Binding("Name"), Width = new DataGridLength(1, DataGridLengthUnitType.Star) });
+
+            var bottom = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right };
+            var ok = new Button { Content = "Use Selected", Width = 110, Margin = new Thickness(0, 0, 8, 0) };
+            var cancel = new Button { Content = "Cancel", Width = 90 };
+            bottom.Children.Add(ok);
+            bottom.Children.Add(cancel);
+
+            Grid.SetRow(top, 0);
+            Grid.SetRow(list, 1);
+            Grid.SetRow(bottom, 2);
+            root.Children.Add(top);
+            root.Children.Add(list);
+            root.Children.Add(bottom);
+            w.Content = root;
+
+            List<LookupEntry> Filter(string q)
+            {
+                q = (q ?? "").Trim();
+                if (q.Length == 0) return entries;
+
+                if (int.TryParse(q, out int id))
+                    return entries.Where(e => e.Id == id || e.Name.IndexOf(q, StringComparison.OrdinalIgnoreCase) >= 0).ToList();
+
+                return entries.Where(e => e.Name.IndexOf(q, StringComparison.OrdinalIgnoreCase) >= 0).ToList();
+            }
+
+            void Refresh()
+            {
+                list.ItemsSource = Filter(searchBox.Text);
+                if (list.Items.Count > 0) list.SelectedIndex = 0;
+            }
+
+            searchBox.TextChanged += (s, e) => Refresh();
+
+            void Pick()
+            {
+                if (list.SelectedItem is LookupEntry picked)
+                {
+                    onPick?.Invoke(picked);
+                    w.Close();
+                }
+            }
+
+            ok.Click += (s, e) => Pick();
+            cancel.Click += (s, e) => w.Close();
+
+            list.MouseDoubleClick += (s, e) => Pick();
+            list.KeyDown += (s, e) =>
+            {
+                if (e.Key == Key.Enter) { Pick(); e.Handled = true; }
+                if (e.Key == Key.Escape) { w.Close(); e.Handled = true; }
+            };
+
+            w.Loaded += (s, e) =>
+            {
+                Refresh();
+                searchBox.Focus();
+                searchBox.SelectAll();
+            };
+
+            w.ShowDialog();
+        }
         // ===================== QUEST LOOKUP (Finder helpers) =====================
         private TextBox _questLookupTarget;
 

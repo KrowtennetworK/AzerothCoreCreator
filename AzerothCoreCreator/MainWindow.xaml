@@ -396,139 +396,139 @@
                                     <StackPanel>
                                         <Grid Margin="1" Grid.IsSharedSizeScope="True">
                                             <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto" SharedSizeGroup="Lbl"/>
-                                            <ColumnDefinition Width="*" MinWidth="220"/>
-                                            <ColumnDefinition Width="20"/>
-                                            <ColumnDefinition Width="Auto" SharedSizeGroup="Lbl"/>
-                                            <ColumnDefinition Width="*" MinWidth="220"/>
-                                        </Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" SharedSizeGroup="Lbl"/>
+                                                <ColumnDefinition Width="*" MinWidth="220"/>
+                                                <ColumnDefinition Width="20"/>
+                                                <ColumnDefinition Width="Auto" SharedSizeGroup="Lbl"/>
+                                                <ColumnDefinition Width="*" MinWidth="220"/>
+                                            </Grid.ColumnDefinitions>
 
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                        </Grid.RowDefinitions>
-
-                                        <!-- Row 0 -->
-                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Name" VerticalAlignment="Center" Margin="0,0,8,4"/>
-                                        <TextBox   Grid.Row="0" Grid.Column="1" x:Name="ItemNameBox" Margin="0,0,0,6"/>
-
-                                        <TextBlock Grid.Row="0" Grid.Column="3" Text="DisplayID" VerticalAlignment="Center" Margin="0,0,8,4"/>
-                                        <TextBox   Grid.Row="0" Grid.Column="4" x:Name="ItemDisplayIdBox" Margin="0,0,0,6"/>
-
-                                        <!-- Row 1 -->
-                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Quality" VerticalAlignment="Center" Margin="0,0,8,4"/>
-                                        <ComboBox  Grid.Row="1" Grid.Column="1" x:Name="ItemQualityBox" Margin="0,0,0,6"/>
-
-                                        <TextBlock Grid.Row="1" Grid.Column="3" Text="Class" VerticalAlignment="Center" Margin="0,0,8,4"/>
-                                        <ComboBox  Grid.Row="1" Grid.Column="4" x:Name="ItemClassBox" Margin="0,0,0,6"/>
-
-                                        <!-- Row 2 -->
-                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Subclass" VerticalAlignment="Center" Margin="0,0,8,4"/>
-                                        <ComboBox  Grid.Row="2" Grid.Column="1" x:Name="ItemSubclassBox" Margin="0,0,0,6"/>
-
-                                        <TextBlock Grid.Row="2" Grid.Column="3" Text="Equip Slot" VerticalAlignment="Center" Margin="0,0,8,4"/>
-                                        <ComboBox  Grid.Row="2" Grid.Column="4" x:Name="ItemInventoryTypeBox" Margin="0,0,0,6"/>
-
-                                        <!-- Row 3 -->
-                                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Req Level" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                        <TextBox   Grid.Row="3" Grid.Column="1" x:Name="ItemReqLevelBox"/>
-
-                                        <TextBlock Grid.Row="3" Grid.Column="3" Text="Item Level" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                        <TextBox   Grid.Row="3" Grid.Column="4" x:Name="ItemLevelBox"/>
-
-                                        <!-- Row 4 -->
-                                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Stack Count" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                        <TextBox   Grid.Row="4" Grid.Column="1" x:Name="ItemStackableBox"/>
-
-
-                                        <!-- Row 5 -->
-                                        <TextBlock Grid.Row="5" Grid.Column="0" Text="Durability" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                        <TextBox   Grid.Row="5" Grid.Column="1" x:Name="ItemDurabilityBox" Text="0" TextChanged="ItemPreview_Changed"/>
-                                        </Grid>
-                                    <GroupBox Header="Stats" Margin="0,10,0,0" Padding="8">
-                                        <Grid>
                                             <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
                                                 <RowDefinition Height="Auto"/>
                                                 <RowDefinition Height="Auto"/>
                                             </Grid.RowDefinitions>
 
-                                            <Grid Grid.Row="0">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="220"/>
-                                                    <ColumnDefinition Width="120"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                </Grid.ColumnDefinitions>
+                                            <!-- Row 0 -->
+                                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Name" VerticalAlignment="Center" Margin="0,0,8,4"/>
+                                            <TextBox   Grid.Row="0" Grid.Column="1" x:Name="ItemNameBox" Margin="0,0,0,6"/>
 
-                                                <ComboBox x:Name="ItemStatTypeBox"
+                                            <TextBlock Grid.Row="0" Grid.Column="3" Text="DisplayID" VerticalAlignment="Center" Margin="0,0,8,4"/>
+                                            <TextBox   Grid.Row="0" Grid.Column="4" x:Name="ItemDisplayIdBox" Margin="0,0,0,6"/>
+
+                                            <!-- Row 1 -->
+                                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Quality" VerticalAlignment="Center" Margin="0,0,8,4"/>
+                                            <ComboBox  Grid.Row="1" Grid.Column="1" x:Name="ItemQualityBox" Margin="0,0,0,6"/>
+
+                                            <TextBlock Grid.Row="1" Grid.Column="3" Text="Class" VerticalAlignment="Center" Margin="0,0,8,4"/>
+                                            <ComboBox  Grid.Row="1" Grid.Column="4" x:Name="ItemClassBox" Margin="0,0,0,6"/>
+
+                                            <!-- Row 2 -->
+                                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Subclass" VerticalAlignment="Center" Margin="0,0,8,4"/>
+                                            <ComboBox  Grid.Row="2" Grid.Column="1" x:Name="ItemSubclassBox" Margin="0,0,0,6"/>
+
+                                            <TextBlock Grid.Row="2" Grid.Column="3" Text="Equip Slot" VerticalAlignment="Center" Margin="0,0,8,4"/>
+                                            <ComboBox  Grid.Row="2" Grid.Column="4" x:Name="ItemInventoryTypeBox" Margin="0,0,0,6"/>
+
+                                            <!-- Row 3 -->
+                                            <TextBlock Grid.Row="3" Grid.Column="0" Text="Req Level" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                            <TextBox   Grid.Row="3" Grid.Column="1" x:Name="ItemReqLevelBox"/>
+
+                                            <TextBlock Grid.Row="3" Grid.Column="3" Text="Item Level" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                            <TextBox   Grid.Row="3" Grid.Column="4" x:Name="ItemLevelBox"/>
+
+                                            <!-- Row 4 -->
+                                            <TextBlock Grid.Row="4" Grid.Column="0" Text="Stack Count" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                            <TextBox   Grid.Row="4" Grid.Column="1" x:Name="ItemStackableBox"/>
+
+
+                                            <!-- Row 5 -->
+                                            <TextBlock Grid.Row="5" Grid.Column="0" Text="Durability" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                            <TextBox   Grid.Row="5" Grid.Column="1" x:Name="ItemDurabilityBox" Text="0" TextChanged="ItemPreview_Changed"/>
+                                        </Grid>
+                                        <GroupBox Header="Stats" Margin="0,10,0,0" Padding="8">
+                                            <Grid>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                </Grid.RowDefinitions>
+
+                                                <Grid Grid.Row="0">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="220"/>
+                                                        <ColumnDefinition Width="120"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+
+                                                    <ComboBox x:Name="ItemStatTypeBox"
                                                           Grid.Column="0"
                                                           MinWidth="200"
                                                           SelectionChanged="ItemPreview_Changed">
-                                                    <ComboBoxItem Content="Strength"/>
-                                                    <ComboBoxItem Content="Agility"/>
-                                                    <ComboBoxItem Content="Stamina"/>
-                                                    <ComboBoxItem Content="Intellect"/>
-                                                    <ComboBoxItem Content="Spirit"/>
-                                                    <ComboBoxItem Content="Mana"/>
-                                                    <ComboBoxItem Content="Health"/>
-                                                    <ComboBoxItem Content="Defense skill"/>
-                                                    <ComboBoxItem Content="Dodge"/>
-                                                    <ComboBoxItem Content="Parry"/>
-                                                    <ComboBoxItem Content="Block"/>
-                                                    <ComboBoxItem Content="Hit"/>
-                                                    <ComboBoxItem Content="Crit Rating"/>
-                                                    <ComboBoxItem Content="Haste"/>
-                                                    <ComboBoxItem Content="Resilience"/>
-                                                    <ComboBoxItem Content="Expertise"/>
-                                                    <ComboBoxItem Content="Attack power"/>
-                                                    <ComboBoxItem Content="Spell power"/>
-                                                </ComboBox>
+                                                        <ComboBoxItem Content="Strength"/>
+                                                        <ComboBoxItem Content="Agility"/>
+                                                        <ComboBoxItem Content="Stamina"/>
+                                                        <ComboBoxItem Content="Intellect"/>
+                                                        <ComboBoxItem Content="Spirit"/>
+                                                        <ComboBoxItem Content="Mana"/>
+                                                        <ComboBoxItem Content="Health"/>
+                                                        <ComboBoxItem Content="Defense skill"/>
+                                                        <ComboBoxItem Content="Dodge"/>
+                                                        <ComboBoxItem Content="Parry"/>
+                                                        <ComboBoxItem Content="Block"/>
+                                                        <ComboBoxItem Content="Hit"/>
+                                                        <ComboBoxItem Content="Crit Rating"/>
+                                                        <ComboBoxItem Content="Haste"/>
+                                                        <ComboBoxItem Content="Resilience"/>
+                                                        <ComboBoxItem Content="Expertise"/>
+                                                        <ComboBoxItem Content="Attack power"/>
+                                                        <ComboBoxItem Content="Spell power"/>
+                                                    </ComboBox>
 
-                                                <TextBox x:Name="ItemStatValueBox"
+                                                    <TextBox x:Name="ItemStatValueBox"
                                                          Grid.Column="1"
                                                          Text="0"
                                                          TextChanged="ItemPreview_Changed"
                                                          VerticalContentAlignment="Center"
                                                          MinWidth="80"/>
 
-                                                <Button x:Name="ItemStatAddButton"
+                                                    <Button x:Name="ItemStatAddButton"
                                                         Grid.Column="2"
                                                         Content="+ Add"
                                                         Margin="8,0,0,0"
                                                         Padding="12,4"
                                                         Click="ItemStatAdd_Click"/>
-                                            </Grid>
+                                                </Grid>
 
-                                            <ItemsControl x:Name="ItemStatsList"
+                                                <ItemsControl x:Name="ItemStatsList"
                                                             Grid.Row="1"
                                                             Margin="0,8,0,0">
-                                                <ItemsControl.ItemTemplate>
-                                                    <DataTemplate>
-                                                        <Grid Margin="0,2,0,2">
-                                                            <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="220"/>
-                                                                <ColumnDefinition Width="120"/>
-                                                                <ColumnDefinition Width="Auto"/>
-                                                            </Grid.ColumnDefinitions>
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Grid Margin="0,2,0,2">
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="220"/>
+                                                                    <ColumnDefinition Width="120"/>
+                                                                    <ColumnDefinition Width="Auto"/>
+                                                                </Grid.ColumnDefinitions>
 
-                                                            <TextBlock Text="{Binding Name}" Grid.Column="0" VerticalAlignment="Center"/>
-                                                            <TextBlock Text="{Binding Value}" Grid.Column="1" VerticalAlignment="Center"/>
+                                                                <TextBlock Text="{Binding Name}" Grid.Column="0" VerticalAlignment="Center"/>
+                                                                <TextBlock Text="{Binding Value}" Grid.Column="1" VerticalAlignment="Center"/>
 
-                                                            <Button Grid.Column="2"
+                                                                <Button Grid.Column="2"
                                                                     Content="✖"
                                                                     Padding="8,2"
                                                                     Margin="8,0,0,0"
                                                                     Tag="{Binding}"
                                                                     Click="ItemStatRemove_Click"/>
-                                                        </Grid>
-                                                    </DataTemplate>
-                                                </ItemsControl.ItemTemplate>
-                                            </ItemsControl>
-                                        </Grid>
-                                    </GroupBox>
+                                                            </Grid>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </Grid>
+                                        </GroupBox>
 
                                     </StackPanel>
                                 </GroupBox>
@@ -1131,11 +1131,18 @@
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
 
-                                        <TextBlock Text="QuestType" Grid.Column="0" VerticalAlignment="Center"/>
-                                        <TextBox x:Name="QuestTypeBox" Grid.Column="1" Text="0"/>
+                                        <TextBlock Text="Quest Type (QuestInfoID)" Grid.Column="0" VerticalAlignment="Center"/>
+                                        <ComboBox x:Name="QuestTypeCombo" Grid.Column="1" MinWidth="140" SelectionChanged="QuestTypeCombo_SelectionChanged"/>
 
-                                        <TextBlock Text="QuestSort" Grid.Column="2" VerticalAlignment="Center"/>
-                                        <TextBox x:Name="QuestSortBox" Grid.Column="3" Text="0"/>
+                                        <TextBlock Text="Quest Sort (QuestSortID)" Grid.Column="2" VerticalAlignment="Center"/>
+                                        <Grid Grid.Column="3">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBox x:Name="QuestSortBox" Grid.Column="0" Text="0"/>
+                                            <Button x:Name="QuestSortFindButton" Grid.Column="1" Content="Find..." Width="70" Margin="6,0,0,0" Height="24" Click="QuestSortFind_Click"/>
+                                        </Grid>
                                     </Grid>
 
                                     <GroupBox Header="Reputation Requirements (quest_template_addon)" Padding="10" Margin="0,10,0,0">
