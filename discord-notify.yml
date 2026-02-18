@@ -1,0 +1,102 @@
+name: Discord Notify
+
+on:
+  push:
+  pull_request:
+    types: [opened, reopened, closed, synchronize]
+  issues:
+    types: [opened, reopened, closed]
+  release:
+    types: [published]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send notification to Discord
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          EVENT: ${{ github.event_name }}
+          REPO: ${{ github.repository }}
+          ACTOR: ${{ github.actor }}
+          URL: ${{ github.server_url }}/${{ github.repository }}
+        run: |
+          if [ -z "$DISCORD_WEBHOOK_URL" ]; then
+            echo "Missing DISCORD_WEBHOOK_URL secret"
+            exit 1
+          fi
+
+          # Build a message that is NEVER empty
+          msg=""
+
+          if [ "$EVENT" = "push" ]; then
+            branch="${GITHUB_REF_NAME}"
+            msg="✅ **Push** to \`$branch\` by **$ACTOR**\n$URL/commits/$branch"
+          elif [ "$EVENT" = "pull_request" ]; then
+            pr_title=$(python3 - <<'PY'
+import json, os
+p=json.load(open(os.environ["GITHUB_EVENT_PATH"]))
+print((p.get("pull_request",{}).get("title") or "(no title)")[:180])
+PY
+)
+            pr_url=$(python3 - <<'PY'
+import json, os
+p=json.load(open(os.environ["GITHUB_EVENT_PATH"]))
+print(p.get("pull_request",{}).get("html_url") or "")
+PY
+)
+            msg="🔀 **PR update** by **$ACTOR**\n$pr_title\n$pr_url"
+          elif [ "$EVENT" = "issues" ]; then
+            issue_title=$(python3 - <<'PY'
+import json, os
+p=json.load(open(os.environ["GITHUB_EVENT_PATH"]))
+print((p.get("issue",{}).get("title") or "(no title)")[:180])
+PY
+)
+            issue_url=$(python3 - <<'PY'
+import json, os
+p=json.load(open(os.environ["GITHUB_EVENT_PATH"]))
+print(p.get("issue",{}).get("html_url") or "")
+PY
+)
+            msg="🐛 **Issue update** by **$ACTOR**\n$issue_title\n$issue_url"
+          elif [ "$EVENT" = "release" ]; then
+            name=$(python3 - <<'PY'
+import json, os
+p=json.load(open(os.environ["GITHUB_EVENT_PATH"]))
+print((p.get("release",{}).get("name") or "New Release")[:180])
+PY
+)
+            tag=$(python3 - <<'PY'
+import json, os
+p=json.load(open(os.environ["GITHUB_EVENT_PATH"]))
+print(p.get("release",{}).get("tag_name") or "(no tag)")
+PY
+)
+            rel_url=$(python3 - <<'PY'
+import json, os
+p=json.load(open(os.environ["GITHUB_EVENT_PATH"]))
+print(p.get("release",{}).get("html_url") or "")
+PY
+)
+            msg="🚀 **Release published:** $name ($tag)\n$rel_url"
+          else
+            msg="ℹ️ GitHub event: **$EVENT** by **$ACTOR**\n$URL"
+          fi
+
+          # Absolute safety net (Discord rejects empty messages)
+          if [ -z "$msg" ]; then
+            msg="(empty notification prevented) Event: $EVENT"
+          fi
+
+          # Send
+          python3 - <<PY
+import os, json, urllib.request
+webhook=os.environ["DISCORD_WEBHOOK_URL"]
+msg=os.environ["MSG"]
+data=json.dumps({"content": msg}).encode("utf-8")
+req=urllib.request.Request(webhook, data=data, headers={"Content-Type":"application/json"})
+urllib.request.urlopen(req).read()
+PY
+        env:
+          MSG: ${{ github.event_name }} # will be overwritten by shell, but required for env injection
