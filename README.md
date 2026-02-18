@@ -3,9 +3,9 @@
   AzerothCore Creator
 </h1>
 
-[![Latest Release](https://img.shields.io/github/v/release/krowtennetwork/azerothcore-creator-releases?include_prereleases)](https://github.com/krowtennetwork/azerothcore-creator-releases/releases)
+**Currently in Beta**
 
-
+[![Latest Release](https://img.shields.io/github/v/release/KrowtennetworK/AzerothCoreCreator?include_prereleases)](https://github.com/KrowtennetworK/AzerothCoreCreator/releases/tag/v0.1.1-beta)
 
 
 ---
@@ -33,6 +33,9 @@ Every change generates clean, structured SQL with transactional safety. You can 
 ---
 
 ### 🎒 Item Editor (Trinity-Style Layout)
+<p align="center">
+  <img src="assets/itempreview.png" width="95%" />
+</p>
 
 <p align="center">
   <img src="assets/ItemTab.png" width="95%" />

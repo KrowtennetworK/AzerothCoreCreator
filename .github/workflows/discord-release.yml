@@ -32,7 +32,7 @@ jobs:
           COLOR=5793266
 
           # Optional: make the webhook show a friendly bot name/avatar (change if you want)
-          BOT_NAME="yehonal-bot"
+          BOT_NAME="GitHub"
           BOT_AVATAR="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
 
           TITLE="GitHub update"
