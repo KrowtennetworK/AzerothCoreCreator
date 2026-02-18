@@ -1,35 +1,107 @@
-name: Deploy to GitHub Releases
+name: Build & Publish (Velopack)
 
 on:
-  push:
-    branches: [ main ]
+  workflow_dispatch:
 
 permissions:
   contents: write
 
+env:
+  # ✅ CHANGE THESE 3 VALUES to match your project
+  PROJECT_PATH: AzerothCoreCreator/AzerothCoreCreator.csproj
+  PACK_ID: KrowtenNetwork.AzerothCoreCreator
+  MAIN_EXE: AzerothCoreCreator.exe
+
+  # build settings
+  CONFIGURATION: Release
+  RUNTIME: win-x64
+  CHANNEL: win
+
 jobs:
-  deploy:
+  publish:
     runs-on: windows-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install .NET
+      - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
 
-      - name: Get Version from Project File
-        id: get-version
-        shell: bash
-        run: echo "version=$(grep -oE '<Version>[^<]+' AzerothCoreCreator/AzerothCoreCreator.csproj | sed 's/<Version>//')" >> $GITHUB_OUTPUT
+      - name: Read version from csproj
+        id: ver
+        shell: pwsh
+        run: |
+          $csproj = "${{ env.PROJECT_PATH }}"
+          if (!(Test-Path $csproj)) { throw "PROJECT_PATH not found: $csproj" }
 
-      - name: Publish
-        run: dotnet publish AzerothCoreCreator/AzerothCoreCreator.csproj -c Release -o publish -r win-x64 --self-contained true
+          [xml]$xml = Get-Content $csproj
+          $version = $xml.Project.PropertyGroup.Version | Select-Object -First 1
 
-      - name: Create Velopack Release
+          if ([string]::IsNullOrWhiteSpace($version)) {
+            throw "No <Version> found in $csproj. Add <Version>0.1.1-beta</Version> to your csproj."
+          }
+
+          # prerelease = contains "-" (eg 0.1.1-beta, 1.0.0-rc1)
+          $isPre = $version.Contains("-")
+
+          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "isPre=$isPre"     | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "tag=v$version"    | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+      - name: Publish app (dotnet publish)
+        shell: pwsh
+        run: |
+          dotnet publish "${{ env.PROJECT_PATH }}" `
+            -c "${{ env.CONFIGURATION }}" `
+            -r "${{ env.RUNTIME }}" `
+            --self-contained true `
+            -o publish
+
+      - name: Install Velopack CLI (vpk)
+        shell: pwsh
         run: |
           dotnet tool install -g vpk
-          vpk download github --repoUrl https://github.com/${{ github.repository }}
-          vpk pack -u KrowtenNetwork.AzerothCoreCreator -v ${{ steps.get-version.outputs.version }} -p publish
-          vpk upload github --repoUrl https://github.com/${{ github.repository }} --publish --releaseName "AzerothCore Creator ${{ steps.get-version.outputs.version }}" --tag v${{ steps.get-version.outputs.version }}
+
+      - name: Download previous release (for delta packages)
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          # If you want deltas for prerelease channel too, we use --pre when current is pre
+          $preFlag = ""
+          if ("${{ steps.ver.outputs.isPre }}" -eq "True") { $preFlag = "--pre" }
+
+          vpk download github `
+            -c "${{ env.CHANNEL }}" `
+            --repoUrl "https://github.com/${{ github.repository }}" `
+            --token "${{ secrets.GITHUB_TOKEN }}" `
+            $preFlag
+
+      - name: Pack (Velopack)
+        shell: pwsh
+        run: |
+          vpk pack `
+            -c "${{ env.CHANNEL }}" `
+            -r "${{ env.RUNTIME }}" `
+            -u "${{ env.PACK_ID }}" `
+            -v "${{ steps.ver.outputs.version }}" `
+            -p publish `
+            -e "${{ env.MAIN_EXE }}"
+
+      - name: Upload to GitHub Releases (prerelease-aware)
+        shell: pwsh
+        run: |
+          $preFlag = ""
+          if ("${{ steps.ver.outputs.isPre }}" -eq "True") { $preFlag = "--pre" }
+
+          vpk upload github `
+            -c "${{ env.CHANNEL }}" `
+            -o Releases `
+            --repoUrl "https://github.com/${{ github.repository }}" `
+            --token "${{ secrets.GITHUB_TOKEN }}" `
+            --tag "${{ steps.ver.outputs.tag }}" `
+            --releaseName "AzerothCore Creator ${{ steps.ver.outputs.version }}" `
+            --publish `
+            $preFlag
