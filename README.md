@@ -3,7 +3,7 @@
   AzerothCore Creator
 </h1>
 
-[![Latest Release](https://img.shields.io/github/v/release/krowtennetwork/azerothcore-creator-releases?include_prereleases)](https://github.com/krowtennetwork/azerothcore-creator-releases/releases)
+[![Latest Release](https://img.shields.io/github/v/release/KrowtennetworK/AzerothCore-Creator-Releases?include_prereleases)](https://github.com/KrowtennetworK/AzerothCore-Creator-Releases/releases/tag/v0.1.1-beta)
 
 
 
