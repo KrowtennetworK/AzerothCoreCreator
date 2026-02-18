@@ -1,4 +1,4 @@
-name: Discord Notify (Embeds)
+name: Discord Notify (Compact)
 
 on:
   push:
@@ -15,7 +15,7 @@ jobs:
   notify:
     runs-on: ubuntu-latest
     steps:
-      - name: Send embed notification to Discord
+      - name: Send Discord notification
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
@@ -24,35 +24,49 @@ jobs:
           EVENT="${{ github.event_name }}"
           ACTOR="${{ github.actor }}"
           REPO="${{ github.repository }}"
-          REPO_URL="${{ github.server_url }}/${{ github.repository }}"
           REF="${{ github.ref_name }}"
+          REPO_URL="${{ github.server_url }}/${{ github.repository }}"
           AVATAR="https://github.com/${ACTOR}.png"
 
-          # Green embed border (Discord embed color is an integer)
-          COLOR=5763719  # bright-ish green
+          # Match the "clean bot" look: subtle bluish embed border
+          COLOR=5793266
+
+          # Optional: make the webhook show a friendly bot name/avatar (change if you want)
+          BOT_NAME="yehonal-bot"
+          BOT_AVATAR="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
 
           TITLE="GitHub update"
-          URL="$REPO_URL"
           DESC="Event: $EVENT"
+          URL="$REPO_URL"
 
           if [ "$EVENT" = "push" ]; then
-            COUNT=$(jq -r '.commits | length' "$GITHUB_EVENT_PATH" 2>/dev/null || echo "0")
-            COMMIT_MSG=$(jq -r '.head_commit.message // ""' "$GITHUB_EVENT_PATH" 2>/dev/null | head -c 180)
-            COMMIT_URL=$(jq -r '.head_commit.url // ""' "$GITHUB_EVENT_PATH" 2>/dev/null)
+            COUNT=$(jq -r '.commits | length' "$GITHUB_EVENT_PATH")
+            SHA=$(jq -r '.head_commit.id // ""' "$GITHUB_EVENT_PATH")
+            SHA7=$(echo "$SHA" | cut -c1-7)
+            COMMIT_URL=$(jq -r '.head_commit.url // ""' "$GITHUB_EVENT_PATH")
+            COMMIT_MSG=$(jq -r '.head_commit.message // ""' "$GITHUB_EVENT_PATH" | head -c 220)
 
-            [ -z "$COMMIT_MSG" ] && COMMIT_MSG="(no commit message)"
+            [ -z "$SHA7" ] && SHA7="commit"
             [ -z "$COMMIT_URL" ] && COMMIT_URL="$REPO_URL/commits/$REF"
+            [ -z "$COMMIT_MSG" ] && COMMIT_MSG="(no commit message)"
 
-            TITLE="Push to ${REF}"
+            # Title like the example
+            if [ "$COUNT" = "1" ]; then
+              TITLE="[$REPO:$REF] 1 new commit"
+            else
+              TITLE="[$REPO:$REF] $COUNT new commits"
+            fi
+
+            # Clickable short SHA in the bottom-left of the embed body
+            DESC="[\`$SHA7\`]($COMMIT_URL) $COMMIT_MSG"
             URL="$COMMIT_URL"
-            DESC="**${ACTOR}** pushed **${COUNT}** commit(s)\n> ${COMMIT_MSG}"
 
           elif [ "$EVENT" = "pull_request" ]; then
-            ACTION=$(jq -r '.action // ""' "$GITHUB_EVENT_PATH" 2>/dev/null)
-            PR_NUM=$(jq -r '.pull_request.number // ""' "$GITHUB_EVENT_PATH" 2>/dev/null)
-            PR_TITLE=$(jq -r '.pull_request.title // ""' "$GITHUB_EVENT_PATH" 2>/dev/null | head -c 180)
-            PR_URL=$(jq -r '.pull_request.html_url // ""' "$GITHUB_EVENT_PATH" 2>/dev/null)
-            MERGED=$(jq -r '.pull_request.merged // false' "$GITHUB_EVENT_PATH" 2>/dev/null)
+            ACTION=$(jq -r '.action // ""' "$GITHUB_EVENT_PATH")
+            PR_NUM=$(jq -r '.pull_request.number // ""' "$GITHUB_EVENT_PATH")
+            PR_TITLE=$(jq -r '.pull_request.title // ""' "$GITHUB_EVENT_PATH" | head -c 220)
+            PR_URL=$(jq -r '.pull_request.html_url // ""' "$GITHUB_EVENT_PATH")
+            MERGED=$(jq -r '.pull_request.merged // false' "$GITHUB_EVENT_PATH")
 
             if [ "$ACTION" = "closed" ] && [ "$MERGED" = "true" ]; then
               ACTION="merged"
@@ -61,58 +75,56 @@ jobs:
             [ -z "$PR_TITLE" ] && PR_TITLE="(no title)"
             [ -z "$PR_URL" ] && PR_URL="$REPO_URL/pulls"
 
-            TITLE="PR ${ACTION} #${PR_NUM}"
+            TITLE="PR $ACTION #$PR_NUM"
+            DESC="$PR_TITLE"
             URL="$PR_URL"
-            DESC="**${ACTOR}**: ${PR_TITLE}"
 
           elif [ "$EVENT" = "issues" ]; then
-            ACTION=$(jq -r '.action // ""' "$GITHUB_EVENT_PATH" 2>/dev/null)
-            ISSUE_NUM=$(jq -r '.issue.number // ""' "$GITHUB_EVENT_PATH" 2>/dev/null)
-            ISSUE_TITLE=$(jq -r '.issue.title // ""' "$GITHUB_EVENT_PATH" 2>/dev/null | head -c 180)
-            ISSUE_URL=$(jq -r '.issue.html_url // ""' "$GITHUB_EVENT_PATH" 2>/dev/null)
+            ACTION=$(jq -r '.action // ""' "$GITHUB_EVENT_PATH")
+            ISSUE_NUM=$(jq -r '.issue.number // ""' "$GITHUB_EVENT_PATH")
+            ISSUE_TITLE=$(jq -r '.issue.title // ""' "$GITHUB_EVENT_PATH" | head -c 220)
+            ISSUE_URL=$(jq -r '.issue.html_url // ""' "$GITHUB_EVENT_PATH")
 
             [ -z "$ISSUE_TITLE" ] && ISSUE_TITLE="(no title)"
             [ -z "$ISSUE_URL" ] && ISSUE_URL="$REPO_URL/issues"
 
-            TITLE="Issue ${ACTION} #${ISSUE_NUM}"
+            TITLE="Issue $ACTION #$ISSUE_NUM"
+            DESC="$ISSUE_TITLE"
             URL="$ISSUE_URL"
-            DESC="**${ACTOR}**: ${ISSUE_TITLE}"
 
           elif [ "$EVENT" = "release" ]; then
-            NAME=$(jq -r '.release.name // ""' "$GITHUB_EVENT_PATH" 2>/dev/null | head -c 180)
-            TAG=$(jq -r '.release.tag_name // ""' "$GITHUB_EVENT_PATH" 2>/dev/null)
-            REL_URL=$(jq -r '.release.html_url // ""' "$GITHUB_EVENT_PATH" 2>/dev/null)
+            NAME=$(jq -r '.release.name // ""' "$GITHUB_EVENT_PATH" | head -c 220)
+            TAG=$(jq -r '.release.tag_name // ""' "$GITHUB_EVENT_PATH")
+            REL_URL=$(jq -r '.release.html_url // ""' "$GITHUB_EVENT_PATH")
 
             [ -z "$NAME" ] && NAME="New Release"
             [ -z "$TAG" ] && TAG="(no tag)"
             [ -z "$REL_URL" ] && REL_URL="$REPO_URL/releases"
 
             TITLE="Release published"
+            DESC="**$NAME** ($TAG)"
             URL="$REL_URL"
-            DESC="**${NAME}** (${TAG})"
 
           elif [ "$EVENT" = "watch" ]; then
             TITLE="Starred"
+            DESC="⭐ $ACTOR starred $REPO"
             URL="$REPO_URL"
-            DESC="**${ACTOR}** starred **${REPO}**"
           fi
 
+          # Discord rejects empty messages
           [ -z "$DESC" ] && DESC="(empty description prevented)"
 
-          # Timestamp (Discord will show "Today at ..." like the GitHub bot cards)
           TS=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
           PAYLOAD=$(jq -n \
-            --arg username "GitHub" \
-            --arg avatar_url "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" \
+            --arg username "$BOT_NAME" \
+            --arg avatar_url "$BOT_AVATAR" \
             --arg title "$TITLE" \
             --arg url "$URL" \
             --arg description "$DESC" \
             --arg actor "$ACTOR" \
-            --arg actor_url "https://github.com/$ACTOR" \
             --arg actor_icon "$AVATAR" \
             --arg repo "$REPO" \
-            --arg ref "$REF" \
             --arg ts "$TS" \
             --argjson color "$COLOR" \
             '{
@@ -121,15 +133,12 @@ jobs:
               "embeds": [
                 {
                   "color": $color,
-                  "author": { "name": $actor, "url": $actor_url, "icon_url": $actor_icon },
+                  "author": { "name": $actor, "icon_url": $actor_icon },
                   "title": $title,
                   "url": $url,
                   "description": $description,
                   "footer": { "text": $repo },
-                  "timestamp": $ts,
-                  "fields": [
-                    { "name": "Branch", "value": ("`" + $ref + "`"), "inline": true }
-                  ]
+                  "timestamp": $ts
                 }
               ]
             }')
