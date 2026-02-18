@@ -1,3 +1,8 @@
+<h1 align="center">
+  <img src="assets/logo-acore.png" width="48" height="48" style="vertical-align: middle;" />
+  AzerothCore Creator
+</h1>
+
 ---
 
 ## 🖼 Interface Preview
