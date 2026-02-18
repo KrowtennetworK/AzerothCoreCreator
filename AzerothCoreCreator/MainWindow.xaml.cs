@@ -1,5 +1,8 @@
+using MySqlConnector;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -8,8 +11,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using MySqlConnector;
-using System.Diagnostics;
 
 
 namespace AzerothCoreCreator
@@ -2603,6 +2604,17 @@ namespace AzerothCoreCreator
                     QuestSortBox.Text = picked.Id.ToString(CultureInfo.InvariantCulture);
                     UpdateQuestPreview();
                 });
+
+        }
+
+        private void QuestFindPrev_Click(object sender, RoutedEventArgs e)
+        {
+            OpenLookupWindow(LookupKind.Quest, QuestPrevQuestIdBox);
+        }
+
+        private void QuestFindNext_Click(object sender, RoutedEventArgs e)
+        {
+            OpenLookupWindow(LookupKind.Quest, QuestNextQuestIdBox);
         }
 
         private void OpenSimpleListLookupWindow(string title, List<LookupEntry> entries, Action<LookupEntry> onPick)
@@ -2732,6 +2744,7 @@ namespace AzerothCoreCreator
 
         private void QuestFindFaction_Click(object sender, RoutedEventArgs e)
         {
+            // Faction lookup for quest fields (e.g. ReqMinRepFaction, ReqMaxRepFaction)
             OpenLookupWindow(LookupKind.FactionTemplate, _questLookupTarget);
         }
 
@@ -2740,7 +2753,8 @@ namespace AzerothCoreCreator
             Item,
             Creature,
             GameObject,
-            FactionTemplate
+            FactionTemplate,
+            Quest
         }
 
         private sealed class LookupRow
@@ -2768,6 +2782,7 @@ namespace AzerothCoreCreator
                 Title = kind == LookupKind.Item ? "Find Item" :
                         kind == LookupKind.Creature ? "Find NPC" :
                         kind == LookupKind.GameObject ? "Find GameObject" :
+                        kind == LookupKind.Quest ? "Find Quest" :
                         "Find Faction (Template)",
                 Owner = this,
                 Width = 720,
@@ -3224,7 +3239,10 @@ namespace AzerothCoreCreator
 
 
             // Use cached faction list if available (fast + avoids repeated DB hits)
-            if (kind == LookupKind.FactionTemplate && _factionCache != null && _factionCache.Count > 0)
+            if (kind == LookupKind.FactionTemplate
+                && _factionCache != null
+                && _factionCache.Count > 0)
+
             {
                 string t = term.Trim();
                 bool has = t.Length >= 2;
@@ -3298,6 +3316,11 @@ namespace AzerothCoreCreator
                     idCol = "entry";
                     nameCol = "name";
                     break;
+                case LookupKind.Quest:
+                    table = "quest_template";
+                    idCol = "ID";
+                    nameCol = "LogTitle";
+                    break;
                 default:
                     // Faction lookups vary by AzerothCore DB:
                     // - Some setups have dbc tables like faction_dbc / factiontemplate_dbc with localized names.
@@ -3328,7 +3351,15 @@ namespace AzerothCoreCreator
                 where = "1=1";
             }
 
-            cmdText = string.Format("SELECT `{0}` AS Id, `{1}` AS Name FROM `{2}` WHERE {3} ORDER BY `{0}` DESC LIMIT 200;", idCol, nameCol, table, where);
+            if (kind == LookupKind.Quest && !isId)
+            {
+                // For quests, sorting by title is much nicer when searching.
+                cmdText = string.Format("SELECT `{0}` AS Id, `{1}` AS Name FROM `{2}` WHERE {3} ORDER BY `{1}` ASC LIMIT 200;", idCol, nameCol, table, where);
+            }
+            else
+            {
+                cmdText = string.Format("SELECT `{0}` AS Id, `{1}` AS Name FROM `{2}` WHERE {3} ORDER BY `{0}` DESC LIMIT 200;", idCol, nameCol, table, where);
+            }
 
             using (var conn = new MySqlConnection(BuildConnString()))
             {
