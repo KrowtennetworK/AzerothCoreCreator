@@ -1,4 +1,4 @@
-name: Discord Notify
+name: Discord Notify (Embeds)
 
 on:
   push:
@@ -26,30 +26,31 @@ jobs:
           REPO="${{ github.repository }}"
           REPO_URL="${{ github.server_url }}/${{ github.repository }}"
           REF="${{ github.ref_name }}"
+          AVATAR="https://github.com/${ACTOR}.png"
 
-          # Defaults
-          TITLE="GitHub Notification"
+          # Green embed border (Discord embed color is an integer)
+          COLOR=5763719  # bright-ish green
+
+          TITLE="GitHub update"
           URL="$REPO_URL"
           DESC="Event: $EVENT"
-          COLOR=5793266  # a nice blue
 
           if [ "$EVENT" = "push" ]; then
             COUNT=$(jq -r '.commits | length' "$GITHUB_EVENT_PATH" 2>/dev/null || echo "0")
-            COMMIT_MSG=$(jq -r '.head_commit.message // ""' "$GITHUB_EVENT_PATH" 2>/dev/null | head -c 240)
+            COMMIT_MSG=$(jq -r '.head_commit.message // ""' "$GITHUB_EVENT_PATH" 2>/dev/null | head -c 180)
             COMMIT_URL=$(jq -r '.head_commit.url // ""' "$GITHUB_EVENT_PATH" 2>/dev/null)
 
             [ -z "$COMMIT_MSG" ] && COMMIT_MSG="(no commit message)"
             [ -z "$COMMIT_URL" ] && COMMIT_URL="$REPO_URL/commits/$REF"
 
-            TITLE="✅ Push to $REF"
+            TITLE="Push to ${REF}"
             URL="$COMMIT_URL"
-            DESC="**$ACTOR** pushed **$COUNT** commit(s)\n\n> $COMMIT_MSG"
-            COLOR=3066993  # green
+            DESC="**${ACTOR}** pushed **${COUNT}** commit(s)\n> ${COMMIT_MSG}"
 
           elif [ "$EVENT" = "pull_request" ]; then
             ACTION=$(jq -r '.action // ""' "$GITHUB_EVENT_PATH" 2>/dev/null)
             PR_NUM=$(jq -r '.pull_request.number // ""' "$GITHUB_EVENT_PATH" 2>/dev/null)
-            PR_TITLE=$(jq -r '.pull_request.title // ""' "$GITHUB_EVENT_PATH" 2>/dev/null | head -c 240)
+            PR_TITLE=$(jq -r '.pull_request.title // ""' "$GITHUB_EVENT_PATH" 2>/dev/null | head -c 180)
             PR_URL=$(jq -r '.pull_request.html_url // ""' "$GITHUB_EVENT_PATH" 2>/dev/null)
             MERGED=$(jq -r '.pull_request.merged // false' "$GITHUB_EVENT_PATH" 2>/dev/null)
 
@@ -60,27 +61,25 @@ jobs:
             [ -z "$PR_TITLE" ] && PR_TITLE="(no title)"
             [ -z "$PR_URL" ] && PR_URL="$REPO_URL/pulls"
 
-            TITLE="🔀 PR $ACTION #$PR_NUM"
+            TITLE="PR ${ACTION} #${PR_NUM}"
             URL="$PR_URL"
-            DESC="**$ACTOR:** $PR_TITLE"
-            COLOR=15105570  # orange-ish
+            DESC="**${ACTOR}**: ${PR_TITLE}"
 
           elif [ "$EVENT" = "issues" ]; then
             ACTION=$(jq -r '.action // ""' "$GITHUB_EVENT_PATH" 2>/dev/null)
             ISSUE_NUM=$(jq -r '.issue.number // ""' "$GITHUB_EVENT_PATH" 2>/dev/null)
-            ISSUE_TITLE=$(jq -r '.issue.title // ""' "$GITHUB_EVENT_PATH" 2>/dev/null | head -c 240)
+            ISSUE_TITLE=$(jq -r '.issue.title // ""' "$GITHUB_EVENT_PATH" 2>/dev/null | head -c 180)
             ISSUE_URL=$(jq -r '.issue.html_url // ""' "$GITHUB_EVENT_PATH" 2>/dev/null)
 
             [ -z "$ISSUE_TITLE" ] && ISSUE_TITLE="(no title)"
             [ -z "$ISSUE_URL" ] && ISSUE_URL="$REPO_URL/issues"
 
-            TITLE="🐛 Issue $ACTION #$ISSUE_NUM"
+            TITLE="Issue ${ACTION} #${ISSUE_NUM}"
             URL="$ISSUE_URL"
-            DESC="**$ACTOR:** $ISSUE_TITLE"
-            COLOR=15548997  # red-ish
+            DESC="**${ACTOR}**: ${ISSUE_TITLE}"
 
           elif [ "$EVENT" = "release" ]; then
-            NAME=$(jq -r '.release.name // ""' "$GITHUB_EVENT_PATH" 2>/dev/null | head -c 240)
+            NAME=$(jq -r '.release.name // ""' "$GITHUB_EVENT_PATH" 2>/dev/null | head -c 180)
             TAG=$(jq -r '.release.tag_name // ""' "$GITHUB_EVENT_PATH" 2>/dev/null)
             REL_URL=$(jq -r '.release.html_url // ""' "$GITHUB_EVENT_PATH" 2>/dev/null)
 
@@ -88,41 +87,46 @@ jobs:
             [ -z "$TAG" ] && TAG="(no tag)"
             [ -z "$REL_URL" ] && REL_URL="$REPO_URL/releases"
 
-            TITLE="🚀 Release published"
+            TITLE="Release published"
             URL="$REL_URL"
-            DESC="**$NAME** ($TAG)"
-            COLOR=10181046  # purple-ish
+            DESC="**${NAME}** (${TAG})"
 
           elif [ "$EVENT" = "watch" ]; then
-            TITLE="⭐ Starred"
+            TITLE="Starred"
             URL="$REPO_URL"
-            DESC="**$ACTOR** starred **$REPO**"
-            COLOR=15844367  # gold
-
+            DESC="**${ACTOR}** starred **${REPO}**"
           fi
 
-          # Safety net
           [ -z "$DESC" ] && DESC="(empty description prevented)"
 
-          # Build Discord embed payload
+          # Timestamp (Discord will show "Today at ..." like the GitHub bot cards)
+          TS=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
           PAYLOAD=$(jq -n \
+            --arg username "GitHub" \
+            --arg avatar_url "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" \
             --arg title "$TITLE" \
             --arg url "$URL" \
             --arg description "$DESC" \
-            --arg repo "$REPO" \
             --arg actor "$ACTOR" \
+            --arg actor_url "https://github.com/$ACTOR" \
+            --arg actor_icon "$AVATAR" \
+            --arg repo "$REPO" \
             --arg ref "$REF" \
-            --arg repourl "$REPO_URL" \
+            --arg ts "$TS" \
             --argjson color "$COLOR" \
             '{
+              "username": $username,
+              "avatar_url": $avatar_url,
               "embeds": [
                 {
+                  "color": $color,
+                  "author": { "name": $actor, "url": $actor_url, "icon_url": $actor_icon },
                   "title": $title,
                   "url": $url,
                   "description": $description,
-                  "color": $color,
                   "footer": { "text": $repo },
-                  "author": { "name": $actor, "url": $repourl },
+                  "timestamp": $ts,
                   "fields": [
                     { "name": "Branch", "value": ("`" + $ref + "`"), "inline": true }
                   ]
