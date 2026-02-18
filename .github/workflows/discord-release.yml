@@ -1,21 +1,125 @@
-name: Discord Release Notify
+name: Discord Notify
 
 on:
+  push:
+  pull_request:
+    types: [opened, reopened, closed, ready_for_review, synchronize]
+  issues:
+    types: [opened, reopened, closed]
   release:
     types: [published]
+  discussion:
+    types: [created]
+  gollum:
+  watch:
+    types: [started]
+  star:
+    types: [created]
 
 jobs:
   notify:
     runs-on: ubuntu-latest
     steps:
-      - name: Send message to Discord
+      - name: Post to Discord
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          RELEASE_NAME: ${{ github.event.release.name }}
-          RELEASE_TAG: ${{ github.event.release.tag_name }}
-          RELEASE_URL: ${{ github.event.release.html_url }}
+          EVENT_NAME: ${{ github.event_name }}
+          REPO: ${{ github.repository }}
+          ACTOR: ${{ github.actor }}
+          REF: ${{ github.ref_name }}
+          SERVER_URL: ${{ github.server_url }}
         run: |
-          payload=$(jq -n \
-            --arg content "🚀 **New Release:** $RELEASE_NAME ($RELEASE_TAG)\n$RELEASE_URL" \
-            '{content: $content}')
-          curl -H "Content-Type: application/json" -d "$payload" "$DISCORD_WEBHOOK_URL"
+          if [ -z "$DISCORD_WEBHOOK_URL" ]; then
+            echo "DISCORD_WEBHOOK_URL secret is missing."
+            exit 1
+          fi
+
+          # Build a Discord-friendly message depending on event
+          content=""
+
+          case "$EVENT_NAME" in
+            push)
+              # Latest commit info
+              commit_msg=$(jq -r '.head_commit.message // ""' "$GITHUB_EVENT_PATH" | head -c 180)
+              commit_url=$(jq -r '.head_commit.url // ""' "$GITHUB_EVENT_PATH")
+              pusher=$(jq -r '.pusher.name // ""' "$GITHUB_EVENT_PATH")
+              ref=$(jq -r '.ref // ""' "$GITHUB_EVENT_PATH")
+              count=$(jq -r '.commits | length' "$GITHUB_EVENT_PATH")
+
+              # Fallbacks
+              [ -z "$commit_msg" ] && commit_msg="(no commit message)"
+              [ -z "$commit_url" ] && commit_url="$SERVER_URL/$REPO/commits/$REF"
+
+              content="✅ **Push** to \`$ref\`\n**$pusher** pushed **$count** commit(s)\n> $commit_msg\n$commit_url"
+              ;;
+
+            pull_request)
+              action=$(jq -r '.action // ""' "$GITHUB_EVENT_PATH")
+              pr_number=$(jq -r '.pull_request.number // ""' "$GITHUB_EVENT_PATH")
+              pr_title=$(jq -r '.pull_request.title // ""' "$GITHUB_EVENT_PATH" | head -c 180)
+              pr_url=$(jq -r '.pull_request.html_url // ""' "$GITHUB_EVENT_PATH")
+              merged=$(jq -r '.pull_request.merged // false' "$GITHUB_EVENT_PATH")
+
+              # Special-case closed (merged vs just closed)
+              if [ "$action" = "closed" ] && [ "$merged" = "true" ]; then
+                action="merged"
+              fi
+
+              [ -z "$pr_title" ] && pr_title="(no title)"
+              content="🔀 **PR $action** #$pr_number\n**$ACTOR:** $pr_title\n$pr_url"
+              ;;
+
+            issues)
+              action=$(jq -r '.action // ""' "$GITHUB_EVENT_PATH")
+              issue_number=$(jq -r '.issue.number // ""' "$GITHUB_EVENT_PATH")
+              issue_title=$(jq -r '.issue.title // ""' "$GITHUB_EVENT_PATH" | head -c 180)
+              issue_url=$(jq -r '.issue.html_url // ""' "$GITHUB_EVENT_PATH")
+              [ -z "$issue_title" ] && issue_title="(no title)"
+              content="🐛 **Issue $action** #$issue_number\n**$ACTOR:** $issue_title\n$issue_url"
+              ;;
+
+            release)
+              name=$(jq -r '.release.name // ""' "$GITHUB_EVENT_PATH" | head -c 180)
+              tag=$(jq -r '.release.tag_name // ""' "$GITHUB_EVENT_PATH")
+              url=$(jq -r '.release.html_url // ""' "$GITHUB_EVENT_PATH")
+              [ -z "$name" ] && name="New Release"
+              [ -z "$tag" ] && tag="(no tag)"
+              content="🚀 **Release published:** $name ($tag)\n$url"
+              ;;
+
+            discussion)
+              title=$(jq -r '.discussion.title // ""' "$GITHUB_EVENT_PATH" | head -c 180)
+              url=$(jq -r '.discussion.html_url // ""' "$GITHUB_EVENT_PATH")
+              [ -z "$title" ] && title="(no title)"
+              content="💬 **New Discussion**\n**$ACTOR:** $title\n$url"
+              ;;
+
+            gollum)
+              page=$(jq -r '.pages[0].page_name // ""' "$GITHUB_EVENT_PATH")
+              url=$(jq -r '.pages[0].html_url // ""' "$GITHUB_EVENT_PATH")
+              [ -z "$page" ] && page="Wiki updated"
+              content="📚 **Wiki updated**\n**$ACTOR:** $page\n$url"
+              ;;
+
+            watch)
+              content="👀 **$ACTOR** started watching **$REPO**"
+              ;;
+
+            star)
+              content="⭐ **$ACTOR** starred **$REPO**"
+              ;;
+
+            *)
+              content="ℹ️ Event: **$EVENT_NAME** by **$ACTOR** in **$REPO**"
+              ;;
+          esac
+
+          # Never allow an empty Discord message
+          if [ -z "$content" ]; then
+            content="(notification had no content) Event: $EVENT_NAME"
+          fi
+
+          # Post
+          payload=$(jq -n --arg content "$content" '{content:$content}')
+          curl -sS -H "Content-Type: application/json" -d "$payload" "$DISCORD_WEBHOOK_URL"
+
