@@ -16,7 +16,7 @@ namespace AzerothCoreCreator
         {
             try
             {
-                string token = null;
+                string? token = null;
 
                 var source = new GithubSource(RepoUrl, token, includePrereleases);
                 var mgr = new UpdateManager(source);

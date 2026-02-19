@@ -2802,7 +2802,7 @@ namespace AzerothCoreCreator
             w.ShowDialog();
         }
         // ===================== QUEST LOOKUP (Finder helpers) =====================
-        private TextBox _questLookupTarget;
+        private TextBox? _questLookupTarget;
 
         private void QuestLookupTarget_GotFocus(object sender, RoutedEventArgs e)
         {
