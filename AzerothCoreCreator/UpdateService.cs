@@ -137,7 +137,8 @@ namespace AzerothCoreCreator
                 // Public repo => no token needed.
                 // NOTE: With Velopack 0.0.1298, GithubSource does not take a channel string.
                 // The channel is determined by the installed app's sq.version (created by vpk pack -c <channel>).
-                var source = new GithubSource(GithubOwner, GithubRepo, includePrereleases);
+                var repoUrl = $"https://github.com/{GithubOwner}/{GithubRepo}";
+                var source = new GithubSource(repoUrl, null, includePrereleases);
                 var mgr = new UpdateManager(source);
 
                 Log("Calling CheckForUpdatesAsync()...");
