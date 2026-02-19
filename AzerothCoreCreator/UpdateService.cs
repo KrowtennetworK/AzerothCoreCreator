@@ -18,7 +18,7 @@ namespace AzerothCoreCreator
             try
             {
                 // IMPORTANT: for public repos, no token needed
-                var source = new GithubSource("KrowtennetworK", "AzerothCoreCreator", includePrereleases);
+                var source = new GithubSource("Krowtennetwork", "AzerothCoreCreator", includePrereleases);
                 var mgr = new UpdateManager(source);
 
                 var update = await mgr.CheckForUpdatesAsync();

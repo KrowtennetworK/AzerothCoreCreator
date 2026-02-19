@@ -13,7 +13,7 @@
 		<Version>0.1.4</Version>
 
 		<!-- IMPORTANT: Keep PackageId stable across versions, or Velopack updates will not bridge -->
-		<PackageId>Krowtennetwork.AzerothCoreCreator</PackageId>
+		<PackageId>KrowtennetworK.AzerothCoreCreator</PackageId>
 
 		<!-- Friendly display metadata -->
 		<AssemblyName>AzerothCoreCreator</AssemblyName>
