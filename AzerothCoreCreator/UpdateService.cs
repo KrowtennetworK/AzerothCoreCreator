@@ -12,18 +12,28 @@ namespace AzerothCoreCreator
         // EXACTLY match your repo in the browser
         private const string GithubOwner = "KrowtennetworK";
         private const string GithubRepo = "AzerothCoreCreator";
+        // Must match the channel you pack/upload with in GitHub Actions (CHANNEL env var)
+        private const string ReleaseChannel = "win";
 
         public static async Task CheckAndUpdateAsync(bool includePrereleases)
         {
             try
             {
+                Debug.WriteLine($"[Velopack] Checking updates for {GithubOwner}/{GithubRepo} (channel='{ReleaseChannel}', prerelease={includePrereleases})...");
+
                 // IMPORTANT: for public repos, no token needed
-                var source = new GithubSource("Krowtennetwork", "AzerothCoreCreator", includePrereleases);
+                // Channel MUST match your workflow/channel used by vpk pack/upload.
+                var source = new GithubSource(GithubOwner, GithubRepo, includePrereleases, ReleaseChannel);
                 var mgr = new UpdateManager(source);
 
                 var update = await mgr.CheckForUpdatesAsync();
                 if (update == null)
+                {
+                    Debug.WriteLine("[Velopack] No update found.");
                     return;
+                }
+
+                Debug.WriteLine($"[Velopack] Update found: {update.TargetFullRelease.Version}");
 
                 var res = MessageBox.Show(
                     $"Update found: {update.TargetFullRelease.Version}\n\nDownload and restart to apply it?",

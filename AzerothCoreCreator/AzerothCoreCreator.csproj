@@ -10,7 +10,7 @@
 		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
 
 		<!-- Version displayed to users / used by Velopack releases -->
-		<Version>0.1.5</Version>
+		<Version>0.1.4</Version>
 
 		<!-- IMPORTANT: Keep PackageId stable across versions, or Velopack updates will not bridge -->
 		<PackageId>KrowtennetworK.AzerothCoreCreator</PackageId>
