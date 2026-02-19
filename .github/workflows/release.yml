@@ -2,7 +2,7 @@ name: Build & Publish (Velopack)
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
 
 permissions:
   contents: write
