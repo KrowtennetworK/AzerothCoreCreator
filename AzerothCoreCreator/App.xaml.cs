@@ -17,7 +17,7 @@ namespace AzerothCoreCreator
             {
                 // IMPORTANT:
                 // Replace with your actual releases repo URL
-                var mgr = new UpdateManager("https://github.com/Krowtennetwork/AzerothCore-Creator-Releases/releases/latest/download");
+                var mgr = new UpdateManager("https://github.com/Krowtennetwork/AzerothCoreCreator/releases/latest/download");
 
                 var update = await mgr.CheckForUpdatesAsync();
 
