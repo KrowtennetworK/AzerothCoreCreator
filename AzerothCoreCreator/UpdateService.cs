@@ -21,10 +21,6 @@ namespace AzerothCoreCreator
         {
             try
             {
-                // If your repo is PUBLIC, token can be null.
-                // If PRIVATE, you'll need a GitHub token with repo access.
-                string? token = null;
-
                 var source = new GithubSource(GithubOwner, GithubRepo, includePrereleases);
                 var mgr = new UpdateManager(source);
 
@@ -32,7 +28,6 @@ namespace AzerothCoreCreator
                 if (update == null)
                     return;
 
-                // Optional prompt (remove if you want silent updates)
                 var res = MessageBox.Show(
                     $"Update found: {update.TargetFullRelease.Version}\n\nDownload and restart to apply it?",
                     "AzerothCore Creator Update",
@@ -43,8 +38,6 @@ namespace AzerothCoreCreator
                     return;
 
                 await mgr.DownloadUpdatesAsync(update);
-
-                // Velopack 0.0.1298+ requires the update object passed in
                 mgr.ApplyUpdatesAndRestart(update);
             }
             catch (Exception ex)
@@ -52,5 +45,6 @@ namespace AzerothCoreCreator
                 Debug.WriteLine("Update check failed: " + ex);
             }
         }
+
     }
 }
