@@ -1,4 +1,6 @@
-﻿using System.Windows;
+﻿using System;
+using System.Diagnostics;
+using System.Windows;
 using Velopack;
 
 namespace AzerothCoreCreator
@@ -9,11 +11,18 @@ namespace AzerothCoreCreator
         {
             base.OnStartup(e);
 
-            // Required for Velopack install/update lifecycle (must be called early)
+            // Required for Velopack install/update lifecycle. Call this as early as possible.
             VelopackApp.Build().Run();
 
-            // Use GithubSource-based updater (supports beta/prerelease properly)
-            await UpdateService.CheckAndUpdateAsync(includePrereleases: true);
+            try
+            {
+                // Beta channel: include pre-releases (e.g., v0.1.5-beta)
+                await UpdateService.CheckAndUpdateAsync(includePrereleases: true);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("Startup update check failed: " + ex);
+            }
         }
     }
 }

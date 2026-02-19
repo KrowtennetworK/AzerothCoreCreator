@@ -1,33 +1,33 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <UseWPF>true</UseWPF>
-	<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-	  <Version>0.1.5-beta</Version>
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net8.0-windows</TargetFramework>
+		<UseWPF>true</UseWPF>
 
-	  <AssemblyName>AzerothCoreCreator</AssemblyName>
-	  <Product>AzerothCore Creator</Product>
-	  <PackageId>AzerothCoreCreator</PackageId>
-	  <ApplicationIcon>AzerothCoreCreator.ico</ApplicationIcon>
-  </PropertyGroup>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
 
-  <ItemGroup>
-    <None Remove="AzerothCoreCreator.ico" />
-  </ItemGroup>
+		<!-- Version displayed to users / used by Velopack releases -->
+		<Version>0.1.4-beta</Version>
 
-  <ItemGroup>
-    <PackageReference Include="MySqlConnector" Version="2.5.0" />
-    <PackageReference Include="Velopack" Version="0.0.1298" />
-  </ItemGroup>
+		<!-- IMPORTANT: Keep PackageId stable across versions, or Velopack updates will not bridge -->
+		<PackageId>KrowtennetworkK.AzerothCoreCreator</PackageId>
 
-  <ItemGroup>
-    <Resource Include="AzerothCoreCreator.ico">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Resource>
-  </ItemGroup>
+		<!-- Friendly display metadata -->
+		<AssemblyName>AzerothCoreCreator</AssemblyName>
+		<Title>AzerothCore Creator</Title>
+		<Product>AzerothCore Creator</Product>
+		<Company>Krowten</Company>
+
+		<!-- App icon -->
+		<ApplicationIcon>AzerothCoreCreator.ico</ApplicationIcon>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="MySqlConnector" Version="2.5.0" />
+		<PackageReference Include="Velopack" Version="0.0.1298" />
+	</ItemGroup>
 
 </Project>
