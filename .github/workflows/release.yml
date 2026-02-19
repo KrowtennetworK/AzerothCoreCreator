@@ -99,6 +99,7 @@ jobs:
             "--tag","${{ steps.ver.outputs.tag }}",
             "--releaseName","AzerothCore Creator ${{ steps.ver.outputs.version }}",
             "--publish"
+            "--pre"
           )
           if ("${{ steps.ver.outputs.isPre }}" -eq "True") { $args += "--pre" }
           vpk @args
