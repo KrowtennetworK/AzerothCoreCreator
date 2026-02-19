@@ -9,7 +9,7 @@ permissions:
 
 env:
   PROJECT_PATH: AzerothCoreCreator/AzerothCoreCreator.csproj
-  PACK_ID: Krowtennetwork.AzerothCoreCreator
+  PACK_ID: KrowtennetworK.AzerothCoreCreator
   MAIN_EXE: AzerothCoreCreator.exe
 
   CONFIGURATION: Release
@@ -87,7 +87,7 @@ jobs:
             -p publish `
             -e "${{ env.MAIN_EXE }}"
 
-      - name: Upload to GitHub Releases (prerelease-aware)
+      - name: Upload to GitHub Releases (always prerelease)
         shell: pwsh
         run: |
           $args = @(
@@ -98,8 +98,7 @@ jobs:
             "--token","${{ secrets.GITHUB_TOKEN }}",
             "--tag","${{ steps.ver.outputs.tag }}",
             "--releaseName","AzerothCore Creator ${{ steps.ver.outputs.version }}",
-            "--publish"
+            "--publish",
             "--pre"
           )
-          if ("${{ steps.ver.outputs.isPre }}" -eq "True") { $args += "--pre" }
           vpk @args
