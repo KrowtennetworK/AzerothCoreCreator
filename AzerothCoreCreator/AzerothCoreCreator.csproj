@@ -10,7 +10,7 @@
 		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
 
 		<!-- Version displayed to users / used by Velopack releases -->
-		<Version>0.1.4-beta</Version>
+		<Version>0.1.5-beta</Version>
 
 		<!-- IMPORTANT: Keep PackageId stable across versions, or Velopack updates will not bridge -->
 		<PackageId>KrowtennetworkK.AzerothCoreCreator</PackageId>
@@ -21,13 +21,18 @@
 		<Product>AzerothCore Creator</Product>
 		<Company>Krowten</Company>
 
-		<!-- App icon -->
+		<!-- App icon (also used for the generated .exe icon) -->
 		<ApplicationIcon>AzerothCoreCreator.ico</ApplicationIcon>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="MySqlConnector" Version="2.5.0" />
 		<PackageReference Include="Velopack" Version="0.0.1298" />
+	</ItemGroup>
+
+	<!-- Ensure the .ico is packaged as a WPF resource so XAML Icon can resolve it -->
+	<ItemGroup>
+		<Resource Include="AzerothCoreCreator.ico" />
 	</ItemGroup>
 
 </Project>

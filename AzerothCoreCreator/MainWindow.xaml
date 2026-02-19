@@ -5,7 +5,7 @@
         Height="780" Width="1200"
         MinWidth="1200" MinHeight="780"
         Loaded="Window_Loaded"
-        Icon="AzerothCoreCreator.ico">
+        Icon="pack://application:,,,/AzerothCoreCreator.ico">
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
