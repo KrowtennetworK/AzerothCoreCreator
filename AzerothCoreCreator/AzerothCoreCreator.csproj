@@ -9,6 +9,9 @@
 	<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
 	  <Version>0.1.5-beta</Version>
 
+	  <AssemblyName>AzerothCoreCreator</AssemblyName>
+	  <Product>AzerothCore Creator</Product>
+	  <PackageId>AzerothCoreCreator</PackageId>
 	  <ApplicationIcon>AzerothCoreCreator.ico</ApplicationIcon>
   </PropertyGroup>
 
