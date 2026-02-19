@@ -9,20 +9,19 @@ namespace AzerothCoreCreator
 {
     internal static class UpdateService
     {
-        // EXACTLY match your repo in the browser
+        // Must match your GitHub repo exactly
         private const string GithubOwner = "KrowtennetworK";
         private const string GithubRepo = "AzerothCoreCreator";
-        // Must match the channel you pack/upload with in GitHub Actions (CHANNEL env var)
-        private const string ReleaseChannel = "win";
 
         public static async Task CheckAndUpdateAsync(bool includePrereleases)
         {
             try
             {
-                Debug.WriteLine($"[Velopack] Checking updates for {GithubOwner}/{GithubRepo} (channel='{ReleaseChannel}', prerelease={includePrereleases})...");
+                Debug.WriteLine($"[Velopack] Checking updates for {GithubOwner}/{GithubRepo} (includePrereleases={includePrereleases})...");
 
-                // IMPORTANT: for public repos, no token needed
-                // Channel MUST match your workflow/channel used by vpk pack/upload.
+                // Public repo => no token needed.
+                // NOTE: With Velopack 0.0.1298, GithubSource does not take a channel string.
+                // The channel is determined by the installed app's sq.version (created by vpk pack -c <channel>).
                 var source = new GithubSource(GithubOwner, GithubRepo, includePrereleases);
                 var mgr = new UpdateManager(source);
 
@@ -49,7 +48,7 @@ namespace AzerothCoreCreator
             }
             catch (Exception ex)
             {
-                Debug.WriteLine("Update check failed: " + ex);
+                Debug.WriteLine("[Velopack] Update check failed: " + ex);
             }
         }
     }
