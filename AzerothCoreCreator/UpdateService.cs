@@ -23,7 +23,7 @@ namespace AzerothCoreCreator
 
                 // IMPORTANT: for public repos, no token needed
                 // Channel MUST match your workflow/channel used by vpk pack/upload.
-                var source = new GithubSource(GithubOwner, GithubRepo, includePrereleases, ReleaseChannel);
+                var source = new GithubSource(GithubOwner, GithubRepo, includePrereleases);
                 var mgr = new UpdateManager(source);
 
                 var update = await mgr.CheckForUpdatesAsync();
