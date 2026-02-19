@@ -11,6 +11,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
 
 
 namespace AzerothCoreCreator
@@ -19,6 +20,18 @@ namespace AzerothCoreCreator
     {
         private bool _connected = false;
         private string _lastSql = "";
+
+        // Rotating status tips (bottom-left)
+        private readonly string[] _statusTips = new[]
+        {
+            "Tip: Install via Setup.exe to enable automatic updates.",
+            "Tip: Use Export .sql to share changes with your team.",
+            "Tip: New releases every few days.",
+            "Tip: Check out our private server!  Join the Discord!",
+            "Tip: Use Find buttons to browse IDs quickly."
+        };
+        private int _statusTipIndex = 0;
+        private DispatcherTimer? _statusTipTimer;
 
 
 
@@ -78,10 +91,36 @@ namespace AzerothCoreCreator
             UpdateItemAllowableClassMask();
             UpdateItemAllowableRaceMask();
             UpdateItemPreview();
-            _ = UpdateService.CheckAndUpdateAsync(includePrereleases: true);
+            StartStatusTipRotator();
+        }
 
+        private void StartStatusTipRotator()
+        {
+            // Avoid double-starting if Window_Loaded fires again for any reason
+            if (_statusTipTimer != null)
+                return;
+
+            // Set an initial tip immediately
+            if (StatusTipText != null && _statusTips.Length > 0)
+                StatusTipText.Text = _statusTips[0];
+
+            _statusTipTimer = new DispatcherTimer();
+            _statusTipTimer.Interval = TimeSpan.FromSeconds(20);
+            _statusTipTimer.Tick += (s, e) =>
+            {
+                if (StatusTipText == null || _statusTips.Length == 0)
+                    return;
+
+                _statusTipIndex++;
+                if (_statusTipIndex >= _statusTips.Length)
+                    _statusTipIndex = 0;
+
+                StatusTipText.Text = _statusTips[_statusTipIndex];
+            };
+            _statusTipTimer.Start();            
 
         }
+
 
         // ===================== CONNECTION =====================
 
@@ -2802,7 +2841,7 @@ namespace AzerothCoreCreator
             w.ShowDialog();
         }
         // ===================== QUEST LOOKUP (Finder helpers) =====================
-        private TextBox? _questLookupTarget;
+        private TextBox _questLookupTarget;
 
         private void QuestLookupTarget_GotFocus(object sender, RoutedEventArgs e)
         {

@@ -13,31 +13,28 @@
             <RowDefinition Height="220"/>
         </Grid.RowDefinitions>
         <TextBlock
-            Grid.Row="2"
-            Text="© 2026 Krowten"
-            HorizontalAlignment="Right"
-            VerticalAlignment="Bottom"
-            Margin="0,0,10,1"
-            Foreground="Gray"
-            FontSize="12"
-            Opacity="0.8"
-            Panel.ZIndex="1000"/>
-        <TextBlock
-            Grid.Row="2"
-            HorizontalAlignment="Left"
-            VerticalAlignment="Bottom"
-            Margin="10,0,0,1"
-            Foreground="Gray"
-            FontSize="12"
-            Opacity="0.8"
-            Panel.ZIndex="1000">
-
-    <Hyperlink Click="DiscordLink_Click">
-        Discord
-    </Hyperlink>
-
+    Grid.Row="2"
+    HorizontalAlignment="Left"
+    VerticalAlignment="Bottom"
+    Margin="10,0,0,1"
+    Foreground="Gray"
+    FontSize="12"
+    Opacity="0.8"
+    Panel.ZIndex="1000">
+    <Hyperlink Click="DiscordLink_Click">Discord</Hyperlink>
         </TextBlock>
 
+        <TextBlock
+    Grid.Row="2"
+    x:Name="StatusTipText"
+    HorizontalAlignment="Left"
+    VerticalAlignment="Bottom"
+    Margin="55,0,0,0"
+    Foreground="Gray"
+    FontSize="12"
+    Opacity="0.8"
+    Panel.ZIndex="1000"
+    Text="Tip: Install via Setup.exe to enable automatic updates."/>
         <!-- ===================== DB CONNECTION ===================== -->
         <GroupBox Header="Database Connection" Grid.Row="0" Padding="10">
             <Grid>
