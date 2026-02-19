@@ -1,5 +1,4 @@
-﻿using System;
-using System.Windows;
+﻿using System.Windows;
 using Velopack;
 
 namespace AzerothCoreCreator
@@ -10,29 +9,26 @@ namespace AzerothCoreCreator
         {
             base.OnStartup(e);
 
-            // REQUIRED for Velopack install/update lifecycle
+            // Required for Velopack install/update lifecycle
             VelopackApp.Build().Run();
 
             try
             {
-                // IMPORTANT:
-                // Replace with your actual releases repo URL
-                var mgr = new UpdateManager("https://github.com/Krowtennetwork/AzerothCoreCreator/releases/latest/download");
+                // Point this to your releases feed location
+                var mgr = new UpdateManager("https://github.com/KrowtennetworK/AzerothCore-Creator-Releases/releases/latest/download");
 
                 var update = await mgr.CheckForUpdatesAsync();
 
                 if (update != null)
                 {
                     await mgr.DownloadUpdatesAsync(update);
-                    mgr.ApplyUpdatesAndRestart();
+                    mgr.ApplyUpdatesAndRestart(update);
                 }
             }
             catch
             {
-                // Optional: log error if needed
+                // Optional: log if you want
             }
         }
     }
 }
-
-
