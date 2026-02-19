@@ -21,4 +21,10 @@
     <PackageReference Include="Velopack" Version="0.0.1298" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Resource Include="AzerothCoreCreator.ico">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+  </ItemGroup>
+
 </Project>
