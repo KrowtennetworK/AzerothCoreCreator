@@ -3,6 +3,10 @@ name: Build & Publish (Velopack)
 on:
   push:
     branches: [ master ]
+    paths:
+      - "AzerothCoreCreator/**"
+      - ".github/workflows/release.yml"
+
 
 permissions:
   contents: write
