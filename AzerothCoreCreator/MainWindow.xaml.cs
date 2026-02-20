@@ -12,6 +12,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
+using Microsoft.Win32;
 
 
 namespace AzerothCoreCreator
@@ -259,6 +260,7 @@ namespace AzerothCoreCreator
         public MainWindow()
         {
             InitializeComponent();
+            UpdateUninstallDisplaySize();
             EnsureFlagCheckboxesBuilt();
             UpdateCreatureOptionalSectionsVisibility();
         }
@@ -1369,6 +1371,43 @@ namespace AzerothCoreCreator
 
             RefreshItemStatsUI();
             UpdateItemPreview();
+        }
+
+        private void UpdateUninstallDisplaySize()
+        {
+            try
+            {
+                string installPath = AppContext.BaseDirectory;
+
+                long size = GetDirectorySize(new DirectoryInfo(installPath));
+                int sizeInKb = (int)(size / 1024);
+
+                string uninstallKeyPath =
+                    @"Software\Microsoft\Windows\CurrentVersion\Uninstall\KrowtennetworkK.AzerothCoreCreator";
+
+                using var key = Registry.CurrentUser.OpenSubKey(uninstallKeyPath, writable: true);
+                if (key != null)
+                {
+                    key.SetValue("DisplaySize", sizeInKb, RegistryValueKind.DWord);
+                }
+            }
+            catch
+            {
+                // Cosmetic only — do nothing if it fails
+            }
+        }
+
+        private long GetDirectorySize(DirectoryInfo dir)
+        {
+            long size = 0;
+
+            foreach (var file in dir.GetFiles())
+                size += file.Length;
+
+            foreach (var sub in dir.GetDirectories())
+                size += GetDirectorySize(sub);
+
+            return size;
         }
 
         private void ItemStatRemove_Click(object sender, RoutedEventArgs e)
