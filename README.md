@@ -3,7 +3,7 @@
   AzerothCore Creator
 </h1>
 
-A modern desktop toolkit for building and managing AzerothCore content — without wrestling raw SQL.
+Home of the Official AzerothCore Creator Tool!  Create Items/Creatures/Quests with ease!
 
 ---
 
