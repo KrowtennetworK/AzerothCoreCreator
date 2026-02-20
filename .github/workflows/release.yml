@@ -26,6 +26,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -52,6 +54,21 @@ jobs:
           "isPre=$isPre"     | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           "tag=v$version"    | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
+      - name: Skip release if version tag already exists
+        id: tagcheck
+        shell: pwsh
+        run: |
+          git fetch --tags --force
+          $tag = "${{ steps.ver.outputs.tag }}"
+          $found = git tag -l $tag
+          if (-not [string]::IsNullOrWhiteSpace($found)) {
+            Write-Host "Tag already exists ($tag). Skipping release steps."
+            "shouldRelease=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          } else {
+            Write-Host "Tag does not exist ($tag). Proceeding with release."
+            "shouldRelease=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          }
+
       - name: Publish app (dotnet publish)
         shell: pwsh
         run: |
@@ -67,6 +84,7 @@ jobs:
           dotnet tool update -g vpk
 
       - name: Download previous release (for delta packages)
+        if: steps.tagcheck.outputs.shouldRelease == 'true'
         shell: pwsh
         continue-on-error: true
         run: |
@@ -80,6 +98,7 @@ jobs:
           vpk @args
 
       - name: Pack (Velopack)
+        if: steps.tagcheck.outputs.shouldRelease == 'true'
         shell: pwsh
         run: |
           vpk pack `
@@ -91,6 +110,7 @@ jobs:
             -e "${{ env.MAIN_EXE }}"
 
       - name: Upload to GitHub Releases (always prerelease)
+        if: steps.tagcheck.outputs.shouldRelease == 'true'
         shell: pwsh
         run: |
           $args = @(
