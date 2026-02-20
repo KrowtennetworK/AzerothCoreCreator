@@ -1379,21 +1379,21 @@ namespace AzerothCoreCreator
             {
                 string installPath = AppContext.BaseDirectory;
 
-                long size = GetDirectorySize(new DirectoryInfo(installPath));
-                int sizeInKb = (int)(size / 1024);
+                long bytes = GetDirectorySize(new DirectoryInfo(installPath));
+                int sizeKb = (int)(bytes / 1024);
 
-                string uninstallKeyPath =
-                    @"Software\Microsoft\Windows\CurrentVersion\Uninstall\KrowtennetworkK.AzerothCoreCreator";
+                using var key = Registry.CurrentUser.OpenSubKey(
+                    @"Software\Microsoft\Windows\CurrentVersion\Uninstall\KrowtennetworkK.AzerothCoreCreator",
+                    writable: true);
 
-                using var key = Registry.CurrentUser.OpenSubKey(uninstallKeyPath, writable: true);
                 if (key != null)
                 {
-                    key.SetValue("DisplaySize", sizeInKb, RegistryValueKind.DWord);
+                    key.SetValue("DisplaySize", sizeKb, RegistryValueKind.DWord);
                 }
             }
             catch
             {
-                // Cosmetic only — do nothing if it fails
+                // Cosmetic only
             }
         }
 
