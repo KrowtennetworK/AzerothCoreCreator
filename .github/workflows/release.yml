@@ -3,8 +3,6 @@ name: Build & Publish (Velopack)
 on:
   push:
     branches: [ master ]
-    paths:
-      - "AzerothCoreCreator/AzerothCoreCreator.csproj"
 
 permissions:
   contents: write
@@ -19,11 +17,11 @@ env:
   CHANNEL: win
 
 jobs:
-  publish:
+  build_and_maybe_release:
     runs-on: windows-latest
 
     steps:
-      - name: Checkout (full history + tags)
+      - name: Checkout (full history)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -33,7 +31,7 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
-      - name: Read version from csproj
+      - name: Read current version from csproj
         id: ver
         shell: pwsh
         run: |
@@ -42,10 +40,7 @@ jobs:
 
           [xml]$xml = Get-Content $csproj
           $version = $xml.Project.PropertyGroup.Version | Select-Object -First 1
-
-          if ([string]::IsNullOrWhiteSpace($version)) {
-            throw "No <Version> found in $csproj. Add <Version>0.1.5</Version> (or 0.1.5-beta) to your csproj."
-          }
+          if ([string]::IsNullOrWhiteSpace($version)) { throw "No <Version> found in $csproj" }
 
           $isPre = $version.Contains("-")
           $tag = "v$version"
@@ -54,29 +49,50 @@ jobs:
           "isPre=$isPre"     | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           "tag=$tag"         | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
-      - name: Decide whether to publish (skip if tag already exists)
-        id: decide
+      - name: Detect whether <Version> changed in this push
+        id: bump
         shell: pwsh
         run: |
-          git fetch --tags --force
-          $tag = "${{ steps.ver.outputs.tag }}"
+          $before = "${{ github.event.before }}"
+          $after  = "${{ github.sha }}"
+          $path   = "${{ env.PROJECT_PATH }}"
 
-          $tagMatch = (git tag -l $tag)
-          if ($tagMatch -and $tagMatch.Trim().Length -gt 0) {
-            Write-Host "Tag $tag already exists -> skipping release."
-            "should_publish=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-          } else {
-            Write-Host "Tag $tag not found -> publishing release."
-            "should_publish=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          # First push / edge cases
+          if ([string]::IsNullOrWhiteSpace($before) -or $before -eq "0000000000000000000000000000000000000000") {
+            Write-Host "No valid 'before' SHA. Assume version changed."
+            "version_changed=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            exit 0
           }
 
-      - name: Stop early (no version bump)
-        if: steps.decide.outputs.should_publish != 'true'
-        shell: pwsh
-        run: |
-          Write-Host "No version bump detected (tag exists). Exiting successfully."
-          exit 0
+          # Read csproj from BEFORE commit
+          $beforeText = git show "$before`:$path" 2>$null
+          if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($beforeText)) {
+            Write-Host "Could not read csproj at 'before'. Assume version changed."
+            "version_changed=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            exit 0
+          }
 
+          # Read csproj from AFTER (checked-out) commit
+          $afterText = Get-Content $path -Raw
+
+          $beforeVer = ([regex]::Match($beforeText, "<Version>(.*?)</Version>")).Groups[1].Value
+          $afterVer  = ([regex]::Match($afterText,  "<Version>(.*?)</Version>")).Groups[1].Value
+
+          if ([string]::IsNullOrWhiteSpace($beforeVer)) {
+            Write-Host "No <Version> in 'before'. Assume changed."
+            "version_changed=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            exit 0
+          }
+
+          if ($beforeVer -ne $afterVer) {
+            Write-Host "Version changed: $beforeVer -> $afterVer"
+            "version_changed=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          } else {
+            Write-Host "Version NOT changed: $afterVer"
+            "version_changed=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          }
+
+      # Always build (so pushes still validate)
       - name: Publish app (dotnet publish)
         shell: pwsh
         run: |
@@ -86,12 +102,15 @@ jobs:
             --self-contained true `
             -o publish
 
+      # Only run Velopack + Release if version changed
       - name: Install Velopack CLI (vpk)
+        if: steps.bump.outputs.version_changed == 'true'
         shell: pwsh
         run: |
           dotnet tool update -g vpk
 
       - name: Download previous release (for delta packages)
+        if: steps.bump.outputs.version_changed == 'true'
         shell: pwsh
         continue-on-error: true
         run: |
@@ -105,6 +124,7 @@ jobs:
           vpk @args
 
       - name: Pack (Velopack)
+        if: steps.bump.outputs.version_changed == 'true'
         shell: pwsh
         run: |
           vpk pack `
@@ -116,6 +136,7 @@ jobs:
             -e "${{ env.MAIN_EXE }}"
 
       - name: Upload to GitHub Releases (always prerelease)
+        if: steps.bump.outputs.version_changed == 'true'
         shell: pwsh
         run: |
           $args = @(
