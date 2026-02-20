@@ -64,9 +64,203 @@ namespace AzerothCoreCreator
 
         private readonly List<SpeechLine> _speechLines = new List<SpeechLine>();
 
+
+        // ===================== EMOTE LOOKUP (hardcoded from Emotes.dbc export) =====================
+        private sealed class EmoteEntry
+        {
+            public int Id { get; }
+            public string Name { get; }
+            public int AnimId { get; }
+            public EmoteEntry(int id, string name, int animId) { Id = id; Name = name; AnimId = animId; }
+            public override string ToString() => $"{Id} - {Name}";
+        }
+
+        private static readonly List<EmoteEntry> _emoteList = new List<EmoteEntry>
+        {
+            new EmoteEntry(0, "ONESHOT_NONE", 0),
+            new EmoteEntry(1, "ONESHOT_TALK(DNR)", 60),
+            new EmoteEntry(2, "ONESHOT_BOW", 66),
+            new EmoteEntry(3, "ONESHOT_WAVE(DNR)", 67),
+            new EmoteEntry(4, "ONESHOT_CHEER(DNR)", 68),
+            new EmoteEntry(5, "ONESHOT_EXCLAMATION(DNR)", 64),
+            new EmoteEntry(6, "ONESHOT_QUESTION", 65),
+            new EmoteEntry(7, "ONESHOT_EAT", 61),
+            new EmoteEntry(10, "STATE_DANCE", 69),
+            new EmoteEntry(11, "ONESHOT_LAUGH", 70),
+            new EmoteEntry(12, "STATE_SLEEP", 0),
+            new EmoteEntry(13, "STATE_SIT", 0),
+            new EmoteEntry(14, "ONESHOT_RUDE(DNR)", 73),
+            new EmoteEntry(15, "ONESHOT_ROAR(DNR)", 74),
+            new EmoteEntry(16, "ONESHOT_KNEEL", 75),
+            new EmoteEntry(17, "ONESHOT_KISS", 76),
+            new EmoteEntry(18, "ONESHOT_CRY", 77),
+            new EmoteEntry(19, "ONESHOT_CHICKEN", 78),
+            new EmoteEntry(20, "ONESHOT_BEG", 79),
+            new EmoteEntry(21, "ONESHOT_APPLAUD", 80),
+            new EmoteEntry(22, "ONESHOT_SHOUT(DNR)", 81),
+            new EmoteEntry(23, "ONESHOT_FLEX", 82),
+            new EmoteEntry(24, "ONESHOT_SHY(DNR)", 83),
+            new EmoteEntry(25, "ONESHOT_POINT(DNR)", 84),
+            new EmoteEntry(26, "STATE_STAND", 0),
+            new EmoteEntry(27, "STATE_READYUNARMED", 25),
+            new EmoteEntry(28, "STATE_WORK_SHEATHED", 62),
+            new EmoteEntry(29, "STATE_POINT(DNR)", 84),
+            new EmoteEntry(30, "STATE_NONE", 0),
+            new EmoteEntry(33, "ONESHOT_WOUND", 9),
+            new EmoteEntry(34, "ONESHOT_WOUNDCRITICAL", 10),
+            new EmoteEntry(35, "ONESHOT_ATTACKUNARMED", 16),
+            new EmoteEntry(36, "ONESHOT_ATTACK1H", 17),
+            new EmoteEntry(37, "ONESHOT_ATTACK2HTIGHT", 18),
+            new EmoteEntry(38, "ONESHOT_ATTACK2HLOOSE", 19),
+            new EmoteEntry(39, "ONESHOT_PARRYUNARMED", 20),
+            new EmoteEntry(43, "ONESHOT_PARRYSHIELD", 24),
+            new EmoteEntry(44, "ONESHOT_READYUNARMED", 25),
+            new EmoteEntry(45, "ONESHOT_READY1H", 26),
+            new EmoteEntry(48, "ONESHOT_READYBOW", 29),
+            new EmoteEntry(50, "ONESHOT_SPELLPRECAST", 31),
+            new EmoteEntry(51, "ONESHOT_SPELLCAST", 32),
+            new EmoteEntry(53, "ONESHOT_BATTLEROAR", 55),
+            new EmoteEntry(54, "ONESHOT_SPECIALATTACK1H", 57),
+            new EmoteEntry(60, "ONESHOT_KICK", 95),
+            new EmoteEntry(61, "ONESHOT_ATTACKTHROWN", 107),
+            new EmoteEntry(64, "STATE_STUN", 14),
+            new EmoteEntry(65, "STATE_DEAD", 0),
+            new EmoteEntry(66, "ONESHOT_SALUTE", 113),
+            new EmoteEntry(68, "STATE_KNEEL", 0),
+            new EmoteEntry(69, "STATE_USESTANDING", 63),
+            new EmoteEntry(70, "ONESHOT_WAVE_NOSHEATHE", 67),
+            new EmoteEntry(71, "ONESHOT_CHEER_NOSHEATHE", 68),
+            new EmoteEntry(92, "ONESHOT_EAT_NOSHEATHE", 199),
+            new EmoteEntry(93, "STATE_STUN_NOSHEATHE", 137),
+            new EmoteEntry(94, "ONESHOT_DANCE", 69),
+            new EmoteEntry(113, "ONESHOT_SALUTE_NOSHEATH", 210),
+            new EmoteEntry(133, "STATE_USESTANDING_NOSHEATHE", 138),
+            new EmoteEntry(153, "ONESHOT_LAUGH_NOSHEATHE", 70),
+            new EmoteEntry(173, "STATE_WORK", 136),
+            new EmoteEntry(193, "STATE_SPELLPRECAST", 31),
+            new EmoteEntry(213, "ONESHOT_READYRIFLE", 48),
+            new EmoteEntry(214, "STATE_READYRIFLE", 48),
+            new EmoteEntry(233, "STATE_WORK_MINING", 136),
+            new EmoteEntry(234, "STATE_WORK_CHOPWOOD", 136),
+            new EmoteEntry(253, "STATE_APPLAUD", 80),
+            new EmoteEntry(254, "ONESHOT_LIFTOFF", 192),
+            new EmoteEntry(273, "ONESHOT_YES(DNR)", 185),
+            new EmoteEntry(274, "ONESHOT_NO(DNR)", 186),
+            new EmoteEntry(275, "ONESHOT_TRAIN(DNR)", 195),
+            new EmoteEntry(293, "ONESHOT_LAND", 200),
+            new EmoteEntry(313, "STATE_AT_EASE", 0),
+            new EmoteEntry(333, "STATE_READY1H", 26),
+            new EmoteEntry(353, "STATE_SPELLKNEELSTART", 140),
+            new EmoteEntry(373, "STAND_STATE_SUBMERGED", 202),
+            new EmoteEntry(374, "ONESHOT_SUBMERGE", 201),
+            new EmoteEntry(375, "STATE_READY2H", 27),
+            new EmoteEntry(376, "STATE_READYBOW", 29),
+            new EmoteEntry(377, "ONESHOT_MOUNTSPECIAL", 94),
+            new EmoteEntry(378, "STATE_TALK", 60),
+            new EmoteEntry(379, "STATE_FISHING", 134),
+            new EmoteEntry(380, "ONESHOT_FISHING", 133),
+            new EmoteEntry(381, "ONESHOT_LOOT", 50),
+            new EmoteEntry(382, "STATE_WHIRLWIND", 126),
+            new EmoteEntry(383, "STATE_DROWNED", 132),
+            new EmoteEntry(384, "STATE_HOLD_BOW", 109),
+            new EmoteEntry(385, "STATE_HOLD_RIFLE", 110),
+            new EmoteEntry(386, "STATE_HOLD_THROWN", 111),
+            new EmoteEntry(387, "ONESHOT_DROWN", 131),
+            new EmoteEntry(388, "ONESHOT_STOMP", 181),
+            new EmoteEntry(389, "ONESHOT_ATTACKOFF", 87),
+            new EmoteEntry(390, "ONESHOT_ATTACKOFFPIERCE", 88),
+            new EmoteEntry(391, "STATE_ROAR", 74),
+            new EmoteEntry(392, "STATE_LAUGH", 70),
+            new EmoteEntry(393, "ONESHOT_CREATURE_SPECIAL", 130),
+            new EmoteEntry(394, "ONESHOT_JUMPLANDRUN", 187),
+            new EmoteEntry(395, "ONESHOT_JUMPEND", 39),
+            new EmoteEntry(396, "ONESHOT_TALK_NOSHEATHE", 208),
+            new EmoteEntry(397, "ONESHOT_POINT_NOSHEATHE", 209),
+            new EmoteEntry(398, "STATE_CANNIBALIZE", 203),
+            new EmoteEntry(399, "ONESHOT_JUMPSTART", 37),
+            new EmoteEntry(400, "STATE_DANCESPECIAL", 211),
+            new EmoteEntry(401, "ONESHOT_DANCESPECIAL", 211),
+            new EmoteEntry(402, "EYEBEAM_DH", 146),
+            new EmoteEntry(403, "GLIDE_DH", 214),
+            new EmoteEntry(404, "VENGEFUL_DH", 215),
+            new EmoteEntry(405, "DOUBLE_JUMP", 216),
+            new EmoteEntry(406, "CHAOS_STRIKE", 217),
+            new EmoteEntry(407, "BLADE_DANCE_A", 218),
+            new EmoteEntry(408, "BLADE_DANCE_B", 219),
+            new EmoteEntry(409, "BLADE_DANCE_C", 220),
+            new EmoteEntry(410, "BLADE_DANCE_D", 221),
+            new EmoteEntry(411, "ONESHOT_CUSTOMSPELL10", 222),
+            new EmoteEntry(412, "STATE_EXCLAIM", 64),
+            new EmoteEntry(413, "STATE_DANCE_CUSTOM", 42),
+            new EmoteEntry(415, "STATE_SIT_CHAIR_MED", 103),
+            new EmoteEntry(416, "STATE_CUSTOM_SPELL_01", 213),
+            new EmoteEntry(417, "STATE_CUSTOM_SPELL_02", 214),
+            new EmoteEntry(418, "STATE_EAT", 61),
+            new EmoteEntry(419, "BLADE_DANCE_E", 216),
+            new EmoteEntry(420, "BLADE_DANCE_F", 215),
+            new EmoteEntry(421, "STATE_CUSTOM_SPELL_05", 217),
+            new EmoteEntry(422, "STATE_SPELLEFFECT_HOLD", 158),
+            new EmoteEntry(423, "STATE_EAT_NO_SHEATHE", 199),
+            new EmoteEntry(424, "STATE_MOUNT", 91),
+            new EmoteEntry(425, "STATE_READY2HL", 28),
+            new EmoteEntry(426, "STATE_SIT_CHAIR_HIGH", 104),
+            new EmoteEntry(427, "STATE_FALL", 40),
+            new EmoteEntry(428, "STATE_LOOT", 188),
+            new EmoteEntry(429, "STATE_SUBMERGED", 202),
+            new EmoteEntry(430, "ONESHOT_COWER(DNR)", 225),
+            new EmoteEntry(431, "STATE_COWER", 225),
+            new EmoteEntry(432, "ONESHOT_USESTANDING", 63),
+            new EmoteEntry(433, "STATE_STEALTH_STAND", 120),
+            new EmoteEntry(434, "ONESHOT_OMNICAST_GHOUL (W/SOUND", 54),
+            new EmoteEntry(435, "ONESHOT_ATTACKBOW", 46),
+            new EmoteEntry(436, "ONESHOT_ATTACKRIFLE", 49),
+            new EmoteEntry(437, "STATE_SWIM_IDLE", 41),
+            new EmoteEntry(438, "STATE_ATTACK_UNARMED", 16),
+            new EmoteEntry(439, "ONESHOT_SPELLCAST (W/SOUND)", 32),
+            new EmoteEntry(440, "ONESHOT_DODGE", 30),
+            new EmoteEntry(441, "ONESHOT_PARRY1H", 21),
+            new EmoteEntry(442, "ONESHOT_PARRY2H", 22),
+            new EmoteEntry(443, "ONESHOT_PARRY2HL", 28),
+            new EmoteEntry(444, "STATE_FLYFALL", 269),
+            new EmoteEntry(445, "ONESHOT_FLYDEATH", 230),
+            new EmoteEntry(446, "STATE_FLY_FALL", 269),
+            new EmoteEntry(447, "ONESHOT_FLY_SIT_GROUND_DOWN", 325),
+            new EmoteEntry(448, "ONESHOT_FLY_SIT_GROUND_UP", 327),
+            new EmoteEntry(449, "ONESHOT_EMERGE", 224),
+            new EmoteEntry(450, "ONESHOT_DRAGONSPIT", 182),
+            new EmoteEntry(451, "STATE_SPECIALUNARMED", 118),
+            new EmoteEntry(452, "ONESHOT_FLYGRAB", 455),
+            new EmoteEntry(453, "STATE_FLYGRABCLOSED", 456),
+            new EmoteEntry(454, "ONESHOT_FLYGRABTHROWN", 457),
+            new EmoteEntry(455, "STATE_FLY_SIT_GROUND", 326),
+            new EmoteEntry(456, "STATE_WALKBACKWARDS", 13),
+            new EmoteEntry(457, "ONESHOT_FLYTALK", 289),
+            new EmoteEntry(458, "ONESHOT_FLYATTACK1H", 246),
+            new EmoteEntry(459, "STATE_CUSTOMSPELL08", 220),
+            new EmoteEntry(460, "ONESHOT_FLY_DRAGONSPIT", 411),
+            new EmoteEntry(461, "STATE_SIT_CHAIR_LOW", 102),
+            new EmoteEntry(462, "ONE_SHOT_STUN", 14),
+            new EmoteEntry(463, "ONESHOT_SPELLCAST_OMNI", 54),
+            new EmoteEntry(465, "STATE_READYTHROWN", 108),
+            new EmoteEntry(466, "ONESHOT_WORK_CHOPWOOD", 62),
+            new EmoteEntry(467, "ONESHOT_WORK_MINING", 62),
+            new EmoteEntry(468, "STATE_SPELL_CHANNEL_OMNI", 125),
+            new EmoteEntry(469, "STATE_SPELL_CHANNEL_DIRECTED", 124),
+            new EmoteEntry(470, "STAND_STATE_NONE", 0),
+            new EmoteEntry(471, "STATE_READYJOUST", 476),
+            new EmoteEntry(473, "STATE_STRANGULATE", 474),
+            new EmoteEntry(474, "STATE_READYSPELLOMNI", 52),
+            new EmoteEntry(475, "STATE_HOLD_JOUST", 478),
+            new EmoteEntry(476, "ONESHOT_CRY (JAINA PROUDMOORE ONLY)", 77),
+            new EmoteEntry(477, "FELRUSH_DH", 506),
+            new EmoteEntry(478, "BLADE_DANCE_A", 600)
+        };
+
         public MainWindow()
         {
             InitializeComponent();
+            EnsureFlagCheckboxesBuilt();
+            UpdateCreatureOptionalSectionsVisibility();
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -75,9 +269,8 @@ namespace AzerothCoreCreator
             PopulateItemCombos();
             PopulateQuestDefaults();
             UpdateQuestPreview();
-            BuildFlagCheckboxes();
-            SetDisconnectedUI("Ready.");
-            BuildFlagCheckboxes();
+            EnsureFlagCheckboxesBuilt();
+            UpdateCreatureOptionalSectionsVisibility();
             SetDisconnectedUI("Ready.");
             InitItemClassAndSubclasses();
             HookItemPreviewEvents();
@@ -117,7 +310,7 @@ namespace AzerothCoreCreator
 
                 StatusTipText.Text = _statusTips[_statusTipIndex];
             };
-            _statusTipTimer.Start();            
+            _statusTipTimer.Start();
 
         }
 
@@ -351,6 +544,48 @@ namespace AzerothCoreCreator
             }
         }
 
+        private bool _flagsBuilt = false;
+
+        private void EnsureFlagCheckboxesBuilt()
+        {
+            if (_flagsBuilt) return;
+
+            // Use FindName to avoid any name-scope surprises if layout changes later
+            NpcFlagWrap = (WrapPanel)(this.FindName("NpcFlagWrap") ?? NpcFlagWrap);
+            UnitFlagsWrap = (WrapPanel)(this.FindName("UnitFlagsWrap") ?? UnitFlagsWrap);
+            UnitFlags2Wrap = (WrapPanel)(this.FindName("UnitFlags2Wrap") ?? UnitFlags2Wrap);
+            FlagsExtraWrap = (WrapPanel)(this.FindName("FlagsExtraWrap") ?? FlagsExtraWrap);
+
+            if (NpcFlagWrap == null || UnitFlagsWrap == null || UnitFlags2Wrap == null || FlagsExtraWrap == null)
+                return;
+
+            BuildFlagCheckboxes();
+            _flagsBuilt = true;
+        }
+
+
+
+        // Toggle optional Creature sections (Spawn + Speech) from their checkboxes
+        private void UpdateCreatureOptionalSectionsVisibility()
+        {
+            var spawnGrid = this.FindName("CreatureSpawnFieldsGrid") as FrameworkElement;
+            var speechPanel = this.FindName("SpeechFieldsPanel") as FrameworkElement;
+
+            var spawnEnable = this.FindName("CreatureSpawnEnable") as CheckBox;
+            var speechEnable = this.FindName("SpeechEnable") as CheckBox;
+
+            if (spawnGrid != null && spawnEnable != null)
+                spawnGrid.Visibility = (spawnEnable.IsChecked == true) ? Visibility.Visible : Visibility.Collapsed;
+
+            if (speechPanel != null && speechEnable != null)
+                speechPanel.Visibility = (speechEnable.IsChecked == true) ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        private void CreatureSpawnEnable_Checked(object sender, RoutedEventArgs e) => UpdateCreatureOptionalSectionsVisibility();
+        private void CreatureSpawnEnable_Unchecked(object sender, RoutedEventArgs e) => UpdateCreatureOptionalSectionsVisibility();
+
+        private void SpeechEnable_Checked(object sender, RoutedEventArgs e) => UpdateCreatureOptionalSectionsVisibility();
+        private void SpeechEnable_Unchecked(object sender, RoutedEventArgs e) => UpdateCreatureOptionalSectionsVisibility();
         private void BuildFlagCheckboxes()
         {
             // NPCFlag (common ones)
@@ -1570,86 +1805,6 @@ namespace AzerothCoreCreator
 
         // ===================== ROLE PRESETS =====================
 
-        private void CreatureApplyRolePreset_Click(object sender, RoutedEventArgs e)
-        {
-            string preset = "Default";
-            var item = CreatureRolePresetCombo?.SelectedItem as ComboBoxItem;
-            if (item != null) preset = item.Content?.ToString() ?? "Default";
-
-            ApplyRolePreset(preset);
-            ConnMessage.Text = "Applied role preset: " + preset;
-        }
-
-        private void ApplyRolePreset(string preset)
-        {
-            // Only touch faction + flags (beginner-friendly)
-            ClearChecks(_npcFlags);
-            ClearChecks(_unitFlags);
-            ClearChecks(_unitFlags2);
-            ClearChecks(_extraFlags);
-
-            // Speech is only auto-enabled for the clue herald preset
-            if (preset != "Clue Herald Template")
-            {
-                // don't destroy existing speech lines; just don't force-enable
-                // user can toggle Speech manually
-            }
-
-            switch (preset)
-            {
-                case "Friendly NPC":
-                    SelectComboByTag(CreatureFactionCombo, 35);
-                    SetCheckByLabel(_npcFlags, "Gossip", true);
-                    SetCheckByLabel(_unitFlags, "Non-attackable", true);
-                    break;
-
-                case "Questgiver":
-                    SelectComboByTag(CreatureFactionCombo, 35);
-                    SetCheckByLabel(_npcFlags, "Gossip", true);
-                    SetCheckByLabel(_npcFlags, "Questgiver", true);
-                    SetCheckByLabel(_unitFlags, "Non-attackable", true);
-                    break;
-
-                case "Vendor":
-                    SelectComboByTag(CreatureFactionCombo, 35);
-                    SetCheckByLabel(_npcFlags, "Gossip", true);
-                    SetCheckByLabel(_npcFlags, "Vendor", true);
-                    // Optional: Repair commonly goes with vendors; user can toggle it.
-                    SetCheckByLabel(_unitFlags, "Non-attackable", true);
-                    break;
-
-                case "Trainer":
-                    SelectComboByTag(CreatureFactionCombo, 35);
-                    SetCheckByLabel(_npcFlags, "Gossip", true);
-                    SetCheckByLabel(_npcFlags, "Trainer", true);
-                    SetCheckByLabel(_unitFlags, "Non-attackable", true);
-                    break;
-
-                case "Guard":
-                    SelectComboByTag(CreatureFactionCombo, 35);
-                    // We don't include a "Guard" npcflag checkbox in beginner list.
-                    // Leave flags mostly empty so user can decide.
-                    break;
-
-                case "Hostile Enemy":
-                    SelectComboByTag(CreatureFactionCombo, 14);
-                    break;
-
-                case "Clue Herald Template":
-                    SelectComboByTag(CreatureFactionCombo, 35);
-                    SetCheckByLabel(_npcFlags, "Gossip", true);
-                    SetCheckByLabel(_unitFlags, "Non-attackable", true);
-                    SpeechEnable.IsChecked = true;
-                    break;
-
-                default:
-                    // Default: no changes
-                    break;
-            }
-
-            UpdateQuestPreview();
-        }
-
         private void ClearChecks(Dictionary<CheckBox, uint> map)
         {
             foreach (var kv in map) kv.Key.IsChecked = false;
@@ -1733,6 +1888,120 @@ namespace AzerothCoreCreator
             SpeechLinesList.ItemsSource = _speechLines;
         }
 
+        private void FindEmote_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var win = new Window
+                {
+                    Title = "Find Emote",
+                    Width = 620,
+                    Height = 700,
+                    Owner = this,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                };
+
+                var root = new DockPanel { Margin = new Thickness(10) };
+
+                var searchBox = new TextBox { Margin = new Thickness(0, 0, 0, 8) };
+                searchBox.ToolTip = "Search by ID or name (example: dance, dead, 65)";
+                DockPanel.SetDock(searchBox, Dock.Top);
+                root.Children.Add(searchBox);
+
+                var list = new ListView { Margin = new Thickness(0, 0, 0, 8) };
+
+                var gv = new GridView();
+                gv.Columns.Add(new GridViewColumn { Header = "ID", DisplayMemberBinding = new System.Windows.Data.Binding("Id"), Width = 70 });
+                gv.Columns.Add(new GridViewColumn { Header = "Emote", DisplayMemberBinding = new System.Windows.Data.Binding("Name"), Width = 430 });
+                gv.Columns.Add(new GridViewColumn { Header = "AnimID", DisplayMemberBinding = new System.Windows.Data.Binding("AnimId"), Width = 80 });
+                list.View = gv;
+
+                list.ItemsSource = _emoteList;
+                root.Children.Add(list);
+
+                var buttons = new StackPanel
+                {
+                    Orientation = Orientation.Horizontal,
+                    HorizontalAlignment = HorizontalAlignment.Right
+                };
+
+                var ok = new Button { Content = "Use Selected", Width = 120, Margin = new Thickness(0, 0, 8, 0) };
+                var cancel = new Button { Content = "Cancel", Width = 90 };
+
+                buttons.Children.Add(ok);
+                buttons.Children.Add(cancel);
+
+                DockPanel.SetDock(buttons, Dock.Bottom);
+                root.Children.Add(buttons);
+
+                win.Content = root;
+
+                var view = System.Windows.Data.CollectionViewSource.GetDefaultView(list.ItemsSource);
+                view.Filter = o =>
+                {
+                    if (o is not EmoteEntry ee) return false;
+
+                    string q = (searchBox.Text ?? "").Trim();
+                    if (q.Length == 0) return true;
+
+                    if (int.TryParse(q, out int qid))
+                        return ee.Id == qid;
+
+                    return ee.Name.IndexOf(q, StringComparison.OrdinalIgnoreCase) >= 0;
+                };
+
+                searchBox.TextChanged += (s, ev) => view.Refresh();
+
+                void accept()
+                {
+                    if (list.SelectedItem is EmoteEntry ee)
+                    {
+                        SpeechEmoteBox.Text = ee.Id.ToString(CultureInfo.InvariantCulture);
+                        win.DialogResult = true;
+                        win.Close();
+                    }
+                }
+
+                ok.Click += (s, ev) => accept();
+                cancel.Click += (s, ev) => { win.DialogResult = false; win.Close(); };
+
+                list.MouseDoubleClick += (s, ev) => accept();
+                list.KeyDown += (s, ev) =>
+                {
+                    if (ev.Key == Key.Enter)
+                    {
+                        accept();
+                        ev.Handled = true;
+                    }
+                };
+
+                searchBox.KeyDown += (s, ev) =>
+                {
+                    if (ev.Key == Key.Down)
+                    {
+                        list.Focus();
+                        if (list.Items.Count > 0 && list.SelectedIndex < 0)
+                            list.SelectedIndex = 0;
+                        ev.Handled = true;
+                    }
+                };
+
+                // Preselect current emote if possible
+                if (int.TryParse(SpeechEmoteBox.Text, out int currentId))
+                {
+                    var found = _emoteList.FirstOrDefault(x => x.Id == currentId);
+                    if (found != null)
+                        list.SelectedItem = found;
+                }
+
+                win.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Find Emote failed: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         // ===================== CREATURE SQL =====================
 
         private void CreatureGenerateSql_Click(object sender, RoutedEventArgs e)
@@ -1806,9 +2075,44 @@ namespace AzerothCoreCreator
 
             int displayId = ParseInt(CreatureDisplayIdBox.Text, 0);
 
+            // Stats
+            int rank = ComboTagInt(CreatureRankCombo);
+            int dmgSchool = ComboTagInt(CreatureDamageSchoolCombo);
+            int unitClass = ComboTagInt(CreatureUnitClassCombo);
+
+            int baseAttackTime = ParseInt(CreatureBaseAttackTimeBox?.Text ?? "1500", 1500);
+            int rangeAttackTime = ParseInt(CreatureRangeAttackTimeBox?.Text ?? "2000", 2000);
+
+            int racialLeader = (CreatureRacialLeaderCheck?.IsChecked == true) ? 1 : 0;
+            int regenHealth = (CreatureRegenHealthCheck?.IsChecked == true) ? 1 : 0;
+
+            int minHealth = ParseInt(CreatureMinHealthBox?.Text ?? "0", 0);
+            int maxHealth = ParseInt(CreatureMaxHealthBox?.Text ?? "0", 0);
+            int minMana = ParseInt(CreatureMinManaBox?.Text ?? "0", 0);
+            int maxMana = ParseInt(CreatureMaxManaBox?.Text ?? "0", 0);
+
+            double minDmg = ParseDouble(CreatureMinDmgBox?.Text ?? "0", 0);
+            double maxDmg = ParseDouble(CreatureMaxDmgBox?.Text ?? "0", 0);
+            double minRangedDmg = ParseDouble(CreatureMinRangedDmgBox?.Text ?? "0", 0);
+            double maxRangedDmg = ParseDouble(CreatureMaxRangedDmgBox?.Text ?? "0", 0);
+
+            int attackPower = ParseInt(CreatureAttackPowerBox?.Text ?? "0", 0);
+            int rangedAttackPower = ParseInt(CreatureRangedAttackPowerBox?.Text ?? "0", 0);
+            int armor = ParseInt(CreatureArmorBox?.Text ?? "0", 0);
+
+            bool isCivilian = (CreatureCivilianCheck?.IsChecked == true);
+
+            // Equipment (creature_equip_template): ItemID1/2/3 (weapon1/weapon2/ranged)
+            int equipItem1 = ParseInt(CreatureEquipItem1Box?.Text ?? "0", 0);
+            int equipItem2 = ParseInt(CreatureEquipItem2Box?.Text ?? "0", 0);
+            int equipItem3 = ParseInt(CreatureEquipItem3Box?.Text ?? "0", 0);
+            int equipmentId = (equipItem1 > 0 || equipItem2 > 0 || equipItem3 > 0) ? 1 : 0;
+
             uint npcflag = SumFlags(_npcFlags);
             uint unitFlags = SumFlags(_unitFlags);
             uint unitFlags2 = SumFlags(_unitFlags2);
+            uint unitFlags2Adjusted = unitFlags2;
+            if (isCivilian) unitFlags2Adjusted |= 0x00000001; // UNIT_FLAG2_CIVILIAN
             uint flagsExtra = SumFlags(_extraFlags);
 
             // We insert with explicit columns (AzerothCore/TC style)
@@ -1824,9 +2128,14 @@ namespace AzerothCoreCreator
             sb.AppendLine();
 
             sb.Append("INSERT INTO `creature_template` ");
-            sb.Append("(`entry`,`name`,`subname`,`minlevel`,`maxlevel`,`faction`,`npcflag`,`unit_flags`,`unit_flags2`,`type`,`family`,`flags_extra`,`modelid1`) VALUES ");
-            sb.AppendFormat("(@ENTRY,'{0}','{1}',{2},{3},{4},{5},{6},{7},{8},{9},{10},{11});",
-                name, subname, minLevel, maxLevel, faction, npcflag, unitFlags, unitFlags2, creatureType, family, flagsExtra, displayId);
+            sb.Append("(`entry`,`name`,`subname`,`minlevel`,`maxlevel`,`faction`,`npcflag`,`unit_flags`,`unit_flags2`,`type`,`family`,`flags_extra`,`modelid1`,`equipment_id`,`rank`,`dmgschool`,`baseattacktime`,`rangeattacktime`,`unit_class`,`racialleader`,`regeneratehealth`,`minhealth`,`maxhealth`,`minmana`,`maxmana`,`mindmg`,`maxdmg`,`minrangedmg`,`maxrangedmg`,`attackpower`,`rangedattackpower`,`armor`) VALUES ");
+            sb.AppendFormat("(@ENTRY,'{0}','{1}',{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15},{16},{17},{18},{19},{20},{21},{22},{23},{24},{25},{26},{27},{28},{29},{30},{31});",
+                name, subname, minLevel, maxLevel, faction, npcflag, unitFlags, unitFlags2Adjusted, creatureType, family, flagsExtra, displayId, equipmentId,
+                rank, dmgSchool, baseAttackTime, rangeAttackTime, unitClass, racialLeader, regenHealth,
+                minHealth, maxHealth, minMana, maxMana,
+                minDmg.ToString(CultureInfo.InvariantCulture), maxDmg.ToString(CultureInfo.InvariantCulture),
+                minRangedDmg.ToString(CultureInfo.InvariantCulture), maxRangedDmg.ToString(CultureInfo.InvariantCulture),
+                attackPower, rangedAttackPower, armor);
             sb.AppendLine();
             sb.AppendLine();// Spawn optional (some AC schemas have id1 instead of id; we try both via columns)
             if (CreatureSpawnEnable.IsChecked == true)
@@ -1850,6 +2159,18 @@ namespace AzerothCoreCreator
                     z.ToString(CultureInfo.InvariantCulture),
                     o.ToString(CultureInfo.InvariantCulture),
                     respawn);
+                sb.AppendLine();
+                sb.AppendLine();
+            }
+
+            // Equipment optional (creature_equip_template)
+            if (equipmentId > 0)
+            {
+                sb.AppendLine("-- Equipment (creature_equip_template)");
+                sb.AppendLine("DELETE FROM `creature_equip_template` WHERE `CreatureID`=@ENTRY AND `ID`=1;");
+                sb.Append("INSERT INTO `creature_equip_template` ");
+                sb.Append("(`CreatureID`,`ID`,`ItemID1`,`ItemID2`,`ItemID3`) VALUES ");
+                sb.AppendFormat("(@ENTRY,1,{0},{1},{2});", equipItem1, equipItem2, equipItem3);
                 sb.AppendLine();
                 sb.AppendLine();
             }
@@ -2867,6 +3188,19 @@ namespace AzerothCoreCreator
         {
             // Faction lookup for quest fields (e.g. ReqMinRepFaction, ReqMaxRepFaction)
             OpenLookupWindow(LookupKind.FactionTemplate, _questLookupTarget);
+        }
+
+        // ===================== CREATURE EQUIPMENT LOOKUP =====================
+        private TextBox _creatureEquipLookupTarget;
+
+        private void CreatureEquipLookupTarget_GotFocus(object sender, RoutedEventArgs e)
+        {
+            _creatureEquipLookupTarget = sender as TextBox;
+        }
+
+        private void CreatureFindEquipment_Click(object sender, RoutedEventArgs e)
+        {
+            OpenLookupWindow(LookupKind.Item, _creatureEquipLookupTarget);
         }
 
         private enum LookupKind

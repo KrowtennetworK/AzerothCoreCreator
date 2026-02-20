@@ -170,24 +170,7 @@
                                         <ColumnDefinition Width="260"/>
                                         <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-
-                                    <ComboBox x:Name="CreatureRolePresetCombo" Grid.Column="0" SelectedIndex="0">
-                                        <ComboBoxItem Content="Default"/>
-                                        <ComboBoxItem Content="Friendly NPC"/>
-                                        <ComboBoxItem Content="Questgiver"/>
-                                        <ComboBoxItem Content="Vendor"/>
-                                        <ComboBoxItem Content="Trainer"/>
-                                        <ComboBoxItem Content="Guard"/>
-                                        <ComboBoxItem Content="Hostile Enemy"/>
-                                        <ComboBoxItem Content="Clue Herald Template"/>
-                                    </ComboBox>
-
-                                    <Button Grid.Column="1" Content="Apply Role Preset" Margin="10,0,0,0" Padding="14,6"
-                                         Click="CreatureApplyRolePreset_Click"/>
-
-                                    <TextBlock Grid.Column="2" Margin="10,0,0,0" VerticalAlignment="Center" Foreground="#777"
-                                            Text="Role presets set Faction and common flags (no raw bitmasks)."/>
+                                    </Grid.ColumnDefinitions>                                                                   
                                 </Grid>
                             </StackPanel>
                         </GroupBox>
@@ -209,32 +192,25 @@
                                 </Grid.RowDefinitions>
 
                                 <TextBlock Text="Name" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"/>
-                                <TextBox x:Name="CreatureNameBox" Grid.Row="0" Grid.Column="1"/>
+                                <TextBox x:Name="CreatureNameBox" Grid.Row="0" Grid.Column="1" Margin="0,0,0,5"/>
 
-                                <TextBlock Text="Subname (Title)" Grid.Row="0" Grid.Column="2" VerticalAlignment="Center"/>
-                                <TextBox x:Name="CreatureSubnameBox" Grid.Row="0" Grid.Column="3"/>
-
-                                <TextBlock Text="Min Level" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center"/>
-                                <TextBox x:Name="CreatureMinLevelBox" Grid.Row="1" Grid.Column="1" Text="1"/>
-
-                                <TextBlock Text="Max Level" Grid.Row="1" Grid.Column="2" VerticalAlignment="Center"/>
-                                <TextBox x:Name="CreatureMaxLevelBox" Grid.Row="1" Grid.Column="3" Text="1"/>
+                                <TextBlock Text="Subname (Title)" Grid.Row="0" Grid.Column="2" VerticalAlignment="Center" Margin="80,0,0,0"/>
+                                <TextBox x:Name="CreatureSubnameBox" Grid.Row="0" Grid.Column="3" Margin="0,0,0,5"/>
 
                                 <TextBlock Text="Faction (easy)" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center"/>
-                                <ComboBox x:Name="CreatureFactionCombo" Grid.Row="2" Grid.Column="1" SelectedIndex="0"/>
+                                <ComboBox x:Name="CreatureFactionCombo" Grid.Row="2" Grid.Column="1" SelectedIndex="0" Margin="0,0,0,5"/>
 
-                                <TextBlock Text="Creature Type" Grid.Row="2" Grid.Column="2" VerticalAlignment="Center"/>
-                                <ComboBox x:Name="CreatureTypeCombo" Grid.Row="2" Grid.Column="3" SelectedIndex="0"/>
+                                <TextBlock Text="Creature Type" Grid.Row="2" Grid.Column="2" VerticalAlignment="Center" Margin="80,0,0,0"/>
+                                <ComboBox x:Name="CreatureTypeCombo" Grid.Row="2" Grid.Column="3" SelectedIndex="0" Margin="0,0,0,5"/>
 
                                 <TextBlock Text="Family (for beasts)" Grid.Row="3" Grid.Column="0" VerticalAlignment="Center"/>
-                                <ComboBox x:Name="CreatureFamilyCombo" Grid.Row="3" Grid.Column="1" SelectedIndex="0"/>
+                                <ComboBox x:Name="CreatureFamilyCombo" Grid.Row="3" Grid.Column="1" SelectedIndex="0" Margin="0,0,0,5"/>
 
-                                <TextBlock Text="Model DisplayID" Grid.Row="3" Grid.Column="2" VerticalAlignment="Center"/>
-                                <TextBox x:Name="CreatureDisplayIdBox" Grid.Row="3" Grid.Column="3" Text="0"/>
+                                <TextBlock Text="Model DisplayID" Grid.Row="3" Grid.Column="2" VerticalAlignment="Center" Margin="80,0,0,0"/>
+                                <TextBox x:Name="CreatureDisplayIdBox" Grid.Row="3" Grid.Column="3" Text="0" Margin="0,0,0,5"/>
                             </Grid>
                         </GroupBox>
 
-                        <!-- Flags -->
                         <GroupBox Header="Flags (Beginner Friendly)" Padding="10" Margin="0,10,0,0">
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -266,94 +242,272 @@
                             </Grid>
                         </GroupBox>
 
+                        <!-- Flags -->
+                        <GroupBox Header="Stats" Padding="10" Margin="0,10,0,0">
+                            <Grid Grid.IsSharedSizeScope="True">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="110" SharedSizeGroup="Label"/>
+                                    <ColumnDefinition Width="2*"/>
+                                    <ColumnDefinition Width="110" SharedSizeGroup="Label"/>
+                                    <ColumnDefinition Width="2*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Text="Rank" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,6"/>
+                                <ComboBox x:Name="CreatureRankCombo" Grid.Row="0" Grid.Column="1" Margin="0,0,12,6">
+                                    <ComboBoxItem Content="Normal" Tag="0" IsSelected="True"/>
+                                    <ComboBoxItem Content="Elite" Tag="1"/>
+                                    <ComboBoxItem Content="Rare Elite" Tag="2"/>
+                                    <ComboBoxItem Content="Boss" Tag="3"/>
+                                    <ComboBoxItem Content="Rare" Tag="4"/>
+                                </ComboBox>
+
+                                <CheckBox x:Name="CreatureRacialLeaderCheck" Content="Is racial leader" Grid.Row="0" Grid.Column="2" VerticalAlignment="Center" Margin="0,0,12,6"/>
+                                <CheckBox x:Name="CreatureRegenHealthCheck" Content="Regenerate health" Grid.Row="0" Grid.Column="3" VerticalAlignment="Center" Margin="0,0,0,6"/>
+
+                                <TextBlock Text="Level" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,6"/>
+                                <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Margin="0,0,12,6">
+                                    <TextBox x:Name="CreatureMinLevelBox" Width="60" Text="1" Margin="0,0,6,0"/>
+                                    <TextBlock Text="-" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBox x:Name="CreatureMaxLevelBox" Width="60" Text="1"/>
+                                </StackPanel>
+
+                                <TextBlock Text="Damage Type" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,6"/>
+                                <ComboBox x:Name="CreatureDamageSchoolCombo" Grid.Row="2" Grid.Column="1" Margin="0,0,12,6">
+                                    <ComboBoxItem Content="Physical" Tag="0" IsSelected="True"/>
+                                    <ComboBoxItem Content="Holy" Tag="1"/>
+                                    <ComboBoxItem Content="Fire" Tag="2"/>
+                                    <ComboBoxItem Content="Nature" Tag="3"/>
+                                    <ComboBoxItem Content="Frost" Tag="4"/>
+                                    <ComboBoxItem Content="Shadow" Tag="5"/>
+                                    <ComboBoxItem Content="Arcane" Tag="6"/>
+                                </ComboBox>
+
+                                <TextBlock Text="Attack Speed (ms)" Grid.Row="3" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,6"/>
+                                <TextBox x:Name="CreatureBaseAttackTimeBox" Grid.Row="3" Grid.Column="1" Text="1500" Margin="0,0,12,6"/>
+
+                                <TextBlock Text="Ranged Speed (ms)" Grid.Row="3" Grid.Column="2" VerticalAlignment="Center" Margin="0,0,8,6"/>
+                                <TextBox x:Name="CreatureRangeAttackTimeBox" Grid.Row="3" Grid.Column="3" Text="2000" Margin="0,0,0,6"/>
+
+                                <TextBlock Text="Unit Class" Grid.Row="4" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <ComboBox x:Name="CreatureUnitClassCombo" Grid.Row="4" Grid.Column="1" Margin="0,0,12,0">
+                                    <ComboBoxItem Content="Warrior (Health only)" Tag="1" IsSelected="True"/>
+                                    <ComboBoxItem Content="Paladin (Health &amp; mana)" Tag="2"/>
+                                    <ComboBoxItem Content="Mage (Less health &amp; more mana)" Tag="4"/>
+                                </ComboBox>
+                            </Grid>
+                        </GroupBox>
+
+                        <GroupBox Header="Detailed Stats" Padding="10" Margin="0,10,0,0">
+                            <Grid Grid.IsSharedSizeScope="True">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="110" SharedSizeGroup="Label"/>
+                                    <ColumnDefinition Width="90"/>
+                                    <ColumnDefinition Width="20"/>
+                                    <ColumnDefinition Width="90"/>
+                                    <ColumnDefinition Width="110" SharedSizeGroup="Label"/>
+                                    <ColumnDefinition Width="2*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Text="Health" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,6"/>
+                                <TextBox x:Name="CreatureMinHealthBox" Grid.Row="0" Grid.Column="1" Text="0" Margin="0,0,6,6"/>
+                                <TextBlock Text="-" Grid.Row="0" Grid.Column="2" VerticalAlignment="Center" Margin="0,0,6,6"/>
+                                <TextBox x:Name="CreatureMaxHealthBox" Grid.Row="0" Grid.Column="3" Text="0" Margin="0,0,0,6"/>
+
+                                <TextBlock Text="Mana" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,6"/>
+                                <TextBox x:Name="CreatureMinManaBox" Grid.Row="1" Grid.Column="1" Text="0" Margin="0,0,6,6"/>
+                                <TextBlock Text="-" Grid.Row="1" Grid.Column="2" VerticalAlignment="Center" Margin="0,0,6,6"/>
+                                <TextBox x:Name="CreatureMaxManaBox" Grid.Row="1" Grid.Column="3" Text="0" Margin="0,0,0,6"/>
+
+                                <TextBlock Text="Melee Damage" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,6"/>
+                                <TextBox x:Name="CreatureMinDmgBox" Grid.Row="2" Grid.Column="1" Text="0" Margin="0,0,6,6"/>
+                                <TextBlock Text="-" Grid.Row="2" Grid.Column="2" VerticalAlignment="Center" Margin="0,0,6,6"/>
+                                <TextBox x:Name="CreatureMaxDmgBox" Grid.Row="2" Grid.Column="3" Text="0" Margin="0,0,0,6"/>
+
+                                <TextBlock Text="Ranged Damage" Grid.Row="3" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,6"/>
+                                <TextBox x:Name="CreatureMinRangedDmgBox" Grid.Row="3" Grid.Column="1" Text="0" Margin="0,0,6,6"/>
+                                <TextBlock Text="-" Grid.Row="3" Grid.Column="2" VerticalAlignment="Center" Margin="0,0,6,6"/>
+                                <TextBox x:Name="CreatureMaxRangedDmgBox" Grid.Row="3" Grid.Column="3" Text="0" Margin="0,0,0,6"/>
+
+                                <TextBlock Text="Melee Attack Power" Grid.Row="4" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,6"/>
+                                <TextBox x:Name="CreatureAttackPowerBox" Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="3" Text="0" Margin="0,0,0,6"/>
+
+                                <TextBlock Text="Ranged Attack Power" Grid.Row="5" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,6"/>
+                                <TextBox x:Name="CreatureRangedAttackPowerBox" Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="3" Text="0" Margin="0,0,0,6"/>
+
+                                <TextBlock Text="Armor" Grid.Row="6" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,6"/>
+                                <TextBox x:Name="CreatureArmorBox" Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="3" Text="0" Margin="0,0,0,6"/>
+
+                                <CheckBox x:Name="CreatureCivilianCheck" Content="Is civilian? (Dishonorable Kill)" Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="4" Margin="0,4,0,0"/>
+                            </Grid>
+                        </GroupBox>
+
                         <!-- Spawn -->
+                        <GroupBox Header="Equipment" Padding="10" Margin="0,10,0,0">
+                            <Grid Grid.IsSharedSizeScope="True">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" SharedSizeGroup="EquipLbl"/>
+                                    <ColumnDefinition Width="*" MinWidth="220"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Text="Weapon 1" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,6"/>
+                                <TextBox x:Name="CreatureEquipItem1Box" Grid.Row="0" Grid.Column="1" Text="0" Margin="0,0,775,6"
+                                         GotFocus="CreatureEquipLookupTarget_GotFocus"/>
+
+                                <TextBlock Text="Weapon 2" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,6"/>
+                                <TextBox x:Name="CreatureEquipItem2Box" Grid.Row="1" Grid.Column="1" Text="0" Margin="0,0,775,6"
+                                         GotFocus="CreatureEquipLookupTarget_GotFocus"/>
+
+                                <TextBlock Text="Ranged Weapon" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <TextBox x:Name="CreatureEquipItem3Box" Grid.Row="2" Grid.Column="1" Text="0" Margin="0,0,775,0"
+                                         GotFocus="CreatureEquipLookupTarget_GotFocus"/>
+
+                                <Button Grid.Row="0" Grid.Column="2" Grid.RowSpan="3"
+                                        Content="Find Item"
+                                        Width="110"
+                                        VerticalAlignment="Top"
+                                        Click="CreatureFindEquipment_Click"/>
+                            </Grid>
+                        </GroupBox>
+
                         <GroupBox Header="Spawn (Optional) - adds a row to creature table" Padding="10" Margin="0,10,0,0">
                             <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="110"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="130"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="130"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="130"/>
-                                </Grid.ColumnDefinitions>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
 
-                                <CheckBox x:Name="CreatureSpawnEnable" Grid.Row="0" Grid.Column="0"
-                                          Content="Create Spawn" Margin="0,0,14,0"/>
+                                <CheckBox x:Name="CreatureSpawnEnable"
+                                          Grid.Row="0"
+                                          Content="Create Spawn"
+                                          Margin="0,0,0,8"
+                                          Checked="CreatureSpawnEnable_Checked"
+                                          Unchecked="CreatureSpawnEnable_Unchecked"/>
 
-                                <TextBlock Text="Map" Grid.Row="0" Grid.Column="2" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                <TextBox x:Name="CreatureMapBox" Grid.Row="0" Grid.Column="3" Text="0"/>
+                                <Grid x:Name="CreatureSpawnFieldsGrid" Grid.Row="1" Visibility="Collapsed">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="110"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="130"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="130"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
 
-                                <TextBlock Text="X" Grid.Row="0" Grid.Column="4" VerticalAlignment="Center" Margin="12,0,6,0"/>
-                                <TextBox x:Name="CreatureXBox" Grid.Row="0" Grid.Column="5" Text="0"/>
+                                    <TextBlock Text="Map" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBox x:Name="CreatureMapBox" Grid.Row="0" Grid.Column="1" Text="0"/>
 
-                                <TextBlock Text="Y" Grid.Row="0" Grid.Column="6" VerticalAlignment="Center" Margin="12,0,6,0"/>
-                                <TextBox x:Name="CreatureYBox" Grid.Row="0" Grid.Column="7" Text="0"/>
+                                    <TextBlock Text="X" Grid.Row="0" Grid.Column="2" VerticalAlignment="Center" Margin="12,0,6,0"/>
+                                    <TextBox x:Name="CreatureXBox" Grid.Row="0" Grid.Column="3" Text="0"/>
 
-                                <TextBlock Text="Z" Grid.Row="1" Grid.Column="2" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                <TextBox x:Name="CreatureZBox" Grid.Row="1" Grid.Column="3" Text="0"/>
+                                    <TextBlock Text="Y" Grid.Row="0" Grid.Column="4" VerticalAlignment="Center" Margin="12,0,6,0"/>
+                                    <TextBox x:Name="CreatureYBox" Grid.Row="0" Grid.Column="5" Text="0"/>
 
-                                <TextBlock Text="O" Grid.Row="1" Grid.Column="4" VerticalAlignment="Center" Margin="12,0,6,0"/>
-                                <TextBox x:Name="CreatureOBox" Grid.Row="1" Grid.Column="5" Text="0"/>
+                                    <TextBlock Text="Z" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBox x:Name="CreatureZBox" Grid.Row="1" Grid.Column="1" Text="0"/>
 
-                                <TextBlock Text="Respawn (sec)" Grid.Row="1" Grid.Column="6" VerticalAlignment="Center" Margin="12,0,6,0"/>
-                                <TextBox x:Name="CreatureRespawnBox" Grid.Row="1" Grid.Column="7" Text="120"/>
+                                    <TextBlock Text="O" Grid.Row="1" Grid.Column="2" VerticalAlignment="Center" Margin="12,0,6,0"/>
+                                    <TextBox x:Name="CreatureOBox" Grid.Row="1" Grid.Column="3" Text="0"/>
+
+                                    <TextBlock Text="Respawn (sec)" Grid.Row="1" Grid.Column="4" VerticalAlignment="Center" Margin="12,0,6,0"/>
+                                    <TextBox x:Name="CreatureRespawnBox" Grid.Row="1" Grid.Column="5" Text="120"/>
+                                </Grid>
                             </Grid>
                         </GroupBox>
+
+                        <!-- Equipment (creature_equip_template) -->
+
 
                         <!-- Speech -->
                         <GroupBox Header="Speech / Text (creature_text) - like your Herald clues" Padding="10" Margin="0,10,0,0">
                             <StackPanel>
-                                <CheckBox x:Name="SpeechEnable" Content="Enable Speech rows (creature_text)" Margin="0,0,0,8"/>
+                                <CheckBox x:Name="SpeechEnable" Content="Enable Speech rows (creature_text)" Margin="0,0,0,8" Checked="SpeechEnable_Checked" Unchecked="SpeechEnable_Unchecked"/>
+                                <StackPanel x:Name="SpeechFieldsPanel" Visibility="Collapsed">
 
-                                <Grid Margin="0,0,0,8">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="160"/>
-                                        <ColumnDefinition Width="200"/>
-                                        <ColumnDefinition Width="160"/>
-                                        <ColumnDefinition Width="200"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
+                                    <Grid Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="160"/>
+                                            <ColumnDefinition Width="200"/>
+                                            <ColumnDefinition Width="160"/>
+                                            <ColumnDefinition Width="200"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
 
-                                    <TextBlock Text="Text GroupID" Grid.Column="0" VerticalAlignment="Center"/>
-                                    <TextBox x:Name="SpeechGroupIdBox" Grid.Column="1" Text="0"/>
+                                        <TextBlock Text="Text GroupID" Grid.Column="0" VerticalAlignment="Center"/>
+                                        <TextBox x:Name="SpeechGroupIdBox" Grid.Column="1" Text="0"/>
 
-                                    <TextBlock Text="Type" Grid.Column="2" VerticalAlignment="Center"/>
-                                    <ComboBox x:Name="SpeechTypeCombo" Grid.Column="3" SelectedIndex="0">
-                                        <ComboBoxItem Content="SAY"/>
-                                        <ComboBoxItem Content="YELL"/>
-                                        <ComboBoxItem Content="WHISPER"/>
-                                    </ComboBox>
+                                        <TextBlock Text="Type" Grid.Column="2" VerticalAlignment="Center" Margin="130,0,0,0"/>
+                                        <ComboBox x:Name="SpeechTypeCombo" Grid.Column="3" SelectedIndex="0" Margin="55,0,5,0">
+                                            <ComboBoxItem Content="SAY"/>
+                                            <ComboBoxItem Content="YELL"/>
+                                            <ComboBoxItem Content="WHISPER"/>
+                                        </ComboBox>
 
-                                    <Button Grid.Column="4" Content="Add Line" HorizontalAlignment="Right" Width="120" Click="SpeechAddLine_Click"/>
-                                </Grid>
+                                        <Button Grid.Column="4" Content="Add Line" HorizontalAlignment="Right" Width="120" Click="SpeechAddLine_Click"/>
+                                    </Grid>
 
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="120"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="120"/>
-                                        <ColumnDefinition Width="120"/>
-                                        <ColumnDefinition Width="120"/>
-                                    </Grid.ColumnDefinitions>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="120"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="80"/>
+                                            <ColumnDefinition Width="140"/>
+                                            <!-- right-side button column (aligns with Add Line above) -->
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
 
-                                    <TextBlock Text="Text" Grid.Column="0" VerticalAlignment="Center"/>
-                                    <TextBox x:Name="SpeechTextBox" Grid.Column="1"/>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
 
-                                    <TextBlock Text="Sound" Grid.Column="2" VerticalAlignment="Center"/>
-                                    <TextBox x:Name="SpeechSoundBox" Grid.Column="3" Text="0"/>
+                                        <!-- Row 0: Text + Sound -->
+                                        <TextBlock Text="Text" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,6"/>
+                                        <TextBox x:Name="SpeechTextBox" Grid.Row="0" Grid.Column="1" Margin="0,0,12,6"/>
 
-                                    <TextBox x:Name="SpeechEmoteBox" Grid.Column="4" Text="0" ToolTip="Emote (optional)"/>
-                                </Grid>
+                                        <TextBlock Text="Sound" Grid.Row="0" Grid.Column="2" VerticalAlignment="Center" Margin="10,0,8,6"/>
+                                        <TextBox x:Name="SpeechSoundBox" Grid.Row="0" Grid.Column="3" Text="0" Margin="0,0,0,6"/>
 
-                                <ListBox x:Name="SpeechLinesList" Margin="0,10,0,0" Height="120"/>
-                                <Button Content="Remove Selected Line" Width="180" Margin="0,8,0,0" Click="SpeechRemoveLine_Click"/>
+                                        <!-- Row 1: Emote directly under Sound, lined up the same -->
+                                        <TextBlock Text="Emote" Grid.Row="1" Grid.Column="2" VerticalAlignment="Center" Margin="10,0,8,0"/>
+                                        <TextBox x:Name="SpeechEmoteBox" Grid.Row="1" Grid.Column="3" Text="0" ToolTip="Emote (optional)"/>
+
+                                        <!-- Find Emote directly under Add Line (right aligned) -->
+                                        <Button Grid.Row="1" Grid.Column="4" Content="Find Emote" HorizontalAlignment="Right" Width="120" Click="FindEmote_Click"/>
+                                    </Grid>
+
+                                    <ListBox x:Name="SpeechLinesList" Margin="0,10,0,0" Height="120"/>
+                                    <Button Content="Remove Selected Line" Width="180" Margin="0,8,0,0" Click="SpeechRemoveLine_Click"/>
+                                </StackPanel>
+
                             </StackPanel>
                         </GroupBox>
 
