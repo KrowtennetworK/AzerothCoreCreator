@@ -5,7 +5,6 @@ on:
     branches: [ master ]
     paths:
       - "AzerothCoreCreator/AzerothCoreCreator.csproj"
-      - ".github/workflows/release.yml"
 
 permissions:
   contents: write
@@ -38,28 +37,36 @@ jobs:
         id: ver
         shell: pwsh
         run: |
-          [xml]$xml = Get-Content "${{ env.PROJECT_PATH }}"
-          $v = $xml.Project.PropertyGroup.Version
-          if (-not $v) { throw "No <Version> found in ${{ env.PROJECT_PATH }}" }
-          "version=$v" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          $csproj = "${{ env.PROJECT_PATH }}"
+          if (!(Test-Path $csproj)) { throw "PROJECT_PATH not found: $csproj" }
 
-      - name: Decide whether to publish
+          [xml]$xml = Get-Content $csproj
+          $version = $xml.Project.PropertyGroup.Version | Select-Object -First 1
+
+          if ([string]::IsNullOrWhiteSpace($version)) {
+            throw "No <Version> found in $csproj. Add <Version>0.1.5</Version> (or 0.1.5-beta) to your csproj."
+          }
+
+          $isPre = $version.Contains("-")
+          $tag = "v$version"
+
+          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "isPre=$isPre"     | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "tag=$tag"         | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+      - name: Decide whether to publish (skip if tag already exists)
         id: decide
         shell: pwsh
         run: |
           git fetch --tags --force
-          $v = "${{ steps.ver.outputs.version }}"
-          $tag = "v$v"
+          $tag = "${{ steps.ver.outputs.tag }}"
 
-          # If this tag already exists, we skip EVERYTHING that would pack/publish.
-          $exists = (git tag -l $tag) -ne $null -and (git tag -l $tag).Trim().Length -gt 0
-
-          if ($exists) {
-            Write-Host "Tag $tag already exists. Skipping release."
+          $tagMatch = (git tag -l $tag)
+          if ($tagMatch -and $tagMatch.Trim().Length -gt 0) {
+            Write-Host "Tag $tag already exists -> skipping release."
             "should_publish=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-          }
-          else {
-            Write-Host "Tag $tag not found. Publishing release."
+          } else {
+            Write-Host "Tag $tag not found -> publishing release."
             "should_publish=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           }
 
@@ -67,55 +74,59 @@ jobs:
         if: steps.decide.outputs.should_publish != 'true'
         shell: pwsh
         run: |
-          Write-Host "No version change detected (tag exists). Exiting job successfully."
+          Write-Host "No version bump detected (tag exists). Exiting successfully."
           exit 0
 
-      # Install Velopack CLI (adjust if you already install elsewhere)
-      - name: Install Velopack CLI
+      - name: Publish app (dotnet publish)
+        shell: pwsh
+        run: |
+          dotnet publish "${{ env.PROJECT_PATH }}" `
+            -c "${{ env.CONFIGURATION }}" `
+            -r "${{ env.RUNTIME }}" `
+            --self-contained true `
+            -o publish
+
+      - name: Install Velopack CLI (vpk)
         shell: pwsh
         run: |
           dotnet tool update -g vpk
 
-      - name: Publish app
-        shell: pwsh
-        run: |
-          dotnet publish "${{ env.PROJECT_PATH }}" -c "${{ env.CONFIGURATION }}" -r "${{ env.RUNTIME }}" --self-contained true `
-            -p:PublishSingleFile=false
-
-      # OPTIONAL (deltas): download previous release assets into Releases folder
-      # Keep your existing logic here if you use deltas; gated behind should_publish already.
       - name: Download previous release (for delta packages)
         shell: pwsh
         continue-on-error: true
         run: |
-          # If you have your own download logic, keep it; this is a placeholder.
-          # It's safe because we only get here when publishing a NEW version.
-          Write-Host "Downloading previous release assets (if any)..."
+          $args = @(
+            "download","github",
+            "-c","${{ env.CHANNEL }}",
+            "--repoUrl","https://github.com/${{ github.repository }}",
+            "--token","${{ secrets.GITHUB_TOKEN }}"
+          )
+          if ("${{ steps.ver.outputs.isPre }}" -eq "True") { $args += "--pre" }
+          vpk @args
 
       - name: Pack (Velopack)
         shell: pwsh
         run: |
-          $v = "${{ steps.ver.outputs.version }}"
           vpk pack `
-            --packId "${{ env.PACK_ID }}" `
-            --packVersion "$v" `
-            --packDir "AzerothCoreCreator/bin/${{ env.CONFIGURATION }}/${{ env.RUNTIME }}/publish" `
-            --mainExe "${{ env.MAIN_EXE }}" `
-            --channel "${{ env.CHANNEL }}" `
-            --outputDir "Releases"
+            -c "${{ env.CHANNEL }}" `
+            -r "${{ env.RUNTIME }}" `
+            -u "${{ env.PACK_ID }}" `
+            -v "${{ steps.ver.outputs.version }}" `
+            -p publish `
+            -e "${{ env.MAIN_EXE }}"
 
-      - name: Create GitHub Release + Upload Assets
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload to GitHub Releases (always prerelease)
         shell: pwsh
         run: |
-          $v = "${{ steps.ver.outputs.version }}"
-          $tag = "v$v"
-
-          # Create release (prerelease if version contains '-')
-          $isPre = $v -match "-"
-          $preArg = $isPre ? "--prerelease" : ""
-
-          gh release create $tag Releases/* `
-            --title "$tag" `
-            $preArg
+          $args = @(
+            "upload","github",
+            "-c","${{ env.CHANNEL }}",
+            "-o","Releases",
+            "--repoUrl","https://github.com/${{ github.repository }}",
+            "--token","${{ secrets.GITHUB_TOKEN }}",
+            "--tag","${{ steps.ver.outputs.tag }}",
+            "--releaseName","AzerothCore Creator ${{ steps.ver.outputs.version }}",
+            "--publish",
+            "--pre"
+          )
+          vpk @args
