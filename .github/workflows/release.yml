@@ -92,6 +92,14 @@ jobs:
             "version_changed=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           }
 
+      - name: Debug version / bump outputs
+        shell: pwsh
+        run: |
+          Write-Host "version=${{ steps.ver.outputs.version }}"
+          Write-Host "tag=${{ steps.ver.outputs.tag }}"
+          Write-Host "isPre=${{ steps.ver.outputs.isPre }}"
+          Write-Host "version_changed=${{ steps.bump.outputs.version_changed }}"
+
       # Always build (so pushes still validate)
       - name: Publish app (dotnet publish)
         shell: pwsh
@@ -108,6 +116,7 @@ jobs:
         shell: pwsh
         run: |
           dotnet tool update -g vpk
+          "$env:USERPROFILE\.dotnet\tools" | Out-File -FilePath $env:GITHUB_PATH -Append
 
       - name: Download previous release (for delta packages)
         if: steps.bump.outputs.version_changed == 'true'
@@ -133,7 +142,8 @@ jobs:
             -u "${{ env.PACK_ID }}" `
             -v "${{ steps.ver.outputs.version }}" `
             -p publish `
-            -e "${{ env.MAIN_EXE }}"
+            -e "${{ env.MAIN_EXE }}" `
+            -o Releases
 
       - name: Upload to GitHub Releases (always prerelease)
         if: steps.bump.outputs.version_changed == 'true'
