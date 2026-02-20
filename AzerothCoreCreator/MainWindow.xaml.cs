@@ -643,11 +643,16 @@ namespace AzerothCoreCreator
             QuestSortBox.Text = "0";
 
             // Quest Info dropdown (QuestInfoID) - categories from QuestInfo.dbc
-            if (QuestQuestTypeCombo != null && QuestQuestTypeCombo.Items.Count == 0)
+            if (QuestInfoCombo != null && QuestInfoCombo.Items.Count == 0)
             {
                 void AddInfo(int id, string name)
                 {
-                    QuestQuestTypeCombo.Items.Add(new ComboBoxItem { Content = $"{id} - {name}", Tag = id });
+                    QuestInfoCombo.Items.Add(
+                        new ComboBoxItem
+                        {
+                            Content = $"{id} - {name}",
+                            Tag = id
+                        });
                 }
 
                 AddInfo(0, "None");
@@ -663,7 +668,7 @@ namespace AzerothCoreCreator
                 AddInfo(88, "Raid (10)");
                 AddInfo(89, "Raid (25)");
 
-                QuestQuestTypeCombo.SelectedIndex = 0;
+                QuestInfoCombo.SelectedIndex = 0;
             }
 
             // Quest Type dropdown (QuestType) - core enable/disable/auto-complete
