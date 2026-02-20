@@ -10,8 +10,7 @@ A modern desktop toolkit for building and managing AzerothCore content — witho
 ## 🚧 Currently in Beta
 
 [![Latest Release](https://img.shields.io/github/v/release/KrowtennetworK/AzerothCoreCreator?include_prereleases&labelColor=%23F213A4&color=%232ECE53
-)](https://github.com/KrowtennetworK/AzerothCoreCreator/releases/latest)
-[![Discord](https://img.shields.io/discord/736685134492729475?style=plastic&logo=discord&logoColor=white&labelColor=%235865F2)](https://discord.gg/nVFp9ec)
+)](https://github.com/KrowtennetworK/AzerothCoreCreator/releases/latest) [![Discord](https://img.shields.io/discord/736685134492729475?style=plastic&logo=discord&logoColor=white&labelColor=%235865F2)](https://discord.gg/nVFp9ec)
 
 > ⚠️ **Run Setup.exe to recieve automatic updates**
 
