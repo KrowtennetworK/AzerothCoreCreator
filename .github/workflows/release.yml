@@ -4,8 +4,7 @@ on:
   push:
     branches: [ master ]
     paths:
-      - "AzerothCoreCreator/**"
-      - ".github/workflows/release.yml"
+      - "AzerothCoreCreator/AzerothCoreCreator.csproj"
 
 
 permissions:

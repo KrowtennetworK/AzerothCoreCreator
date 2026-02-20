@@ -3,14 +3,15 @@
   AzerothCore Creator
 </h1>
 
-A modern desktop toolkit for building and managing AzerothCore content — without wrestling raw SQL.
+Home of the Official AzerothCore Creator Tool!  Create Items/Creatures/Quests with ease!
 
 ---
 
 ## 🚧 Currently in Beta
 
-[![Latest Release](https://img.shields.io/github/v/release/KrowtennetworK/AzerothCoreCreator?include_prereleases)](https://github.com/KrowtennetworK/AzerothCoreCreator/releases/latest)
-[![Discord](https://img.shields.io/discord/736685134492729475?logo=discord&logoColor=white)](https://discord.gg/nVFp9ec "Our community hub on Discord")
+[![Latest Release](https://img.shields.io/github/v/release/KrowtennetworK/AzerothCoreCreator?include_prereleases&labelColor=%23ED2F21&color=%23000000)](https://github.com/KrowtennetworK/AzerothCoreCreator/releases/latest) <--- **click here to download!**
+
+[![Discord](https://img.shields.io/discord/736685134492729475?style=plastic&logo=discord&logoColor=white&labelColor=%235865F2)](https://discord.gg/nVFp9ec)
 
 > ⚠️ **Run Setup.exe to recieve automatic updates**
 
