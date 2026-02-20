@@ -170,7 +170,7 @@
                                         <ColumnDefinition Width="260"/>
                                         <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>                                                                   
+                                    </Grid.ColumnDefinitions>
                                 </Grid>
                             </StackPanel>
                         </GroupBox>
@@ -447,7 +447,7 @@
 
 
                         <!-- Speech -->
-                        <GroupBox Header="Speech / Text (creature_text) - like your Herald clues" Padding="10" Margin="0,10,0,0">
+                        <GroupBox Header="Speech / Text (creature_text)" Padding="10" Margin="0,10,0,0">
                             <StackPanel>
                                 <CheckBox x:Name="SpeechEnable" Content="Enable Speech rows (creature_text)" Margin="0,0,0,8" Checked="SpeechEnable_Checked" Unchecked="SpeechEnable_Unchecked"/>
                                 <StackPanel x:Name="SpeechFieldsPanel" Visibility="Collapsed">
@@ -1294,32 +1294,90 @@
                                   x:Name="QuestAdvancedGrid" Visibility="Collapsed">
                                 <StackPanel>
                                     <TextBlock Foreground="Gray"
-                                           Text="This is a starter set: quest type/sort + Required Items 1-6 + Reward Items 1-4 + Choice Items 1-6. We can add POI, reputations, scripts next."/>
-                                    <Grid Margin="0,10,0,0">
+                                           Text="Advanced Quest Details"/>
+
+                                    
+                                    <!-- Quest Info / QuestType row -->
+                                    <Grid Margin="0,10,0,0" Grid.IsSharedSizeScope="True">
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="170"/>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="170"/>
-                                            <ColumnDefinition Width="*"/>
+                                            <!-- Left pair -->
+                                            <ColumnDefinition Width="130" SharedSizeGroup="QLabel"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <!-- Spacer -->
+                                            <ColumnDefinition Width="24"/>
+                                            <!-- Right pair -->
+                                            <ColumnDefinition Width="Auto" SharedSizeGroup="QLabel"/>
+                                            <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
 
-                                        <TextBlock Text="Quest Type" Grid.Column="0" VerticalAlignment="Center"/>
-                                        <ComboBox x:Name="QuestTypeCombo" Grid.Column="1" MinWidth="140"
-                                                  SelectionChanged="QuestTypeCombo_SelectionChanged"/>
+                                        <TextBlock Text="Quest Info"
+               Grid.Column="0"
+               VerticalAlignment="Center"
+               Margin="0,0,8,0"/>
 
-                                        <TextBlock Text="QuestSort" Grid.Column="2" VerticalAlignment="Center"/>
-                                        <TextBox x:Name="QuestSortBox" Grid.Column="3" Text="0"/>
+                                        <ComboBox x:Name="QuestInfoCombo"
+              Grid.Column="1"
+              Width="240"
+              HorizontalAlignment="Left"
+              SelectionChanged="QuestTypeCombo_SelectionChanged"/>
+
+                                        <TextBlock Text="Quest Type"
+                                                   Grid.Column="3"
+                                                   VerticalAlignment="Center"
+                                                   Margin="60,0,8,0"/>
+
+                                        <ComboBox x:Name="QuestQuestTypeCombo"
+                                                  Grid.Column="4"
+                                                  Width="200"
+                                                  HorizontalAlignment="Left"
+                                                  SelectionChanged="QuestTypeCombo_SelectionChanged">
+                                        <ComboBox.ItemContainerStyle>
+                                                <Style TargetType="ComboBoxItem">
+                                                    <Setter Property="HorizontalContentAlignment" Value="Left"/>
+                                                </Style>
+                                        </ComboBox.ItemContainerStyle>
+                                        </ComboBox>
+                                    </Grid>
+
+                                    <!-- Quest Sort row -->
+                                    <Grid Margin="0,6,0,0" Grid.IsSharedSizeScope="True">
+                                        <Grid.ColumnDefinitions>
+                                            <!-- Left pair -->
+                                            <ColumnDefinition Width="Auto" SharedSizeGroup="QLabel"/>
+                                            <ColumnDefinition Width="*" />
+                                            <!-- Spacer -->
+                                            <ColumnDefinition Width="24"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <TextBlock Text="Quest Sort (QuestSortID)"
+               Grid.Column="0"
+               VerticalAlignment="Center"
+               Margin="0,0,8,0"/>
+
+                                        <!-- Text field + Find button (dropdown removed to avoid lag) -->
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Left">
+                                            <TextBox x:Name="QuestSortBox"
+                                                     Width="120"
+                                                     Text="0"
+                                                     ToolTip="QuestSortID (0 = none, &gt;0 = Zone AreaTable ID, &lt;0 = -QuestSort category ID)"
+                                                     TextChanged="QuestPreview_Changed"/>
+                                            <Button Content="Find Quest Sort"
+                                                    Width="130"
+                                                    Height="24"
+                                                    Margin="8,0,0,0"
+                                                    Click="QuestSortFind_Click"/>
+                                        </StackPanel>
                                     </Grid>
 
                                     <GroupBox Header="Reputation Requirements (quest_template_addon)" Padding="10" Margin="0,10,0,0">
                                         <StackPanel>
-                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,0,6">
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,-10,0,-10">
                                                 <Button Content="Find Faction ID" Width="120" Height="24" Click="QuestFindFaction_Click"/>
                                             </StackPanel>
 
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="170"/>
+                                                    <ColumnDefinition Width="160"/>
                                                     <ColumnDefinition Width="140"/>
                                                     <ColumnDefinition Width="70"/>
                                                     <ColumnDefinition Width="110"/>
@@ -1329,8 +1387,8 @@
                                                     <RowDefinition Height="Auto"/>
                                                 </Grid.RowDefinitions>
 
-                                                <TextBlock Text="Required Min Rep Faction" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"/>
-                                                <TextBox x:Name="QuestReqMinRepFactionBox" Grid.Row="0" Grid.Column="1" Text="0"
+                                                <TextBlock Text="Required Min Rep Faction" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,0,0"/>
+                                                <TextBox x:Name="QuestReqMinRepFactionBox" Grid.Row="0" Grid.Column="1" Text="0" Margin="0,0,0,0"
                                                      TextChanged="QuestPreview_Changed" GotFocus="QuestLookupTarget_GotFocus"/>
                                                 <TextBlock Text="Value" Grid.Row="0" Grid.Column="2" VerticalAlignment="Center" Margin="10,0,0,0"/>
                                                 <TextBox x:Name="QuestReqMinRepValueBox" Grid.Row="0" Grid.Column="3" Text="0"
@@ -1349,11 +1407,11 @@
 
                                     <GroupBox Header="Required Items (RequiredItemId / RequiredItemCount) 1-6" Padding="10" Margin="0,10,0,0">
                                         <StackPanel>
-                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,0,6">
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,-10,0,6">
                                                 <Button Content="Find Item" Width="90" Height="24" Margin="0,0,0,0" Click="QuestFindItem_Click"/>
                                             </StackPanel>
 
-                                            <Grid x:Name="ReqItemRow1" Margin="0,0,0,6">
+                                            <Grid x:Name="ReqItemRow1" Margin="-20,-20,0,6">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="60"/>
                                                     <ColumnDefinition Width="120"/>
@@ -1361,7 +1419,7 @@
                                                     <ColumnDefinition Width="80"/>
                                                     <ColumnDefinition Width="Auto"/>
                                                 </Grid.ColumnDefinitions>
-                                                <TextBlock Text="Item1" Grid.Column="0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="Item1" Grid.Column="0" VerticalAlignment="Center" Margin="20,0,0,0"/>
                                                 <TextBox x:Name="ReqItemId1" Grid.Column="1" Text="0" TextChanged="QuestRowValueChanged" GotFocus="QuestLookupTarget_GotFocus"/>
                                                 <TextBlock Text="Cnt1" Grid.Column="2" VerticalAlignment="Center" Margin="10,0,0,0"/>
                                                 <TextBox x:Name="ReqItemCount1" Grid.Column="3" Text="0" TextChanged="QuestRowValueChanged"/>
@@ -1460,7 +1518,7 @@
                                                 <Button Content="Find Item" Width="90" Height="24" Margin="0,0,0,0" Click="QuestFindItem_Click"/>
                                             </StackPanel>
 
-                                            <Grid x:Name="RewardItemRow1" Margin="0,0,0,6">
+                                            <Grid x:Name="RewardItemRow1" Margin="0,-30,0,6">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="60"/>
                                                     <ColumnDefinition Width="140"/>
@@ -1535,7 +1593,7 @@
                                                 <Button Content="Find Item" Width="90" Height="24" Margin="0,0,0,0" Click="QuestFindItem_Click"/>
                                             </StackPanel>
 
-                                            <Grid x:Name="ChoiceItemRow1" Margin="0,0,0,6">
+                                            <Grid x:Name="ChoiceItemRow1" Margin="0,-30,0,6">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="60"/>
                                                     <ColumnDefinition Width="140"/>
@@ -1642,7 +1700,7 @@
                                                 <Button Content="Find GO" Width="90" Height="24" Click="QuestFindGo_Click"/>
                                             </StackPanel>
 
-                                            <Grid x:Name="ReqNpcGoRow1" Margin="0,0,0,6">
+                                            <Grid x:Name="ReqNpcGoRow1" Margin="0,-30,0,6">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="80"/>
                                                     <ColumnDefinition Width="140"/>
@@ -1717,7 +1775,7 @@
                                                 <Button Content="Find Faction ID" Width="120" Height="24" Click="QuestFindFaction_Click"/>
                                             </StackPanel>
 
-                                            <Grid x:Name="RepFactionRow1" Margin="0,0,0,6">
+                                            <Grid x:Name="RepFactionRow1" Margin="0,-30,0,6">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="90"/>
                                                     <ColumnDefinition Width="140"/>
@@ -1812,16 +1870,16 @@
                                             </Grid.ColumnDefinitions>
 
                                             <TextBlock Text="Previous Quest ID" Grid.Column="0" VerticalAlignment="Center"/>
-                                            <TextBox x:Name="QuestPrevQuestIdBox" Grid.Column="1" Text="0"/>
+                                            <TextBox x:Name="QuestPrevQuestIdBox" Grid.Column="1" Text="0" Margin="-70,0,150,0"/>
 
-                                            <TextBlock Text="Next Quest ID" Grid.Column="2" VerticalAlignment="Center"/>
-                                            <TextBox x:Name="QuestNextQuestIdBox" Grid.Column="3" Text="0"/>
+                                            <TextBlock Text="Next Quest ID" Grid.Column="2" VerticalAlignment="Center" Margin="-130,0,0,0"/>
+                                            <TextBox x:Name="QuestNextQuestIdBox" Grid.Column="3" Text="0" Margin="-220,0,290,0"/>
                                         </Grid>
                                     </GroupBox>
 
                                     <Separator Margin="0,12,0,8"/>
 
-                                    <TextBlock Text="Optional panels (Trinity-style)" Foreground="Gray"/>
+                                    <TextBlock Text="Quest Option Panels" Foreground="Gray"/>
 
                                     <WrapPanel Margin="0,6,0,0">
                                         <CheckBox x:Name="QuestShowFlagsToggle" Content="Quest Flags" Margin="0,0,14,0"
