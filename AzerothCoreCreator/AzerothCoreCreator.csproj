@@ -29,6 +29,7 @@
 		<PackageReference Include="MySqlConnector" Version="2.5.0" />
 		<PackageReference Include="Velopack" Version="0.0.1298" />
 	</ItemGroup>
+	
 	<!-- Ensure the .ico is packaged as a WPF resource so XAML Icon can resolve it -->
 	<ItemGroup>
 		<Resource Include="AzerothCoreCreator.ico" />
