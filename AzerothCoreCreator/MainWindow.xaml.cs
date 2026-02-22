@@ -276,6 +276,11 @@ namespace AzerothCoreCreator
         public MainWindow()
         {
             InitializeComponent();
+            // Show changelog once per version AFTER UI is ready (important for Velopack launches)
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                ShowChangelogOncePerVersion();
+            }), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
             this.Loaded += (_, __) => ShowChangelogOncePerVersion();
             UpdateUninstallDisplaySize();
             EnsureFlagCheckboxesBuilt();
