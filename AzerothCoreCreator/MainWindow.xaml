@@ -1,7 +1,7 @@
 <Window x:Class="AzerothCoreCreator.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="AzerothCore Creator v0.1.6"
+        Title="AzerothCore Creator v0.1.7"
         Height="780" Width="1200"
         MinWidth="1200" MinHeight="780"
         Loaded="Window_Loaded"
@@ -35,6 +35,19 @@
     Opacity="0.8"
     Panel.ZIndex="1000"
     Text="Tip: Install via Setup.exe to enable automatic updates."/>
+
+        <!-- Bottom-right copyright -->
+        <TextBlock
+    Grid.Row="2"
+    HorizontalAlignment="Right"
+    VerticalAlignment="Bottom"
+    Margin="0,0,12,0"
+    Foreground="Gray"
+    FontSize="11"
+    Opacity="0.75"
+    Panel.ZIndex="1000"
+    IsHitTestVisible="False"
+    Text="© 2026 Krowten"/>
         <!-- ===================== DB CONNECTION ===================== -->
         <GroupBox Header="Database Connection" Grid.Row="0" Padding="10">
             <Grid>
@@ -1296,7 +1309,7 @@
                                     <TextBlock Foreground="Gray"
                                            Text="Advanced Quest Details"/>
 
-                                    
+
                                     <!-- Quest Info / QuestType row -->
                                     <Grid Margin="0,10,0,0" Grid.IsSharedSizeScope="True">
                                         <Grid.ColumnDefinitions>
@@ -1331,11 +1344,11 @@
                                                   Width="200"
                                                   HorizontalAlignment="Left"
                                                   SelectionChanged="QuestTypeCombo_SelectionChanged">
-                                        <ComboBox.ItemContainerStyle>
+                                            <ComboBox.ItemContainerStyle>
                                                 <Style TargetType="ComboBoxItem">
                                                     <Setter Property="HorizontalContentAlignment" Value="Left"/>
                                                 </Style>
-                                        </ComboBox.ItemContainerStyle>
+                                            </ComboBox.ItemContainerStyle>
                                         </ComboBox>
                                     </Grid>
 
@@ -1510,6 +1523,97 @@
                                             <Button Content="+ Add required item" HorizontalAlignment="Left" Width="170"
                 Click="QuestAddRow_Click" Tag="ReqItem" />
                                         </StackPanel>
+                                    </GroupBox>
+
+                                    <GroupBox Header="Rewards" Padding="10" Margin="0,10,0,0">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="120"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+
+                                            <!-- XP Reward -->
+                                            <TextBlock Text="XP Reward" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,6"/>
+                                            <ComboBox x:Name="QuestRewardXpCombo" Grid.Row="0" Grid.Column="1" Margin="0,0,0,6" MinWidth="220" SelectionChanged="QuestRewardXpCombo_SelectionChanged">
+                                                <ComboBoxItem Content="No XP" Tag="0"/>
+                                                <ComboBoxItem Content="Simple delivery" Tag="1"/>
+                                                <ComboBoxItem Content="Long walk delivery" Tag="2"/>
+                                                <ComboBoxItem Content="Simple slaying quest" Tag="3"/>
+                                                <ComboBoxItem Content="Long slaying quest" Tag="4"/>
+                                                <ComboBoxItem Content="Elite &amp; group quests" Tag="5"/>
+                                                <ComboBoxItem Content="End of quest chain (big reward)" Tag="6"/>
+                                                <ComboBoxItem Content="Raid quests" Tag="7"/>
+                                            </ComboBox>
+
+                                            <!-- Money Reward -->
+                                            <TextBlock Text="Money Reward" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,6"/>
+                                            <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Margin="0,0,0,6">
+                                                <TextBox x:Name="QuestRewardMoneyGoldBox" Width="60" Text="0" TextChanged="QuestRewardMoneyParts_Changed"/>
+                                                <Ellipse Width="14" Height="14" Margin="6,0,12,0" VerticalAlignment="Center">
+                                                    <Ellipse.Fill>
+                                                        <RadialGradientBrush GradientOrigin="0.3,0.3" Center="0.3,0.3" RadiusX="0.9" RadiusY="0.9">
+                                                            <GradientStop Color="#FFF9E27D" Offset="0"/>
+                                                            <GradientStop Color="#FFE3B72A" Offset="0.55"/>
+                                                            <GradientStop Color="#FFB88600" Offset="1"/>
+                                                        </RadialGradientBrush>
+                                                    </Ellipse.Fill>
+                                                </Ellipse>
+
+                                                <TextBox x:Name="QuestRewardMoneySilverBox" Width="60" Text="0" TextChanged="QuestRewardMoneyParts_Changed"/>
+                                                <Ellipse Width="14" Height="14" Margin="6,0,12,0" VerticalAlignment="Center">
+                                                    <Ellipse.Fill>
+                                                        <RadialGradientBrush GradientOrigin="0.3,0.3" Center="0.3,0.3" RadiusX="0.9" RadiusY="0.9">
+                                                            <GradientStop Color="#FFF2F2F2" Offset="0"/>
+                                                            <GradientStop Color="#FFBFC6D1" Offset="0.55"/>
+                                                            <GradientStop Color="#FF7E8794" Offset="1"/>
+                                                        </RadialGradientBrush>
+                                                    </Ellipse.Fill>
+                                                </Ellipse>
+
+                                                <TextBox x:Name="QuestRewardMoneyCopperBox" Width="60" Text="0" TextChanged="QuestRewardMoneyParts_Changed"/>
+                                                <Ellipse Width="14" Height="14" Margin="6,0,0,0" VerticalAlignment="Center">
+                                                    <Ellipse.Fill>
+                                                        <RadialGradientBrush GradientOrigin="0.3,0.3" Center="0.3,0.3" RadiusX="0.9" RadiusY="0.9">
+                                                            <GradientStop Color="#FFFFD0B0" Offset="0"/>
+                                                            <GradientStop Color="#FFD07A3A" Offset="0.55"/>
+                                                            <GradientStop Color="#FF8A3D14" Offset="1"/>
+                                                        </RadialGradientBrush>
+                                                    </Ellipse.Fill>
+                                                </Ellipse>
+                                            </StackPanel>
+
+                                            <!-- Cast Spell -->
+                                            <TextBlock Text="Cast Spell" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,6"/>
+                                            <TextBox x:Name="QuestRewardSpellBox" Grid.Row="2" Grid.Column="1" Text="0" Margin="0,0,8,6" TextChanged="QuestPreview_Changed" GotFocus="QuestLookupTarget_GotFocus"/>
+                                            <Button Content="Find" Grid.Row="2" Grid.Column="2" Width="70" Height="24" Margin="0,0,0,6" Click="QuestFindSpell_Click"/>
+
+                                            <!-- Honor -->
+                                            <TextBlock Text="Honor" Grid.Row="3" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,6"/>
+                                            <TextBox x:Name="QuestRewardHonorBox" Grid.Row="3" Grid.Column="1" Text="0" Margin="0,0,0,6" TextChanged="QuestPreview_Changed"/>
+
+                                            <!-- Arena points -->
+                                            <TextBlock Text="Arena points" Grid.Row="4" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,6"/>
+                                            <TextBox x:Name="QuestRewardArenaPointsBox" Grid.Row="4" Grid.Column="1" Text="0" Margin="0,0,0,6" TextChanged="QuestPreview_Changed"/>
+
+                                            <!-- Talent points -->
+                                            <TextBlock Text="Talent points" Grid.Row="5" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,6"/>
+                                            <TextBox x:Name="QuestRewardTalentsBox" Grid.Row="5" Grid.Column="1" Text="0" Margin="0,0,0,6" TextChanged="QuestPreview_Changed"/>
+
+                                            <!-- Title reward -->
+                                            <TextBlock Text="Title reward" Grid.Row="6" Grid.Column="0" VerticalAlignment="Center"/>
+                                            <TextBox x:Name="QuestRewardTitleBox" Grid.Row="6" Grid.Column="1" Text="0" Margin="0,0,8,0" TextChanged="QuestPreview_Changed" GotFocus="QuestLookupTarget_GotFocus"/>
+                                            <Button Content="Find" Grid.Row="6" Grid.Column="2" Width="70" Height="24" Click="QuestFindTitle_Click"/>
+                                        </Grid>
                                     </GroupBox>
 
                                     <GroupBox Header="Reward Items (RewardItemId / RewardItemCount) 1-4" Padding="10" Margin="0,10,0,0">
