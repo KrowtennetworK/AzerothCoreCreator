@@ -1700,7 +1700,7 @@ namespace AzerothCoreCreator
                 int sizeKb = (int)(bytes / 1024);
 
                 using var key = Registry.CurrentUser.OpenSubKey(
-                    @"Software\Microsoft\Windows\CurrentVersion\Uninstall\KrowtennetworkK.AzerothCoreCreator",
+                    @"Software\Microsoft\Windows\CurrentVersion\Uninstall\KrowtennetworK.AzerothCoreCreator",
                     writable: true);
 
                 if (key != null)
