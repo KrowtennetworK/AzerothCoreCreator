@@ -49,48 +49,52 @@ jobs:
           "isPre=$isPre"     | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           "tag=$tag"         | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
-      - name: Detect whether <Version> changed in this push
+      - name: Detect whether csproj version is newer than latest git tag
         id: bump
         shell: pwsh
         run: |
-          $before = "${{ github.event.before }}"
-          $after  = "${{ github.sha }}"
-          $path   = "${{ env.PROJECT_PATH }}"
+          # Ensure we have all tags
+          git fetch --tags --force
 
-          # First push / edge cases
-          if ([string]::IsNullOrWhiteSpace($before) -or $before -eq "0000000000000000000000000000000000000000") {
-            Write-Host "No valid 'before' SHA. Assume version changed."
+          $projVer = "${{ steps.ver.outputs.version }}"
+          if ([string]::IsNullOrWhiteSpace($projVer)) { throw "Project version missing" }
+
+          # Get latest tag that looks like v<semver> (optionally with -suffix), sorted as versions
+          $tags = git tag -l "v*" | ForEach-Object { $_.Trim() } | Where-Object { $_ -match '^v\d+(\.\d+){1,3}([\-+].+)?$' }
+
+          if (-not $tags -or $tags.Count -eq 0) {
+            Write-Host "No version tags found. Will release."
             "version_changed=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            "latest_tag=" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
             exit 0
           }
 
-          # Read csproj from BEFORE commit
-          $beforeText = git show "$before`:$path" 2>$null
-          if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($beforeText)) {
-            Write-Host "Could not read csproj at 'before'. Assume version changed."
-            "version_changed=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-            exit 0
-          }
+          # Sort by version (strip leading 'v'). This handles 0.1.10 > 0.1.9 correctly.
+          $latestTag = $tags |
+            Sort-Object { [version]($_.TrimStart('v').Split('-')[0]) } -Descending |
+            Select-Object -First 1
 
-          # Read csproj from AFTER (checked-out) commit
-          $afterText = Get-Content $path -Raw
+          $latestTagVer = $latestTag.TrimStart('v')
 
-          $beforeVer = ([regex]::Match($beforeText, "<Version>(.*?)</Version>")).Groups[1].Value
-          $afterVer  = ([regex]::Match($afterText,  "<Version>(.*?)</Version>")).Groups[1].Value
+          # Compare only the numeric part for "newer" check
+          $projNum = $projVer.Split('-')[0]
+          $tagNum  = $latestTagVer.Split('-')[0]
 
-          if ([string]::IsNullOrWhiteSpace($beforeVer)) {
-            Write-Host "No <Version> in 'before'. Assume changed."
-            "version_changed=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-            exit 0
-          }
+          $projV = [version]$projNum
+          $tagV  = [version]$tagNum
 
-          if ($beforeVer -ne $afterVer) {
-            Write-Host "Version changed: $beforeVer -> $afterVer"
+          Write-Host "Latest tag: $latestTag (numeric: $tagV)"
+          Write-Host "Project version: v$projVer (numeric: $projV)"
+
+          if ($projV -gt $tagV) {
+            Write-Host "Project version is NEWER than latest tag. Will release."
             "version_changed=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           } else {
-            Write-Host "Version NOT changed: $afterVer"
+            Write-Host "Project version is NOT newer than latest tag. Skip release."
             "version_changed=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           }
+
+          "latest_tag=$latestTag" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
       - name: Debug version / bump outputs
         shell: pwsh
@@ -99,6 +103,7 @@ jobs:
           Write-Host "tag=${{ steps.ver.outputs.tag }}"
           Write-Host "isPre=${{ steps.ver.outputs.isPre }}"
           Write-Host "version_changed=${{ steps.bump.outputs.version_changed }}"
+          Write-Host "latest_tag=${{ steps.bump.outputs.latest_tag }}"
 
       # Always build (so pushes still validate)
       - name: Publish app (dotnet publish)
@@ -110,7 +115,7 @@ jobs:
             --self-contained true `
             -o publish
 
-      # Only run Velopack + Release if version changed
+      # Only run Velopack + Release if project version is newer than latest tag
       - name: Install Velopack CLI (vpk)
         if: steps.bump.outputs.version_changed == 'true'
         shell: pwsh
