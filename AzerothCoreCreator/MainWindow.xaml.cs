@@ -324,36 +324,37 @@ namespace AzerothCoreCreator
         {
             try
             {
-                // 1) InformationalVersion (usually matches <Version> in csproj, e.g. "0.1.7-beta")
-                var info = Assembly.GetExecutingAssembly()
-                    .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+                // 1) Prefer csproj <Version> (InformationalVersion)
+                var asm = System.Reflection.Assembly.GetExecutingAssembly();
+
+                var info = asm
+                    .GetCustomAttributes(typeof(System.Reflection.AssemblyInformationalVersionAttribute), false)
+                    .OfType<System.Reflection.AssemblyInformationalVersionAttribute>()
+                    .FirstOrDefault()?.InformationalVersion;
 
                 if (!string.IsNullOrWhiteSpace(info))
-                    return NormalizeVersionString(info);
-
-                // 2) File/Product version (sometimes set by packaging)
-                try
                 {
-                    string exe = Process.GetCurrentProcess().MainModule?.FileName;
-                    if (!string.IsNullOrWhiteSpace(exe))
-                    {
-                        var fvi = FileVersionInfo.GetVersionInfo(exe);
-                        if (!string.IsNullOrWhiteSpace(fvi.ProductVersion))
-                            return NormalizeVersionString(fvi.ProductVersion);
-                        if (!string.IsNullOrWhiteSpace(fvi.FileVersion))
-                            return NormalizeVersionString(fvi.FileVersion);
-                    }
+                    // Strip build metadata like "+githash"
+                    return info.Split('+')[0].Trim();
                 }
-                catch { /* ignore */ }
 
-                // 3) AssemblyVersion fallback
-                var ver = Assembly.GetExecutingAssembly().GetName().Version?.ToString();
-                if (!string.IsNullOrWhiteSpace(ver))
-                    return NormalizeVersionString(ver);
+                // 2) Fall back to installed EXE Product/File version (reliable for Velopack builds)
+                string exePath = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName ?? asm.Location;
+                var fvi = System.Diagnostics.FileVersionInfo.GetVersionInfo(exePath);
+
+                if (!string.IsNullOrWhiteSpace(fvi.ProductVersion))
+                    return fvi.ProductVersion.Trim();
+
+                if (!string.IsNullOrWhiteSpace(fvi.FileVersion))
+                    return fvi.FileVersion.Trim();
+
+                // 3) Last resort: AssemblyVersion
+                return asm.GetName().Version?.ToString() ?? "0.0.0.0";
             }
-            catch { /* ignore */ }
-
-            return "0.0.0";
+            catch
+            {
+                return "0.0.0.0";
+            }
         }
 
         private string NormalizeVersionString(string v)
