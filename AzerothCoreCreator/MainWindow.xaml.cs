@@ -276,7 +276,7 @@ namespace AzerothCoreCreator
         public MainWindow()
         {
             InitializeComponent();
-            ShowChangelogOncePerVersion();
+            this.Loaded += (_, __) => ShowChangelogOncePerVersion();
             UpdateUninstallDisplaySize();
             EnsureFlagCheckboxesBuilt();
             UpdateCreatureOptionalSectionsVisibility();
@@ -287,9 +287,9 @@ namespace AzerothCoreCreator
         {
             try
             {
-                // Current executable version (AssemblyVersion). If you prefer the file version, we can swap later.
-                string currentVersion =
-                    Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "0.0.0.0";
+                // Prefer the version you set in the .csproj <Version> (InformationalVersion),
+                // because AssemblyVersion often stays constant unless explicitly set.
+                string currentVersion = GetAppVersionForChangelog();
 
                 // Store in %AppData%\AzerothCoreCreator\last_seen_version.txt
                 string appDataDir = Path.Combine(
@@ -308,15 +308,69 @@ namespace AzerothCoreCreator
                         Owner = this,
                         WindowStartupLocation = WindowStartupLocation.CenterOwner
                     };
-                    win.ShowDialog();
 
+                    // Show once, then mark as seen.
+                    win.ShowDialog();
                     File.WriteAllText(versionFile, currentVersion);
                 }
             }
             catch
             {
-                // Never block startup if anything goes wrong.
+                // Never block startup if anything goes wrong
             }
+        }
+
+        private string GetAppVersionForChangelog()
+        {
+            try
+            {
+                // 1) InformationalVersion (usually matches <Version> in csproj, e.g. "0.1.7-beta")
+                var info = Assembly.GetExecutingAssembly()
+                    .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+
+                if (!string.IsNullOrWhiteSpace(info))
+                    return NormalizeVersionString(info);
+
+                // 2) File/Product version (sometimes set by packaging)
+                try
+                {
+                    string exe = Process.GetCurrentProcess().MainModule?.FileName;
+                    if (!string.IsNullOrWhiteSpace(exe))
+                    {
+                        var fvi = FileVersionInfo.GetVersionInfo(exe);
+                        if (!string.IsNullOrWhiteSpace(fvi.ProductVersion))
+                            return NormalizeVersionString(fvi.ProductVersion);
+                        if (!string.IsNullOrWhiteSpace(fvi.FileVersion))
+                            return NormalizeVersionString(fvi.FileVersion);
+                    }
+                }
+                catch { /* ignore */ }
+
+                // 3) AssemblyVersion fallback
+                var ver = Assembly.GetExecutingAssembly().GetName().Version?.ToString();
+                if (!string.IsNullOrWhiteSpace(ver))
+                    return NormalizeVersionString(ver);
+            }
+            catch { /* ignore */ }
+
+            return "0.0.0";
+        }
+
+        private string NormalizeVersionString(string v)
+        {
+            if (string.IsNullOrWhiteSpace(v))
+                return "0.0.0";
+
+            v = v.Trim();
+
+            // Remove Git hash metadata if present (e.g. "0.1.7-beta+abcdef")
+            int plus = v.IndexOf('+');
+            if (plus >= 0) v = v.Substring(0, plus);
+
+            // Some environments include extra text; keep first token.
+            v = v.Split(new[] { ' ', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? v;
+
+            return v;
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
