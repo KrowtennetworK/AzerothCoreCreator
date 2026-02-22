@@ -296,10 +296,10 @@ namespace AzerothCoreCreator
                 // because AssemblyVersion often stays constant unless explicitly set.
                 string currentVersion = GetAppVersionForChangelog();
 
-                // Store in %AppData%\AzerothCoreCreator\last_seen_version.txt
+                // Store in %AppData%\KrowtennetworK.AzerothCoreCreator\last_seen_version.txt
                 string appDataDir = Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                    "AzerothCoreCreator");
+                    "KrowtennetworK.AzerothCoreCreator");
 
                 Directory.CreateDirectory(appDataDir);
 
