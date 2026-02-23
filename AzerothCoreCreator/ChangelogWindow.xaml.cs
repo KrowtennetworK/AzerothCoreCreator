@@ -15,7 +15,12 @@ namespace AzerothCoreCreator
 
             // Update this text when you release. Newest entries at top.
             ChangelogText =
-@"v0.1.7
+@"v0.1.8
+- New Loot Tab Added
+- Death section added to Creature tab
+- Max+1 Logic added to Creature Loot/Pickpocket/Skinning Loot Templates
+
+v0.1.7
 - Rewards section added to Quest tab
 - Find Spell popout (offline list)
 - Find Title popout (offline list)

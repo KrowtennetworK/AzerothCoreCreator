@@ -285,6 +285,8 @@ namespace AzerothCoreCreator
             UpdateUninstallDisplaySize();
             EnsureFlagCheckboxesBuilt();
             UpdateCreatureOptionalSectionsVisibility();
+            if (MainTabControl != null)
+                MainTabControl.SelectionChanged += MainTabControl_SelectionChanged;
         }
 
 
@@ -498,6 +500,26 @@ namespace AzerothCoreCreator
 
                     // Pre-load faction name list for quest lookups (Faction.dbc)
                     EnsureFactionCache(conn);
+
+                    // Also load next loot template IDs (MAX(Entry)+1) so users can create new loot IDs quickly.
+                    try
+                    {
+                        long nextCreatureLoot = GetNextId(conn, "creature_loot_template", "Entry");
+                        long nextPickpocketLoot = GetNextId(conn, "pickpocketing_loot_template", "Entry");
+                        long nextSkinningLoot = GetNextId(conn, "skinning_loot_template", "Entry");
+
+                        if (CreatureLootIdBox != null) CreatureLootIdBox.Text = nextCreatureLoot.ToString(CultureInfo.InvariantCulture);
+                        if (CreaturePickpocketLootIdBox != null) CreaturePickpocketLootIdBox.Text = nextPickpocketLoot.ToString(CultureInfo.InvariantCulture);
+                        if (CreatureSkinningLootIdBox != null) CreatureSkinningLootIdBox.Text = nextSkinningLoot.ToString(CultureInfo.InvariantCulture);
+
+                        // If Loot tab is already realized, populate its Entry box too (based on selected loot type).
+                        AutoFillLootTemplateIdIfNeeded();
+                    }
+                    catch
+                    {
+                        // ignore (tables may not exist in some DBs)
+                    }
+
                 }
 
                 SetConnectedUI("Connected + loaded next IDs.");
@@ -2464,6 +2486,17 @@ namespace AzerothCoreCreator
             int equipItem3 = ParseInt(CreatureEquipItem3Box?.Text ?? "0", 0);
             int equipmentId = (equipItem1 > 0 || equipItem2 > 0 || equipItem3 > 0) ? 1 : 0;
 
+            // Death / Loot (creature_template)
+            int lootId = ParseInt(CreatureLootIdBox?.Text ?? "0", 0);
+            int pickpocketLoot = ParseInt(CreaturePickpocketLootIdBox?.Text ?? "0", 0);
+            int skinLoot = ParseInt(CreatureSkinningLootIdBox?.Text ?? "0", 0);
+
+            int minGold = MoneyToCopper(CreatureMinGoldGoldBox?.Text, CreatureMinGoldSilverBox?.Text, CreatureMinGoldCopperBox?.Text);
+            int maxGold = MoneyToCopper(CreatureMaxGoldGoldBox?.Text, CreatureMaxGoldSilverBox?.Text, CreatureMaxGoldCopperBox?.Text);
+            if (minGold < 0) minGold = 0;
+            if (maxGold < 0) maxGold = 0;
+            if (maxGold > 0 && maxGold < minGold) maxGold = minGold;
+
             uint npcflag = SumFlags(_npcFlags);
             uint unitFlags = SumFlags(_unitFlags);
             uint unitFlags2 = SumFlags(_unitFlags2);
@@ -2484,14 +2517,14 @@ namespace AzerothCoreCreator
             sb.AppendLine();
 
             sb.Append("INSERT INTO `creature_template` ");
-            sb.Append("(`entry`,`name`,`subname`,`minlevel`,`maxlevel`,`faction`,`npcflag`,`unit_flags`,`unit_flags2`,`type`,`family`,`flags_extra`,`modelid1`,`equipment_id`,`rank`,`dmgschool`,`baseattacktime`,`rangeattacktime`,`unit_class`,`racialleader`,`regeneratehealth`,`minhealth`,`maxhealth`,`minmana`,`maxmana`,`mindmg`,`maxdmg`,`minrangedmg`,`maxrangedmg`,`attackpower`,`rangedattackpower`,`armor`) VALUES ");
+            sb.Append("(`entry`,`name`,`subname`,`minlevel`,`maxlevel`,`faction`,`npcflag`,`unit_flags`,`unit_flags2`,`type`,`family`,`flags_extra`,`modelid1`,`equipment_id`,`rank`,`dmgschool`,`baseattacktime`,`rangeattacktime`,`unit_class`,`racialleader`,`regeneratehealth`,`minhealth`,`maxhealth`,`minmana`,`maxmana`,`mindmg`,`maxdmg`,`minrangedmg`,`maxrangedmg`,`attackpower`,`rangedattackpower`,`armor`,`lootid`,`pickpocketloot`,`skinloot`,`mingold`,`maxgold`) VALUES ");
             sb.AppendFormat("(@ENTRY,'{0}','{1}',{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15},{16},{17},{18},{19},{20},{21},{22},{23},{24},{25},{26},{27},{28},{29},{30},{31});",
                 name, subname, minLevel, maxLevel, faction, npcflag, unitFlags, unitFlags2Adjusted, creatureType, family, flagsExtra, displayId, equipmentId,
                 rank, dmgSchool, baseAttackTime, rangeAttackTime, unitClass, racialLeader, regenHealth,
                 minHealth, maxHealth, minMana, maxMana,
                 minDmg.ToString(CultureInfo.InvariantCulture), maxDmg.ToString(CultureInfo.InvariantCulture),
                 minRangedDmg.ToString(CultureInfo.InvariantCulture), maxRangedDmg.ToString(CultureInfo.InvariantCulture),
-                attackPower, rangedAttackPower, armor);
+                attackPower, rangedAttackPower, armor, lootId, pickpocketLoot, skinLoot, minGold, maxGold);
             sb.AppendLine();
             sb.AppendLine();// Spawn optional (some AC schemas have id1 instead of id; we try both via columns)
             if (CreatureSpawnEnable.IsChecked == true)
@@ -2563,6 +2596,405 @@ namespace AzerothCoreCreator
 
             sb.AppendLine("COMMIT;");
             return sb.ToString();
+        }
+
+
+
+        // ===================== TAB SELECTION (Lazy init) =====================
+
+        private void MainTabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            try
+            {
+                if (MainTabControl?.SelectedItem is TabItem ti)
+                {
+                    string header = ti.Header?.ToString() ?? "";
+
+                    // Creature tab has dynamic flag checkbox building
+                    if (header.Equals("Creature", StringComparison.OrdinalIgnoreCase))
+                        EnsureFlagCheckboxesBuilt();
+
+                    // Loot tab needs combo + grid binding
+                    if (header.Equals("Loot", StringComparison.OrdinalIgnoreCase))
+                        EnsureLootTabInitialized();
+                }
+            }
+            catch
+            {
+                // Never crash on tab switching
+            }
+        }
+
+        private void SelectMainTab(string header)
+        {
+            if (MainTabControl == null) return;
+            foreach (var item in MainTabControl.Items)
+            {
+                if (item is TabItem ti && string.Equals(ti.Header?.ToString(), header, StringComparison.OrdinalIgnoreCase))
+                {
+                    MainTabControl.SelectedItem = ti;
+                    return;
+                }
+            }
+        }
+
+        // ===================== LOOT TAB =====================
+
+        private sealed class LootRow
+        {
+            public int Item { get; set; }
+            public float Chance { get; set; }
+            public int MinCount { get; set; }
+            public int MaxCount { get; set; }
+            public bool QuestRequired { get; set; }
+            public string Comment { get; set; } = "";
+        }
+
+        private readonly List<LootRow> _lootRows = new();
+
+        // Guards to prevent re-entrancy loops (SelectionChanged -> hint update -> auto-fill -> UI event -> ...)
+        private bool _lootTypeChangeInProgress = false;
+        private bool _lootHintUpdateInProgress = false;
+        private bool _lootAutoFillInProgress = false;
+
+        private void EnsureLootTabInitialized()
+        {
+            // Tab content may not be realized until selected.
+            if (LootTypeCombo == null || LootGrid == null)
+                return;
+
+            if (LootGrid.ItemsSource == null)
+                LootGrid.ItemsSource = _lootRows;
+
+            if (LootTypeCombo.Items.Count == 0)
+            {
+                void Add(string label, string table)
+                {
+                    LootTypeCombo.Items.Add(new ComboBoxItem { Content = label, Tag = table });
+                }
+
+                // Trinity Creator list (mapped to AzerothCore table names)
+                Add("Creature", "creature_loot_template");
+                Add("Disenchant", "disenchant_loot_template");
+                Add("Fishing", "fishing_loot_template");
+                Add("GameObject", "gameobject_loot_template");
+                Add("Item", "item_loot_template");
+                Add("Mail", "mail_loot_template");
+                Add("Milling", "milling_loot_template");
+                Add("Pickpocketing", "pickpocketing_loot_template");
+                Add("Prospecting", "prospecting_loot_template");
+                Add("Reference", "reference_loot_template");
+                Add("Skinning", "skinning_loot_template");
+                Add("Spell", "spell_loot_template");
+
+                LootTypeCombo.SelectedIndex = 0;
+            }
+
+            // safe defaults
+            if (string.IsNullOrWhiteSpace(LootTemplateIdBox?.Text)) LootTemplateIdBox.Text = "0";
+            if (string.IsNullOrWhiteSpace(LootItemBox?.Text)) LootItemBox.Text = "0";
+            if (string.IsNullOrWhiteSpace(LootChanceBox?.Text)) LootChanceBox.Text = "100";
+            if (string.IsNullOrWhiteSpace(LootMinCountBox?.Text)) LootMinCountBox.Text = "1";
+            if (string.IsNullOrWhiteSpace(LootMaxCountBox?.Text)) LootMaxCountBox.Text = "1";
+
+            UpdateLootEntryHint();
+        }
+
+        private void LootTypeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (_lootTypeChangeInProgress)
+                return;
+
+            try
+            {
+                _lootTypeChangeInProgress = true;
+                UpdateLootEntryHint();
+            }
+            finally
+            {
+                _lootTypeChangeInProgress = false;
+            }
+        }
+
+        private void UpdateLootEntryHint()
+        {
+            if (_lootHintUpdateInProgress)
+                return;
+
+            try
+            {
+                _lootHintUpdateInProgress = true;
+
+                if (LootEntryHint == null)
+                    return;
+                string table = GetSelectedLootTable();
+                string hint = table switch
+                {
+                    "creature_loot_template" => "(Entry = creature_template.lootid)",
+                    "disenchant_loot_template" => "(Entry = item_template.DisenchantID)",
+                    "fishing_loot_template" => "(Entry = Area ID)",
+                    "gameobject_loot_template" => "(Entry = gameobject_template.data1)",
+                    "item_loot_template" => "(Entry = item_template.entry)",
+                    "mail_loot_template" => "(Entry = MailTemplate.dbc ID)",
+                    "milling_loot_template" => "(Entry = item_template.entry)",
+                    "pickpocketing_loot_template" => "(Entry = creature_template.pickpocketloot)",
+                    "prospecting_loot_template" => "(Entry = item_template.entry)",
+                    "reference_loot_template" => "(Entry = referenced loot ID)",
+                    "skinning_loot_template" => "(Entry = creature_template.skinloot)",
+                    "spell_loot_template" => "(Entry = SpellID)",
+                    _ => ""
+                };
+                LootEntryHint.Text = hint;
+
+                AutoFillLootTemplateIdIfNeeded();
+            }
+            finally
+            {
+                _lootHintUpdateInProgress = false;
+            }
+        }
+
+        private string GetSelectedLootTable()
+        {
+            if (LootTypeCombo?.SelectedItem is ComboBoxItem cbi && cbi.Tag is string s && !string.IsNullOrWhiteSpace(s))
+                return s;
+            return "creature_loot_template";
+        }
+
+        private void AutoFillLootTemplateIdIfNeeded()
+        {
+            if (_lootAutoFillInProgress)
+                return;
+
+            try
+            {
+                _lootAutoFillInProgress = true;
+
+                // Only auto-fill when connected and the user has not entered a custom value yet.
+                if (!_connected)
+                    return;
+
+                if (LootTemplateIdBox == null)
+                    return;
+
+                string cur = (LootTemplateIdBox.Text ?? "").Trim();
+                if (!string.IsNullOrEmpty(cur) && cur != "0")
+                    return;
+
+                string table = GetSelectedLootTable();
+
+                long next = 0;
+                using (var conn = new MySqlConnection(BuildConnString()))
+                {
+                    conn.Open();
+                    next = GetNextId(conn, table, "Entry");
+                }
+
+                if (next < 1) next = 1;
+
+                string nextStr = next.ToString(CultureInfo.InvariantCulture);
+                if (!string.Equals((LootTemplateIdBox.Text ?? "").Trim(), nextStr, StringComparison.Ordinal))
+                    LootTemplateIdBox.Text = nextStr;
+            }
+            catch
+            {
+                // Don't block UI if a table is missing or DB is unavailable.
+            }
+            finally
+            {
+                _lootAutoFillInProgress = false;
+            }
+        }
+
+        private void LootAddRow_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                EnsureLootTabInitialized();
+
+                int item = ParseInt(LootItemBox?.Text ?? "0", 0);
+                if (item <= 0)
+                    throw new Exception("Item must be > 0.");
+
+                float chance = (float)ParseDouble(LootChanceBox?.Text ?? "0", 0);
+                if (chance < 0) chance = 0;
+
+                int minI = ParseInt(LootMinCountBox?.Text ?? "1", 1);
+                int maxI = ParseInt(LootMaxCountBox?.Text ?? "1", 1);
+                if (minI < 1) minI = 1;
+                if (maxI < 1) maxI = 1;
+                if (maxI < minI) maxI = minI;
+
+                bool questReq = LootQuestRequiredCheck?.IsChecked == true;
+
+                _lootRows.Add(new LootRow
+                {
+                    Item = item,
+                    Chance = chance,
+                    MinCount = minI,
+                    MaxCount = maxI,
+                    QuestRequired = questReq,
+                    Comment = "AcoreCreator"
+                });
+
+                LootGrid.Items.Refresh();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Loot row add failed: " + ex.Message, "Loot", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void LootClearRows_Click(object sender, RoutedEventArgs e)
+        {
+            _lootRows.Clear();
+            LootGrid?.Items.Refresh();
+        }
+
+        private void LootRemoveRow_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.Tag is LootRow row)
+            {
+                _lootRows.Remove(row);
+                LootGrid?.Items.Refresh();
+            }
+        }
+
+        private string BuildLootSql()
+        {
+            EnsureLootTabInitialized();
+
+            string table = GetSelectedLootTable();
+            int entry = ParseInt(LootTemplateIdBox?.Text ?? "0", 0);
+            if (entry <= 0)
+                throw new Exception("Loot Template ID (Entry) must be > 0.");
+
+            if (_lootRows.Count == 0)
+                throw new Exception("Add at least one loot row.");
+
+            var sb = new StringBuilder();
+            sb.AppendLine("-- AzerothCore Creator - Loot");
+            sb.AppendLine("START TRANSACTION;");
+            sb.AppendLine($"DELETE FROM `{table}` WHERE `Entry`={entry};");
+
+            sb.Append($"INSERT INTO `{table}` (`Entry`,`Item`,`Reference`,`Chance`,`QuestRequired`,`LootMode`,`GroupId`,`MinCount`,`MaxCount`,`Comment`) VALUES ");
+
+            for (int i = 0; i < _lootRows.Count; i++)
+            {
+                var r = _lootRows[i];
+                int questReq = r.QuestRequired ? 1 : 0;
+                string chanceStr = r.Chance.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+                sb.Append($"({entry},{r.Item},0,{chanceStr},{questReq},1,0,{r.MinCount},{r.MaxCount},'AcoreCreator')");
+                sb.Append(i == _lootRows.Count - 1 ? ";" : ",");
+            }
+
+            sb.AppendLine();
+            sb.AppendLine("COMMIT;");
+            return sb.ToString();
+        }
+
+        private void LootGenerateSql_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                _lastSql = BuildLootSql();
+                SqlPreviewBox.Clear();
+                SqlPreviewBox.Text = _lastSql;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Loot SQL failed: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void LootApplyDb_Click(object sender, RoutedEventArgs e)
+        {
+            if (!_connected)
+            {
+                MessageBox.Show("Not connected.", "DB", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            try
+            {
+                string sql = BuildLootSql();
+                ExecuteSql(sql);
+                _lastSql = sql;
+                SqlPreviewBox.Clear();
+                SqlPreviewBox.Text = sql;
+                MessageBox.Show("Loot applied.", "DB", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Loot apply failed: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void LootExportSql_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                string sql = BuildLootSql();
+                string file = ExportToFile(sql, "loot");
+                _lastSql = sql;
+                SqlPreviewBox.Clear();
+                SqlPreviewBox.Text = sql;
+                MessageBox.Show("Exported to: " + file, "Export", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Loot export failed: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        // ===================== CREATURE -> LOOT NAV =====================
+
+        private void CreatureCreateLoot_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                string lootType = (sender as Button)?.Tag?.ToString() ?? "Creature";
+
+                TextBox? src = lootType switch
+                {
+                    "Pickpocketing" => CreaturePickpocketLootIdBox,
+                    "Skinning" => CreatureSkinningLootIdBox,
+                    _ => CreatureLootIdBox
+                };
+
+                int entry = ParseInt(CreatureEntryBox?.Text ?? "0", 0);
+                int lootId = ParseInt(src?.Text ?? "0", 0);
+
+                // Quality-of-life: default to creature entry when lootid is 0
+                if (lootId <= 0 && entry > 0)
+                {
+                    lootId = entry;
+                    if (src != null) src.Text = lootId.ToString();
+                }
+
+                SelectMainTab("Loot");
+                EnsureLootTabInitialized();
+
+                // Select loot type
+                for (int i = 0; i < LootTypeCombo.Items.Count; i++)
+                {
+                    if (LootTypeCombo.Items[i] is ComboBoxItem cbi && string.Equals(cbi.Content?.ToString(), lootType, StringComparison.OrdinalIgnoreCase))
+                    {
+                        LootTypeCombo.SelectedIndex = i;
+                        break;
+                    }
+                }
+
+                if (LootTemplateIdBox != null)
+                    LootTemplateIdBox.Text = lootId.ToString();
+
+                UpdateLootEntryHint();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Open Loot tab failed: " + ex.Message, "Loot", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         // ===================== ITEM SQL =====================
