@@ -15,7 +15,13 @@ namespace AzerothCoreCreator
 
             // Update this text when you release. Newest entries at top.
             ChangelogText =
-@"v0.1.8
+@"v0.1.9
+- Added Movement section to Creature tab
+- Added Inhabit Type section to Creature tab
+- Aligned Bronze image on Death section of Creature tab
+- Added Function section to Creature tab
+
+v0.1.8
 - New Loot Tab Added
 - Death section added to Creature tab
 - Max+1 Logic added to Creature Loot/Pickpocket/Skinning Loot Templates

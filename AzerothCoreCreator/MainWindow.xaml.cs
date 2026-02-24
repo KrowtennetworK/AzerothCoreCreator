@@ -2121,6 +2121,17 @@ namespace AzerothCoreCreator
             CreatureFamilyCombo.SelectedIndex = 0;
             CreatureDisplayIdBox.Text = "0";
 
+            // movement defaults
+            if (CreatureWalkSpeedBox != null) CreatureWalkSpeedBox.Text = "1.1";
+            if (CreatureRunSpeedBox != null) CreatureRunSpeedBox.Text = "1.17";
+            if (CreatureHoverHeightBox != null) CreatureHoverHeightBox.Text = "1";
+            if (CreatureMovementTypeCombo != null) CreatureMovementTypeCombo.SelectedIndex = 0; // stay in one place
+
+            // inhabit defaults (ground only)
+            if (CreatureInhabitGroundCheck != null) CreatureInhabitGroundCheck.IsChecked = true;
+            if (CreatureInhabitWaterCheck != null) CreatureInhabitWaterCheck.IsChecked = false;
+            if (CreatureInhabitFlyingCheck != null) CreatureInhabitFlyingCheck.IsChecked = false;
+
             // clear flags
             ClearChecks(_npcFlags);
             ClearChecks(_unitFlags);
@@ -2491,6 +2502,17 @@ namespace AzerothCoreCreator
             int pickpocketLoot = ParseInt(CreaturePickpocketLootIdBox?.Text ?? "0", 0);
             int skinLoot = ParseInt(CreatureSkinningLootIdBox?.Text ?? "0", 0);
 
+            // Movement (creature_template)
+            double speedWalk = ParseDouble(CreatureWalkSpeedBox?.Text ?? "1.1", 1.1);
+            double speedRun = ParseDouble(CreatureRunSpeedBox?.Text ?? "1.17", 1.17);
+            int movementType = ComboTagInt(CreatureMovementTypeCombo);
+            double hoverHeight = ParseDouble(CreatureHoverHeightBox?.Text ?? "1", 1);
+
+            // Inhabit Type (AzerothCore: creature_template_movement)
+            int inhabitGround = (CreatureInhabitGroundCheck?.IsChecked == true) ? 1 : 0;
+            int inhabitSwim = (CreatureInhabitWaterCheck?.IsChecked == true) ? 1 : 0;
+            int inhabitFlight = (CreatureInhabitFlyingCheck?.IsChecked == true) ? 2 : 0;
+
             int minGold = MoneyToCopper(CreatureMinGoldGoldBox?.Text, CreatureMinGoldSilverBox?.Text, CreatureMinGoldCopperBox?.Text);
             int maxGold = MoneyToCopper(CreatureMaxGoldGoldBox?.Text, CreatureMaxGoldSilverBox?.Text, CreatureMaxGoldCopperBox?.Text);
             if (minGold < 0) minGold = 0;
@@ -2513,18 +2535,29 @@ namespace AzerothCoreCreator
 
             sb.AppendLine("DELETE FROM `creature_text` WHERE `CreatureID`=@ENTRY;");
             sb.AppendLine("DELETE FROM `creature` WHERE `id1`=@ENTRY OR `id`=@ENTRY;");
+            sb.AppendLine("DELETE FROM `creature_template_movement` WHERE `CreatureId`=@ENTRY;");
             sb.AppendLine("DELETE FROM `creature_template` WHERE `entry`=@ENTRY;");
             sb.AppendLine();
 
             sb.Append("INSERT INTO `creature_template` ");
-            sb.Append("(`entry`,`name`,`subname`,`minlevel`,`maxlevel`,`faction`,`npcflag`,`unit_flags`,`unit_flags2`,`type`,`family`,`flags_extra`,`modelid1`,`equipment_id`,`rank`,`dmgschool`,`baseattacktime`,`rangeattacktime`,`unit_class`,`racialleader`,`regeneratehealth`,`minhealth`,`maxhealth`,`minmana`,`maxmana`,`mindmg`,`maxdmg`,`minrangedmg`,`maxrangedmg`,`attackpower`,`rangedattackpower`,`armor`,`lootid`,`pickpocketloot`,`skinloot`,`mingold`,`maxgold`) VALUES ");
-            sb.AppendFormat("(@ENTRY,'{0}','{1}',{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15},{16},{17},{18},{19},{20},{21},{22},{23},{24},{25},{26},{27},{28},{29},{30},{31});",
-                name, subname, minLevel, maxLevel, faction, npcflag, unitFlags, unitFlags2Adjusted, creatureType, family, flagsExtra, displayId, equipmentId,
+            sb.Append("(`entry`,`name`,`subname`,`minlevel`,`maxlevel`,`faction`,`npcflag`,`speed_walk`,`speed_run`,`unit_flags`,`unit_flags2`,`type`,`family`,`flags_extra`,`modelid1`,`equipment_id`,`rank`,`dmgschool`,`baseattacktime`,`rangeattacktime`,`unit_class`,`racialleader`,`regeneratehealth`,`minhealth`,`maxhealth`,`minmana`,`maxmana`,`mindmg`,`maxdmg`,`minrangedmg`,`maxrangedmg`,`attackpower`,`rangedattackpower`,`armor`,`lootid`,`pickpocketloot`,`skinloot`,`mingold`,`maxgold`,`MovementType`,`HoverHeight`) VALUES ");
+            sb.AppendFormat("(@ENTRY,'{0}','{1}',{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15},{16},{17},{18},{19},{20},{21},{22},{23},{24},{25},{26},{27},{28},{29},{30},{31},{32},{33},{34},{35},{36},{37},{38},{39},{40});",
+                name, subname, minLevel, maxLevel, faction, npcflag,
+                speedWalk.ToString(CultureInfo.InvariantCulture),
+                speedRun.ToString(CultureInfo.InvariantCulture),
+                unitFlags, unitFlags2Adjusted, creatureType, family, flagsExtra, displayId, equipmentId,
                 rank, dmgSchool, baseAttackTime, rangeAttackTime, unitClass, racialLeader, regenHealth,
                 minHealth, maxHealth, minMana, maxMana,
                 minDmg.ToString(CultureInfo.InvariantCulture), maxDmg.ToString(CultureInfo.InvariantCulture),
                 minRangedDmg.ToString(CultureInfo.InvariantCulture), maxRangedDmg.ToString(CultureInfo.InvariantCulture),
-                attackPower, rangedAttackPower, armor, lootId, pickpocketLoot, skinLoot, minGold, maxGold);
+                attackPower, rangedAttackPower, armor, lootId, pickpocketLoot, skinLoot, minGold, maxGold,
+                movementType,
+                hoverHeight.ToString(CultureInfo.InvariantCulture));
+            sb.AppendLine();
+
+            sb.AppendLine("-- Inhabit Type (creature_template_movement)");
+            sb.Append("INSERT INTO `creature_template_movement` (`CreatureId`,`Ground`,`Swim`,`Flight`) VALUES ");
+            sb.AppendFormat("(@ENTRY,{0},{1},{2});", inhabitGround, inhabitSwim, inhabitFlight);
             sb.AppendLine();
             sb.AppendLine();// Spawn optional (some AC schemas have id1 instead of id; we try both via columns)
             if (CreatureSpawnEnable.IsChecked == true)

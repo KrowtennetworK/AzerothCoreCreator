@@ -318,6 +318,117 @@
                             </Grid>
                         </GroupBox>
 
+                        <!-- Movement / Inhabit Type -->
+                        <GroupBox Header="Movement" Padding="10" Margin="0,10,0,0">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="170"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="170"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <!-- Row 0 -->
+                                <TextBlock Text="Walk speed" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"/>
+                                <TextBox x:Name="CreatureWalkSpeedBox" Grid.Row="0" Grid.Column="1" Text="1.1" Margin="0,0,0,6"/>
+
+                                <TextBlock Text="Run speed" Grid.Row="0" Grid.Column="2" VerticalAlignment="Center" Margin="80,0,0,0"/>
+                                <TextBox x:Name="CreatureRunSpeedBox" Grid.Row="0" Grid.Column="3" Text="1.17" Margin="0,0,0,6"/>
+
+                                <!-- Row 1 -->
+                                <TextBlock Text="Movement Type" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center"/>
+                                <ComboBox x:Name="CreatureMovementTypeCombo" Grid.Row="1" Grid.Column="1" Margin="0,0,0,6" SelectedIndex="0">
+                                    <!-- AzerothCore creature_template.MovementType: 0 idle, 1 random, 2 waypoint -->
+                                    <ComboBoxItem Content="Stay in one place" Tag="0" IsSelected="True"/>
+                                    <ComboBoxItem Content="Waypoint Movement" Tag="2"/>
+                                    <ComboBoxItem Content="Random Movement inside spawn radius" Tag="1"/>
+                                </ComboBox>
+
+                                <TextBlock Text="Hover height" Grid.Row="1" Grid.Column="2" VerticalAlignment="Center" Margin="80,0,0,0"/>
+                                <TextBox x:Name="CreatureHoverHeightBox" Grid.Row="1" Grid.Column="3" Text="1" Margin="0,0,0,6"/>
+
+                                <TextBlock Text="Inhabit Type" Grid.Row="2" Grid.Column="0" VerticalAlignment="Top" Margin="0,4,0,0"/>
+                                <Border Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3" BorderBrush="#FFBFBFBF" BorderThickness="1" CornerRadius="2" Padding="8">
+                                    <StackPanel>
+                                        <CheckBox x:Name="CreatureInhabitGroundCheck" Content="Ground" IsChecked="True"/>
+                                        <CheckBox x:Name="CreatureInhabitWaterCheck" Content="Water" IsChecked="False"/>
+                                        <CheckBox x:Name="CreatureInhabitFlyingCheck" Content="Flying" IsChecked="False"/>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+                        </GroupBox>
+
+                        <!-- Function -->
+                        <GroupBox Header="Function" Padding="10" Margin="0,10,0,0">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="170"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Text="Trainer" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"/>
+                                <ComboBox x:Name="CreatureTrainerCombo" Grid.Row="0" Grid.Column="1" SelectedIndex="0" Margin="0,0,0,6">
+                                    <ComboBoxItem Content="Not a trainer" Tag="NONE" IsSelected="True"/>
+                                    <ComboBoxItem Content="Profession Trainer" Tag="PROF"/>
+                                    <ComboBoxItem Content="Pet Trainer for hunters" Tag="PET"/>
+
+                                    <ComboBoxItem Content="Warrior Trainer" Tag="CLASS:WARRIOR"/>
+                                    <ComboBoxItem Content="Paladin Trainer" Tag="CLASS:PALADIN"/>
+                                    <ComboBoxItem Content="Hunter Trainer" Tag="CLASS:HUNTER"/>
+                                    <ComboBoxItem Content="Rogue Trainer" Tag="CLASS:ROGUE"/>
+                                    <ComboBoxItem Content="Priest Trainer" Tag="CLASS:PRIEST"/>
+                                    <ComboBoxItem Content="Death Knight Trainer" Tag="CLASS:DEATHKNIGHT"/>
+                                    <ComboBoxItem Content="Shaman Trainer" Tag="CLASS:SHAMAN"/>
+                                    <ComboBoxItem Content="Mage Trainer" Tag="CLASS:MAGE"/>
+                                    <ComboBoxItem Content="Warlock Trainer" Tag="CLASS:WARLOCK"/>
+                                    <ComboBoxItem Content="Monk (5.x) Trainer" Tag="CLASS:MONK"/>
+                                    <ComboBoxItem Content="Druid Trainer" Tag="CLASS:DRUID"/>
+
+                                    <ComboBoxItem Content="Human Mount Trainer" Tag="MOUNT:HUMAN"/>
+                                    <ComboBoxItem Content="Orc Mount Trainer" Tag="MOUNT:ORC"/>
+                                    <ComboBoxItem Content="Dwarf Mount Trainer" Tag="MOUNT:DWARF"/>
+                                    <ComboBoxItem Content="Night Elf Mount Trainer" Tag="MOUNT:NIGHTELF"/>
+                                    <ComboBoxItem Content="Undead Mount Trainer" Tag="MOUNT:UNDEAD"/>
+                                    <ComboBoxItem Content="Tauren Mount Trainer" Tag="MOUNT:TAUREN"/>
+                                    <ComboBoxItem Content="Gnome Mount Trainer" Tag="MOUNT:GNOME"/>
+                                    <ComboBoxItem Content="Troll Mount Trainer" Tag="MOUNT:TROLL"/>
+                                    <ComboBoxItem Content="Blood Elf Mount Trainer" Tag="MOUNT:BLOODELF"/>
+                                    <ComboBoxItem Content="Draenei Mount Trainer" Tag="MOUNT:DRAENEI"/>
+                                    <ComboBoxItem Content="Goblin Mount Trainer" Tag="MOUNT:GOBLIN"/>
+                                    <ComboBoxItem Content="Worgen Mount Trainer" Tag="MOUNT:WORGEN"/>
+                                </ComboBox>
+
+                                <TextBlock Text="Vehicle ID" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center"/>
+                                <TextBox x:Name="CreatureVehicleIdBox" Grid.Row="1" Grid.Column="1" Text="0" Margin="0,0,0,6"/>
+
+                                <TextBlock Text="AI Name" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center"/>
+                                <ComboBox x:Name="CreatureAINameCombo" Grid.Row="2" Grid.Column="1" SelectedIndex="0">
+                                    <ComboBoxItem Content="NullAI" Tag="NullCreatureAI" IsSelected="True"/>
+                                    <ComboBoxItem Content="AggressorAI" Tag="AggressorAI"/>
+                                    <ComboBoxItem Content="ReactorAI" Tag="ReactorAI"/>
+                                    <ComboBoxItem Content="GuardAI" Tag="GuardAI"/>
+                                    <ComboBoxItem Content="PetAI" Tag="PetAI"/>
+                                    <ComboBoxItem Content="TotemAI" Tag="TotemAI"/>
+                                    <ComboBoxItem Content="EventAI" Tag="EventAI"/>
+                                    <ComboBoxItem Content="SmartAI" Tag="SmartAI"/>
+                                </ComboBox>
+                            </Grid>
+                        </GroupBox>
+
                         <GroupBox Header="Detailed Stats" Padding="10" Margin="0,10,0,0">
                             <Grid Grid.IsSharedSizeScope="True">
                                 <Grid.ColumnDefinitions>
@@ -554,7 +665,7 @@
                                 <TextBox x:Name="CreatureMinGoldSilverBox" Grid.Row="0" Grid.Column="3" Text="0" Width="60" Margin="0,0,6,6"/>
                                 <Ellipse Grid.Row="0" Grid.Column="4" Width="14" Height="14" Fill="Silver" Stroke="#888" Margin="0,0,6,6" VerticalAlignment="Center"/>
                                 <TextBox x:Name="CreatureMinGoldCopperBox" Grid.Row="0" Grid.Column="5" Text="0" Width="60" Margin="0,0,6,6"/>
-                                <Ellipse Grid.Row="0" Grid.Column="6" Width="14" Height="14" Fill="#CD7F32" Stroke="#8A4B15" Margin="0,0,0,6" VerticalAlignment="Center"/>
+                                <Ellipse Grid.Row="0" Grid.Column="6" Width="14" Height="14" Fill="#CD7F32" Stroke="#8A4B15" Margin="-570,0,0,6" VerticalAlignment="Center"/>
 
                                 <!-- Max gold -->
                                 <TextBlock Text="Max gold" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,6"/>
@@ -563,7 +674,7 @@
                                 <TextBox x:Name="CreatureMaxGoldSilverBox" Grid.Row="1" Grid.Column="3" Text="0" Width="60" Margin="0,0,6,6"/>
                                 <Ellipse Grid.Row="1" Grid.Column="4" Width="14" Height="14" Fill="Silver" Stroke="#888" Margin="0,0,6,6" VerticalAlignment="Center"/>
                                 <TextBox x:Name="CreatureMaxGoldCopperBox" Grid.Row="1" Grid.Column="5" Text="0" Width="60" Margin="0,0,6,6"/>
-                                <Ellipse Grid.Row="1" Grid.Column="6" Width="14" Height="14" Fill="#CD7F32" Stroke="#8A4B15" Margin="0,0,0,6" VerticalAlignment="Center"/>
+                                <Ellipse Grid.Row="1" Grid.Column="6" Width="14" Height="14" Fill="#CD7F32" Stroke="#8A4B15" Margin="-570,0,0,6" VerticalAlignment="Center"/>
 
                                 <!-- Loot IDs -->
                                 <TextBlock Text="Loot ID" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,6"/>
