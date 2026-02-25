@@ -54,7 +54,7 @@ Because your tools should work with you — not against you.
 ### 🎒 Item Editor (Trinity-Style Layout)
 
 <p align="center">
-  <img src="assets/itempreview.png" width="95%" />
+  <img src="assets/AzerothcorecreatorITEM.png" width="95%" />
 </p>
 
 <p align="center">
@@ -88,7 +88,7 @@ Less alt-tabbing. More building.
 ### 📜 Quest Editor with Live Preview
 
 <p align="center">
-  <img src="assets/QuestTab.png" width="95%" />
+  <img src="assets/AzerothcorecreatorQUEST.png" width="95%" />
 </p>
 
 Structured support for `quest_template` with organized reward handling, requirement configuration, and a live quest preview panel.
