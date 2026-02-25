@@ -62234,6 +62234,9 @@ Rank 3
 
             var invBox = FindFirstByName<ComboBox>(
                 "ItemInventoryTypeBox", "ItemInventoryType", "ItemEquipSlotBox", "ItemEquipSlot");
+            var bondingBox = FindFirstByName<ComboBox>(
+                "ItemBondingBox", "ItemBonding", "ItemBondingCombo", "ItemBondingComboBox",
+                "ItemBindingBox", "ItemBinding", "ItemBindBox", "ItemBindTypeBox", "ItemBindType");
 
             if (nameBox != null) nameBox.TextChanged += ItemPreview_Changed;
             if (displayBox != null) displayBox.TextChanged += ItemPreview_Changed;
@@ -62241,6 +62244,7 @@ Rank 3
             if (classBox != null) classBox.SelectionChanged += ItemPreview_Changed;
             if (subclassBox != null) subclassBox.SelectionChanged += ItemPreview_Changed;
             if (invBox != null) invBox.SelectionChanged += ItemPreview_Changed;
+            if (bondingBox != null) bondingBox.SelectionChanged += ItemPreview_Changed;
         }
 
         // ContainerSlots (Bag Slots) input helpers: digits only, clamp 0-255 (Trinity-like).
