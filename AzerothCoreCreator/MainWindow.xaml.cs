@@ -12,6 +12,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using Microsoft.Win32;
 
@@ -23,6 +24,19 @@ namespace AzerothCoreCreator
         private bool _connected = false;
         private string _lastSql = "";
 
+        // Item sockets (Gem Sockets UI)
+        private readonly List<ItemSocketRow> _itemSocketRows = new List<ItemSocketRow>();
+
+        private sealed class ItemSocketRow
+        {
+            public Grid RowGrid;
+            public ComboBox TypeCombo;
+            public TextBox AmountBox;
+        }
+
+
+
+        private bool _changelogCheckedThisRun = false;
         // Rotating status tips (bottom-left)
         private readonly string[] _statusTips = new[]
         {
@@ -277,11 +291,13 @@ namespace AzerothCoreCreator
         {
             InitializeComponent();
             // Show changelog once per version AFTER UI is ready (important for Velopack launches)
-            Dispatcher.BeginInvoke(new Action(() =>
+            this.Loaded += (_, __) =>
             {
-                ShowChangelogOncePerVersion();
-            }), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
-            this.Loaded += (_, __) => ShowChangelogOncePerVersion();
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    ShowChangelogOncePerVersion();
+                }), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+            };
             UpdateUninstallDisplaySize();
             EnsureFlagCheckboxesBuilt();
             UpdateCreatureOptionalSectionsVisibility();
@@ -292,6 +308,11 @@ namespace AzerothCoreCreator
 
         private void ShowChangelogOncePerVersion()
         {
+            if (_changelogCheckedThisRun)
+                return;
+
+            _changelogCheckedThisRun = true;
+
             try
             {
                 // Prefer the version you set in the .csproj <Version> (InformationalVersion),
@@ -393,6 +414,8 @@ namespace AzerothCoreCreator
             SetDisconnectedUI("Ready.");
             InitItemClassAndSubclasses();
             HookItemPreviewEvents();
+            InitializeItemSocketsUi();
+
             UpdateItemPreview();
             LockQuestSectionsToSingleRow();
 
@@ -1607,6 +1630,350 @@ namespace AzerothCoreCreator
             UpdateContainerUiVisibility();
         }
 
+        private void ItemSocketsToggle_Changed(object sender, RoutedEventArgs e)
+        {
+            if (ItemSocketsFieldsPanel == null || ItemShowSocketsCheck == null)
+                return;
+
+            ItemSocketsFieldsPanel.Visibility = (ItemShowSocketsCheck.IsChecked == true) ? Visibility.Visible : Visibility.Collapsed;
+
+            // If enabling and no rows exist, add one default row.
+            if (ItemShowSocketsCheck.IsChecked == true && _itemSocketRows.Count == 0)
+                AddItemSocketRow();
+
+            UpdateItemPreview();
+        }
+
+        private void InitializeItemSocketsUi()
+        {
+            try
+            {
+                if (ItemSocketBonusCombo != null)
+                {
+                    var bonusList = new List<KeyValuePair<int, string>>
+                    {
+                        new KeyValuePair<int, string>(0, "No Bonus"),
+
+                        // Common socket bonus IDs (AzerothCore wiki / Trinity-style lists)
+                        new KeyValuePair<int, string>(3015, "+2 Strength"),
+                        new KeyValuePair<int, string>(2879, "+3 Strength"),
+                        new KeyValuePair<int, string>(2927, "+4 Strength"),
+                        new KeyValuePair<int, string>(3357, "+6 Strength"),
+                        new KeyValuePair<int, string>(3312, "+8 Strength"),
+
+                        new KeyValuePair<int, string>(3149, "+2 Agility"),
+                        new KeyValuePair<int, string>(2893, "+3 Agility"),
+                        new KeyValuePair<int, string>(2877, "+4 Agility"),
+                        new KeyValuePair<int, string>(3355, "+6 Agility"),
+                        new KeyValuePair<int, string>(3313, "+8 Agility"),
+
+                        new KeyValuePair<int, string>(3164, "+3 Stamina"),
+                        new KeyValuePair<int, string>(2895, "+4 Stamina"),
+                        new KeyValuePair<int, string>(2882, "+6 Stamina"),
+                        new KeyValuePair<int, string>(3307, "+9 Stamina"),
+                        new KeyValuePair<int, string>(3766, "+12 Stamina"),
+
+                        new KeyValuePair<int, string>(3016, "+2 Intellect"),
+                        new KeyValuePair<int, string>(2863, "+3 Intellect"),
+                        new KeyValuePair<int, string>(2869, "+4 Intellect"),
+                        new KeyValuePair<int, string>(3310, "+6 Intellect"),
+                        new KeyValuePair<int, string>(3353, "+8 Intellect"),
+
+                        new KeyValuePair<int, string>(3097, "+2 Spirit"),
+                        new KeyValuePair<int, string>(2866, "+3 Spirit"),
+                        new KeyValuePair<int, string>(2890, "+4 Spirit"),
+                        new KeyValuePair<int, string>(3311, "+6 Spirit"),
+                        new KeyValuePair<int, string>(3352, "+8 Spirit"),
+
+                        new KeyValuePair<int, string>(3114, "+4 Attack Power"),
+                        new KeyValuePair<int, string>(2973, "+6 Attack Power"),
+                        new KeyValuePair<int, string>(2936, "+8 Attack Power"),
+                        new KeyValuePair<int, string>(3764, "+12 Attack Power"),
+                        new KeyValuePair<int, string>(3877, "+16 Attack Power"),
+                        new KeyValuePair<int, string>(1597, "+32 Attack Power"),
+
+                        new KeyValuePair<int, string>(3153, "+2 Spell Power"),
+                        new KeyValuePair<int, string>(2974, "+4 Spell Power"),
+                        new KeyValuePair<int, string>(3752, "+5 Spell Power"),
+                        new KeyValuePair<int, string>(3602, "+7 Spell Power"),
+                        new KeyValuePair<int, string>(3753, "+9 Spell Power"),
+
+                        new KeyValuePair<int, string>(2872, "+9 Healing"),
+
+                        new KeyValuePair<int, string>(2941, "+2 Hit Rating"),
+                        new KeyValuePair<int, string>(2880, "+3 Hit Rating"),
+                        new KeyValuePair<int, string>(2908, "+4 Hit Rating"),
+                        new KeyValuePair<int, string>(3351, "+6 Hit Rating"),
+                        new KeyValuePair<int, string>(2844, "+8 Hit Rating"),
+
+                        new KeyValuePair<int, string>(3152, "+2 Critical Strike Rating"),
+                        new KeyValuePair<int, string>(3205, "+3 Critical Strike Rating"),
+                        new KeyValuePair<int, string>(3263, "+4 Critical Strike Rating"),
+                        new KeyValuePair<int, string>(3316, "+6 Critical Strike Rating"),
+                        new KeyValuePair<int, string>(3314, "+8 Critical Strike Rating"),
+
+                        new KeyValuePair<int, string>(3308, "+4 Haste Rating"),
+                        new KeyValuePair<int, string>(3309, "+6 Haste Rating"),
+                        new KeyValuePair<int, string>(3303, "+8 Haste Rating"),
+
+                        new KeyValuePair<int, string>(3094, "+4 Expertise Rating"),
+                        new KeyValuePair<int, string>(3362, "+6 Expertise Rating"),
+                        new KeyValuePair<int, string>(3778, "+8 Expertise Rating"),
+
+                        new KeyValuePair<int, string>(2976, "+2 Defense Rating"),
+                        new KeyValuePair<int, string>(2861, "+3 Defense Rating"),
+                        new KeyValuePair<int, string>(2932, "+4 Defense Rating"),
+                        new KeyValuePair<int, string>(3857, "+6 Defense Rating"),
+                        new KeyValuePair<int, string>(3302, "+8 Defense Rating"),
+
+                        new KeyValuePair<int, string>(2926, "+2 Dodge Rating"),
+                        new KeyValuePair<int, string>(2876, "+3 Dodge Rating"),
+                        new KeyValuePair<int, string>(2871, "+4 Dodge Rating"),
+                        new KeyValuePair<int, string>(3358, "+6 Dodge Rating"),
+                        new KeyValuePair<int, string>(3304, "+8 Dodge Rating"),
+
+                        new KeyValuePair<int, string>(2907, "+2 Parry Rating"),
+                        new KeyValuePair<int, string>(2870, "+3 Parry Rating"),
+                        new KeyValuePair<int, string>(3359, "+4 Parry Rating"),
+                        new KeyValuePair<int, string>(3871, "+6 Parry Rating"),
+                        new KeyValuePair<int, string>(3360, "+8 Parry Rating"),
+
+                        new KeyValuePair<int, string>(3017, "+3 Block Rating"),
+                        new KeyValuePair<int, string>(2972, "+4 Block Rating"),
+                        new KeyValuePair<int, string>(3361, "+6 Block Rating"),
+
+                        new KeyValuePair<int, string>(2975, "+5 Block Value"),
+                        new KeyValuePair<int, string>(2888, "+6 Block Value"),
+                        new KeyValuePair<int, string>(3363, "+9 Block Value"),
+
+                        new KeyValuePair<int, string>(2881, "+1 Mana per 5 sec"),
+                        new KeyValuePair<int, string>(2865, "+2 Mana per 5 sec"),
+                        new KeyValuePair<int, string>(2370, "+3 Mana per 5 sec"),
+                        new KeyValuePair<int, string>(2371, "+4 Mana per 5 sec"),
+                        new KeyValuePair<int, string>(2392, "+12 Mana per 5 sec"),
+
+                        new KeyValuePair<int, string>(2867, "+2 Resilience Rating"),
+                        new KeyValuePair<int, string>(2862, "+3 Resilience Rating"),
+                        new KeyValuePair<int, string>(2878, "+4 Resilience Rating"),
+                        new KeyValuePair<int, string>(3600, "+6 Resilience Rating"),
+                        new KeyValuePair<int, string>(3821, "+8 Resilience Rating"),
+                    };
+
+                    ItemSocketBonusCombo.ItemsSource = bonusList;
+                    ItemSocketBonusCombo.DisplayMemberPath = "Value";
+                    ItemSocketBonusCombo.SelectedValuePath = "Key";
+                    if (ItemSocketBonusCombo.SelectedIndex < 0)
+                        ItemSocketBonusCombo.SelectedValue = 0;
+                }
+
+                // Default collapsed until checked
+                ItemSocketsToggle_Changed(null, null);
+            }
+            catch
+            {
+                // don't block startup
+            }
+        }
+
+        private void ItemAddSocketRowBtn_Click(object sender, RoutedEventArgs e)
+        {
+            AddItemSocketRow();
+            UpdateItemPreview();
+        }
+
+        private void AddItemSocketRow()
+        {
+            if (ItemSocketsRowsPanel == null)
+                return;
+
+            if (_itemSocketRows.Count >= 3)
+                return;
+
+            var rowGrid = new Grid { Margin = new Thickness(0, 0, 0, 6) };
+            rowGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(150) });
+            rowGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(90) });
+            rowGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(30) });
+
+            var typeCombo = new ComboBox { Height = 22, Margin = new Thickness(0, 0, 8, 0) };
+            typeCombo.ItemsSource = new[]
+            {
+                new KeyValuePair<int,string>(1, "Meta"),
+                new KeyValuePair<int,string>(2, "Red"),
+                new KeyValuePair<int,string>(4, "Yellow"),
+                new KeyValuePair<int,string>(8, "Blue"),
+            };
+            typeCombo.DisplayMemberPath = "Value";
+            typeCombo.SelectedValuePath = "Key";
+            typeCombo.SelectedValue = 1;
+            typeCombo.SelectionChanged += ItemPreview_Changed;
+
+            var amtBox = new TextBox { Height = 22, VerticalContentAlignment = VerticalAlignment.Center, Padding = new Thickness(4, 0, 4, 0), Text = "0" };
+            amtBox.PreviewTextInput += NumericOnly_PreviewTextInput;
+            amtBox.TextChanged += ItemPreview_Changed;
+
+            var delBtn = new Button { Content = "✖", Width = 24, Height = 24, Padding = new Thickness(0), Margin = new Thickness(0) };
+            delBtn.Click += (s, e) =>
+            {
+                ItemSocketsRowsPanel.Children.Remove(rowGrid);
+                _itemSocketRows.RemoveAll(r => r.RowGrid == rowGrid);
+                UpdateItemPreview();
+            };
+
+            Grid.SetColumn(typeCombo, 0);
+            Grid.SetColumn(amtBox, 1);
+            Grid.SetColumn(delBtn, 2);
+
+            rowGrid.Children.Add(typeCombo);
+            rowGrid.Children.Add(amtBox);
+            rowGrid.Children.Add(delBtn);
+
+            ItemSocketsRowsPanel.Children.Add(rowGrid);
+
+            _itemSocketRows.Add(new ItemSocketRow
+            {
+                RowGrid = rowGrid,
+                TypeCombo = typeCombo,
+                AmountBox = amtBox
+            });
+        }
+
+        private void NumericOnly_PreviewTextInput(object sender, System.Windows.Input.TextCompositionEventArgs e)
+        {
+            foreach (char c in e.Text)
+            {
+                if (!char.IsDigit(c))
+                {
+                    e.Handled = true;
+                    return;
+                }
+            }
+        }
+
+        private void GetSocketValues(out int c1, out int c2, out int c3, out int v1, out int v2, out int v3)
+        {
+            c1 = c2 = c3 = 0;
+            v1 = v2 = v3 = 0;
+
+            if (ItemShowSocketsCheck == null || ItemShowSocketsCheck.IsChecked != true)
+                return;
+
+            int count = Math.Min(3, _itemSocketRows.Count);
+            for (int i = 0; i < count; i++)
+            {
+                int col = 0;
+                int val = 0;
+
+                try { col = Convert.ToInt32(_itemSocketRows[i].TypeCombo?.SelectedValue ?? 0); } catch { col = 0; }
+                try { val = ParseInt(_itemSocketRows[i].AmountBox?.Text ?? "0", 0); } catch { val = 0; }
+
+                if (i == 0) { c1 = col; v1 = val; }
+                else if (i == 1) { c2 = col; v2 = val; }
+                else if (i == 2) { c3 = col; v3 = val; }
+            }
+        }
+
+        private int GetSocketBonusId()
+        {
+            if (ItemShowSocketsCheck == null || ItemShowSocketsCheck.IsChecked != true)
+                return 0;
+
+            try
+            {
+                if (ItemSocketBonusCombo?.SelectedValue != null)
+                    return Convert.ToInt32(ItemSocketBonusCombo.SelectedValue);
+            }
+            catch { }
+            return 0;
+        }
+
+        private string GetSocketBonusLabel()
+        {
+            try
+            {
+                if (ItemSocketBonusCombo?.SelectedItem is KeyValuePair<int, string> kv)
+                    return kv.Value ?? "";
+            }
+            catch { }
+            return "";
+        }
+
+        private static string SocketColorToLabel(int socketColor)
+        {
+            return socketColor switch
+            {
+                1 => "Meta Socket",
+                2 => "Red Socket",
+                4 => "Yellow Socket",
+                8 => "Blue Socket",
+                _ => "Socket"
+            };
+        }
+
+        private static System.Windows.Media.Brush SocketColorToBrush(int socketColor)
+        {
+            return socketColor switch
+            {
+                1 => System.Windows.Media.Brushes.Purple,
+                2 => System.Windows.Media.Brushes.Red,
+                4 => System.Windows.Media.Brushes.Gold,
+                8 => System.Windows.Media.Brushes.DodgerBlue,
+                _ => System.Windows.Media.Brushes.Gray
+            };
+        }
+
+
+
+        private static readonly Dictionary<int, System.Windows.Media.ImageSource> _socketIconCache = new();
+
+        private static System.Windows.Media.ImageSource SocketColorToImageSource(int socketColor)
+        {
+            // Uses files placed next to the EXE (Build Action: Content, Copy to Output Directory),
+            // so we don't have to rely on embedded resources.
+            // Expected filenames: metasocket.png, redsocket.png, yellowsocket.png, bluesocket.png
+            if (_socketIconCache.TryGetValue(socketColor, out var cached))
+                return cached;
+
+            string fileName = socketColor switch
+            {
+                1 => "metasocket.png",
+                2 => "redsocket.png",
+                4 => "yellowsocket.png",
+                8 => "bluesocket.png",
+                _ => ""
+            };
+
+            if (string.IsNullOrWhiteSpace(fileName))
+            {
+                _socketIconCache[socketColor] = null;
+                return null;
+            }
+
+            try
+            {
+                var uri = new Uri($"pack://application:,,,/assets/{fileName}", UriKind.Absolute);
+                var bmp = new BitmapImage();
+                bmp.BeginInit();
+                bmp.UriSource = uri;
+                bmp.CacheOption = BitmapCacheOption.OnLoad;
+                bmp.EndInit();
+                bmp.Freeze();
+
+                _socketIconCache[socketColor] = bmp;
+                return bmp;
+            }
+            catch
+            {
+                _socketIconCache[socketColor] = null;
+                return null;
+            }
+        }
+        private sealed class SocketPreviewRow
+        {
+            public System.Windows.Media.ImageSource IconSource { get; set; }
+            public string Text { get; set; }
+        }
+
+
         private void ItemClassMask_Changed(object sender, RoutedEventArgs e) => UpdateItemAllowableClassMask();
         private void ItemRaceMask_Changed(object sender, RoutedEventArgs e) => UpdateItemAllowableRaceMask();
 
@@ -1780,6 +2147,8 @@ namespace AzerothCoreCreator
             var reqTb = FindFirstByName<TextBlock>("ItemTooltipReqLevel");
             var ilvlTb = FindFirstByName<TextBlock>("ItemTooltipItemLevel");
             var statsCtl = FindFirstByName<ItemsControl>("ItemTooltipStats");
+            var socketsCtl = FindFirstByName<ItemsControl>("ItemTooltipSockets");
+            var socketBonusTb = FindFirstByName<TextBlock>("ItemTooltipSocketBonus");
             var flavorTb = FindFirstByName<TextBlock>("ItemTooltipFlavor");
             var classesTb = FindFirstByName<TextBlock>("ItemTooltipClasses");
             var durTb = FindFirstByName<TextBlock>("ItemTooltipDurability");
@@ -1789,6 +2158,8 @@ namespace AzerothCoreCreator
             // Item inputs
             var nameBox = FindFirstByName<TextBox>(
                 "ItemNameBox", "ItemNameTextBox", "ItemName", "ItemNameTxt", "ItemNameField");
+            var quoteBox = FindFirstByName<TextBox>("ItemQuoteBox", "ItemFlavorBox", "ItemDescriptionBox", "ItemQuote");
+
 
             var qualityBox = FindFirstByName<ComboBox>(
                 "ItemQualityBox", "ItemQuality", "ItemQualityCombo", "ItemQualityComboBox");
@@ -1814,6 +2185,8 @@ namespace AzerothCoreCreator
             var stackBox = FindFirstByName<TextBox>("ItemStackableBox", "ItemStackCountBox");
 
             string name = (nameBox?.Text ?? "").Trim();
+
+            string quote = (quoteBox?.Text ?? "").Trim();
             if (string.IsNullOrWhiteSpace(name)) name = "(name)";
 
             int quality = 0;
@@ -2066,14 +2439,60 @@ namespace AzerothCoreCreator
 
                 statsCtl.ItemsSource = statLines;
                 statsCtl.Visibility = statLines.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+
+                // --- Gem sockets preview ---
+                if (socketsCtl != null && socketBonusTb != null)
+                {
+                    GetSocketValues(out int sc1, out int sc2, out int sc3, out int sv1, out int sv2, out int sv3);
+
+                    var socketRows = new List<SocketPreviewRow>();
+                    if (sc1 != 0) socketRows.Add(new SocketPreviewRow { IconSource = SocketColorToImageSource(sc1), Text = SocketColorToLabel(sc1) });
+                    if (sc2 != 0) socketRows.Add(new SocketPreviewRow { IconSource = SocketColorToImageSource(sc2), Text = SocketColorToLabel(sc2) });
+                    if (sc3 != 0) socketRows.Add(new SocketPreviewRow { IconSource = SocketColorToImageSource(sc3), Text = SocketColorToLabel(sc3) });
+
+                    if (socketRows.Count > 0)
+                    {
+                        socketsCtl.ItemsSource = socketRows;
+                        socketsCtl.Visibility = Visibility.Visible;
+                    }
+                    else
+                    {
+                        socketsCtl.ItemsSource = null;
+                        socketsCtl.Visibility = Visibility.Collapsed;
+                    }
+
+                    int bonusId = GetSocketBonusId();
+                    string bonusLabel = GetSocketBonusLabel();
+                    if (bonusId != 0 && !string.IsNullOrWhiteSpace(bonusLabel) && !string.Equals(bonusLabel, "No Bonus", StringComparison.OrdinalIgnoreCase))
+                    {
+                        socketBonusTb.Text = $"Socket Bonus: {bonusLabel}";
+                        socketBonusTb.Visibility = Visibility.Visible;
+                    }
+                    else
+                    {
+                        socketBonusTb.Text = "";
+                        socketBonusTb.Visibility = Visibility.Collapsed;
+                    }
+                }
+
             }
 
 
             // FLAVOR (optional)
             if (flavorTb != null)
             {
-                flavorTb.Text = "";
-                flavorTb.Visibility = Visibility.Collapsed;
+                string q = quote;
+                if (!string.IsNullOrWhiteSpace(q))
+                {
+                    // Show as item "flavor text" with quotes
+                    flavorTb.Text = $"\"{q}\"";
+                    flavorTb.Visibility = Visibility.Visible;
+                }
+                else
+                {
+                    flavorTb.Text = "";
+                    flavorTb.Visibility = Visibility.Collapsed;
+                }
             }
         }
 
@@ -3092,6 +3511,7 @@ namespace AzerothCoreCreator
             if (entry <= 0) throw new Exception("Item Entry must be > 0.");
 
             string name = SqlEscape(ItemNameBox.Text);
+            string itemQuote = SqlEscape(ItemQuoteBox?.Text ?? "");
             int displayId = ParseInt(ItemDisplayIdBox.Text, 0);
 
             int quality = ComboTagInt(ItemQualityBox);
@@ -3133,6 +3553,11 @@ namespace AzerothCoreCreator
             int arcaneRes = ParseInt(ItemArcaneResBox?.Text ?? "0", 0);
 
 
+
+
+            // Sockets (item_template.socketColor_1..3, socketContent_1..3, socketBonus)
+            GetSocketValues(out int sockC1, out int sockC2, out int sockC3, out int sockV1, out int sockV2, out int sockV3);
+            int sockBonus = GetSocketBonusId();
             var sb = new StringBuilder();
             sb.AppendLine("-- AzerothCore Creator - Item");
             sb.AppendLine("START TRANSACTION;");
@@ -3148,17 +3573,17 @@ namespace AzerothCoreCreator
             sb.AppendLine();
 
             sb.Append("INSERT INTO `item_template` ");
-            sb.Append("(`entry`,`class`,`subclass`,`name`,`displayid`,`Quality`,`BuyPrice`,`SellPrice`,`BuyCount`,`InventoryType`,`RequiredLevel`,`ItemLevel`,`stackable`,`bonding`,");
+            sb.Append("(`entry`,`class`,`subclass`,`name`,`description`,`displayid`,`Quality`,`BuyPrice`,`SellPrice`,`BuyCount`,`InventoryType`,`RequiredLevel`,`ItemLevel`,`stackable`,`bonding`,");
             sb.Append("`ContainerSlots`,`BagFamily`,");
             sb.Append("`armor`,`dmg_min1`,`dmg_max1`,");
-            sb.Append("`Flags`,`FlagsExtra`,`AllowableClass`,`AllowableRace`,`holy_res`,`fire_res`,`nature_res`,`frost_res`,`shadow_res`,`arcane_res`) VALUES ");
+            sb.Append("`Flags`,`FlagsExtra`,`AllowableClass`,`AllowableRace`,`holy_res`,`fire_res`,`nature_res`,`frost_res`,`shadow_res`,`arcane_res`,`socketColor_1`,`socketContent_1`,`socketColor_2`,`socketContent_2`,`socketColor_3`,`socketContent_3`,`socketBonus`) VALUES ");
 
             sb.AppendFormat(
-                "(@ENTRY,{0},{1},'{2}',{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15},{16},{17},{18},{19},{20},{21},{22},{23},{24},{25},{26},{27});",
-                cls, subcls, name.Replace("'", "''"), displayId, quality, buyPrice, sellPrice, buyCount, inv, reqLevel, itemLevel, stack, bonding,
+                "(@ENTRY,{0},{1},'{2}','{3}',{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15},{16},{17},{18},{19},{20},{21},{22},{23},{24},{25},{26},{27},{28},{29},{30},{31},{32},{33},{34},{35});",
+                cls, subcls, name.Replace("'", "''"), itemQuote.Replace("'", "''"), displayId, quality, buyPrice, sellPrice, buyCount, inv, reqLevel, itemLevel, stack, bonding,
                 containerSlots, bagFamily,
                 armor, dmgMin, dmgMax,
-                flags, flagsExtra, allowableClass, allowableRace, holyRes, fireRes, natureRes, frostRes, shadowRes, arcaneRes);
+                flags, flagsExtra, allowableClass, allowableRace, holyRes, fireRes, natureRes, frostRes, shadowRes, arcaneRes, sockC1, sockV1, sockC2, sockV2, sockC3, sockV3, sockBonus);
 
             sb.AppendLine();
             sb.AppendLine("COMMIT;");

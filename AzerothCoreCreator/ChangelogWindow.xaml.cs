@@ -15,7 +15,16 @@ namespace AzerothCoreCreator
 
             // Update this text when you release. Newest entries at top.
             ChangelogText =
-@"v0.1.9
+@"v0.2.0
+- Fixed Double Changelog Popup
+- Added Item Quote field to Item Tab
+- Added Item Sockets section to Item tab
+- Added Item sockets to Item Preview tab
+- Added Socket Images to Item preview
+- Added Quest background image to Quest Preview
+- Added Gold/Silver/Bronze Images
+
+v0.1.9
 - Added Movement section to Creature tab
 - Added Inhabit Type section to Creature tab
 - Aligned Bronze image on Death section of Creature tab

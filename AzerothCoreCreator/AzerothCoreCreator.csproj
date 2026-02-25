@@ -10,7 +10,7 @@
 		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
 
 		<!-- Version displayed to users / used by Velopack releases -->
-		<Version>0.1.9-beta</Version>
+		<Version>0.2.0-beta</Version>
 
 		<!-- IMPORTANT: Keep PackageId stable across versions, or Velopack updates will not bridge -->
 		<PackageId>KrowtennetworK.AzerothCoreCreator</PackageId>
@@ -26,12 +26,47 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <None Remove="assets\bluesocket.png" />
+	  <None Remove="assets\copper.gif" />
+	  <None Remove="assets\gold.gif" />
+	  <None Remove="assets\metasocket.png" />
+	  <None Remove="assets\QuestGreeting.png" />
+	  <None Remove="assets\redsocket.png" />
+	  <None Remove="assets\silver.gif" />
+	  <None Remove="assets\yellowsocket.png" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="MySqlConnector" Version="2.5.0" />
 		<PackageReference Include="Velopack" Version="0.0.1298" />
 	</ItemGroup>
 	
 	<!-- Ensure the .ico (icon) is packaged as a WPF resource so XAML Icon can resolve it -->
 	<ItemGroup>
+		<Resource Include="assets\bluesocket.png">
+		  <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="assets\copper.gif">
+		  <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="assets\gold.gif">
+		  <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="assets\metasocket.png">
+		  <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="assets\QuestGreeting.png">
+		  <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="assets\redsocket.png">
+		  <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="assets\silver.gif">
+		  <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="assets\yellowsocket.png">
+		  <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</Resource>
 		<Resource Include="AzerothCoreCreator.ico" />
 	</ItemGroup>
 
