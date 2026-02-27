@@ -15,7 +15,12 @@ namespace AzerothCoreCreator
 
             // Update this text when you release. Newest entries at top.
             ChangelogText =
-@"v0.3.0
+@"v0.4.0
+- Added WoW Font to Quest Preview
+- Added Incomplete Quest Text Field to Quest Tab
+- Resized Default dimensions of the app
+
+v0.3.0
 -  Added Dressing Room Tab
 
 v0.2.0

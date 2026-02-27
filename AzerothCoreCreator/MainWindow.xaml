@@ -1,11 +1,19 @@
 <Window x:Class="AzerothCoreCreator.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="AzerothCore Creator v0.3.0"
-        Height="780" Width="1200"
+        Title="AzerothCore Creator v0.4.0"
+        Height="880" Width="1200"
         MinWidth="1200" MinHeight="780"
         Loaded="Window_Loaded"
         Icon="pack://application:,,,/AzerothCoreCreator.ico">
+
+    <Window.Resources>
+        <!-- Quest Preview fonts (WoW-style) -->
+        <!-- IMPORTANT: Add MORPHEUS.TTF and FRIZQT__.TTF to your project under /Fonts and set Build Action = Resource -->
+        <FontFamily x:Key="QuestPreviewHeaderFont">pack://application:,,,/Fonts/MORPHEUS.TTF#Morpheus</FontFamily>
+        <FontFamily x:Key="QuestPreviewBodyFont">pack://application:,,,/Fonts/FRIZQT__.TTF#Friz Quadrata TT</FontFamily>
+    </Window.Resources>
+
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -1532,6 +1540,7 @@
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
                                     </Grid.RowDefinitions>
 
                                     <TextBlock Text="Title (LogTitle)" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"/>
@@ -1539,21 +1548,24 @@
 
                                     <TextBlock Text="Description (QuestDescription)" Grid.Row="1" Grid.Column="0" VerticalAlignment="Top"/>
                                     <TextBox x:Name="QuestDetailsBox" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Height="80"
-                                         AcceptsReturn="True" TextWrapping="Wrap" TextChanged="QuestPreview_Changed"/>
+                                             AcceptsReturn="True" TextWrapping="Wrap" TextChanged="QuestPreview_Changed"/>
                                     <TextBlock Text="Objectives Text" Grid.Row="2" Grid.Column="0" VerticalAlignment="Top"/>
                                     <TextBox x:Name="QuestObjectivesBox" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3" Height="60"
-                                         AcceptsReturn="True" TextWrapping="Wrap" TextChanged="QuestPreview_Changed"/>
-                                    <TextBlock Text="Min Level" Grid.Row="3" Grid.Column="0" VerticalAlignment="Center"/>
-                                    <TextBox x:Name="QuestMinLevelBox" Grid.Row="3" Grid.Column="1" Text="1"/>
+                                             AcceptsReturn="True" TextWrapping="Wrap" TextChanged="QuestPreview_Changed"/>
+                                    <TextBlock Text="Incomplete Text" Grid.Row="3" Grid.Column="0" VerticalAlignment="Top"/>
+                                    <TextBox x:Name="QuestIncompleteTextBox" Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="3" Height="60"
+                                             Text="Greetings $N. How goes the quest?" AcceptsReturn="True" TextWrapping="Wrap" TextChanged="QuestPreview_Changed"/>
+                                    <TextBlock Text="Min Level" Grid.Row="4" Grid.Column="0" VerticalAlignment="Center"/>
+                                    <TextBox x:Name="QuestMinLevelBox" Grid.Row="4" Grid.Column="1" Text="1"/>
 
-                                    <TextBlock Text="Quest Level" Grid.Row="3" Grid.Column="2" VerticalAlignment="Center"/>
-                                    <TextBox x:Name="QuestLevelBox" Grid.Row="3" Grid.Column="3" Text="1"/>
+                                    <TextBlock Text="Quest Level" Grid.Row="4" Grid.Column="2" VerticalAlignment="Center"/>
+                                    <TextBox x:Name="QuestLevelBox" Grid.Row="4" Grid.Column="3" Text="1"/>
 
-                                    <TextBlock Text="Reward XP" Grid.Row="4" Grid.Column="0" VerticalAlignment="Center"/>
-                                    <TextBox x:Name="QuestRewardXpBox" Grid.Row="4" Grid.Column="1" Text="0" TextChanged="QuestPreview_Changed"/>
+                                    <TextBlock Text="Reward XP" Grid.Row="5" Grid.Column="0" VerticalAlignment="Center"/>
+                                    <TextBox x:Name="QuestRewardXpBox" Grid.Row="5" Grid.Column="1" Text="0" TextChanged="QuestPreview_Changed"/>
 
-                                    <TextBlock Text="Reward Money (copper)" Grid.Row="4" Grid.Column="2" VerticalAlignment="Center"/>
-                                    <TextBox x:Name="QuestRewardMoneyBox" Grid.Row="4" Grid.Column="3" Text="0" TextChanged="QuestPreview_Changed"/>
+                                    <TextBlock Text="Reward Money (copper)" Grid.Row="5" Grid.Column="2" VerticalAlignment="Center"/>
+                                    <TextBox x:Name="QuestRewardMoneyBox" Grid.Row="5" Grid.Column="3" Text="0" TextChanged="QuestPreview_Changed"/>
                                 </Grid>
                             </GroupBox>
 
@@ -1581,15 +1593,15 @@
                                         </Grid.ColumnDefinitions>
 
                                         <TextBlock Text="Quest Info"
-               Grid.Column="0"
-               VerticalAlignment="Center"
-               Margin="0,0,8,0"/>
+                                                   Grid.Column="0"
+                                                   VerticalAlignment="Center"
+                                                   Margin="0,0,8,0"/>
 
                                         <ComboBox x:Name="QuestInfoCombo"
-              Grid.Column="1"
-              Width="240"
-              HorizontalAlignment="Left"
-              SelectionChanged="QuestTypeCombo_SelectionChanged"/>
+                                                  Grid.Column="1"
+                                                  Width="240"
+                                                  HorizontalAlignment="Left"
+                                                  SelectionChanged="QuestTypeCombo_SelectionChanged"/>
 
                                         <TextBlock Text="Quest Type"
                                                    Grid.Column="3"
@@ -2376,7 +2388,7 @@
                                         AlignmentY="Center"/>
                         </Border.Background>
 
-                        <StackPanel>
+                        <StackPanel TextOptions.TextFormattingMode="Display" TextOptions.TextRenderingMode="ClearType">
                             <TextBlock Text=""
                                        FontWeight="SemiBold"
                                        Margin="0,0,0,8"/>
@@ -2385,34 +2397,53 @@
                                        FontSize="16"
                                        FontWeight="Bold"
                                        TextWrapping="Wrap"
-                                       Margin="20,0,0,6"/>
+                                       Margin="20,60,0,6"
+                                       FontFamily="{StaticResource QuestPreviewHeaderFont}" />
 
                             <TextBlock Text="Objectives"
                                        FontWeight="SemiBold"
-                                       Margin="20,6,0,2"/>
+                                       Margin="20,6,0,2"
+                                       FontFamily="{StaticResource QuestPreviewHeaderFont}" />
 
                             <TextBlock x:Name="QuestPreviewObjectives"
                                        TextWrapping="Wrap"
                                        Foreground="#FF2B2B2B"
-                                       Margin="20,10,0,2"/>
+                                       Margin="20,10,0,2"
+                                       FontFamily="{StaticResource QuestPreviewBodyFont}" />
 
                             <TextBlock Text="Details"
                                        FontWeight="SemiBold"
-                                       Margin="20,10,0,2"/>
+                                       Margin="20,10,0,2"
+                                       FontFamily="{StaticResource QuestPreviewHeaderFont}" />
 
                             <TextBlock x:Name="QuestPreviewDetails"
                                        TextWrapping="Wrap"
                                        Foreground="#FF2B2B2B"
-                                       Margin="20,10,0,2"/>
+                                       Margin="20,10,0,2"
+                                       FontFamily="{StaticResource QuestPreviewBodyFont}" />
+
+
+                            <TextBlock Text="Incomplete Text"
+                                       FontWeight="SemiBold"
+                                       Margin="20,10,0,2"
+                                       FontFamily="{StaticResource QuestPreviewHeaderFont}" />
+
+                            <TextBlock x:Name="QuestPreviewIncompleteText"
+                                       TextWrapping="Wrap"
+                                       Foreground="#FF2B2B2B"
+                                       Margin="20,10,0,2"
+                                       FontFamily="{StaticResource QuestPreviewBodyFont}" />
 
                             <TextBlock Text="Rewards"
                                        FontWeight="SemiBold"
-                                       Margin="20,10,0,2"/>
+                                       Margin="20,10,0,2"
+                                       FontFamily="{StaticResource QuestPreviewHeaderFont}" />
 
                             <TextBlock x:Name="QuestPreviewRewards"
                                        TextWrapping="Wrap"
                                        Foreground="#FF2B2B2B"
-                                       Margin="20,10,0,2"/>
+                                       Margin="20,10,0,2"
+                                       FontFamily="{StaticResource QuestPreviewBodyFont}" />
                         </StackPanel>
                     </Border>
                 </Grid>

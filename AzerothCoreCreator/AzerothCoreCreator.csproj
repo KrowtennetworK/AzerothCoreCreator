@@ -10,7 +10,7 @@
 		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
 
 		<!-- Version displayed to users / used by Velopack releases -->
-		<Version>0.3.0-beta</Version>
+		<Version>0.4.0-beta</Version>
 
 		<!-- IMPORTANT: Keep PackageId stable across versions, or Velopack updates will not bridge -->
 		<PackageId>KrowtennetworK.AzerothCoreCreator</PackageId>
@@ -34,6 +34,8 @@
 	  <None Remove="assets\redsocket.png" />
 	  <None Remove="assets\silver.gif" />
 	  <None Remove="assets\yellowsocket.png" />
+	  <None Remove="Fonts\FRIZQT__.TTF" />
+	  <None Remove="Fonts\MORPHEUS.TTF" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -69,6 +71,12 @@
 		  <CopyToOutputDirectory>Never</CopyToOutputDirectory>
 		</Resource>
 		<Resource Include="AzerothCoreCreator.ico" />
+		<Resource Include="Fonts\FRIZQT__.TTF">
+		  <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Fonts\MORPHEUS.TTF">
+		  <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</Resource>
 	</ItemGroup>
 
 </Project>

@@ -3673,6 +3673,7 @@ namespace AzerothCoreCreator
             string title = SqlEscape(QuestTitleBox.Text);
             string details = SqlEscape(QuestDetailsBox.Text);
             string objectives = SqlEscape(QuestObjectivesBox.Text);
+            string incompleteText = SqlEscape(QuestIncompleteTextBox.Text);
 
             int minLevel = ParseInt(QuestMinLevelBox.Text, 1);
             int questLevel = ParseInt(QuestLevelBox.Text, 1);
@@ -3741,7 +3742,7 @@ namespace AzerothCoreCreator
             sb.AppendLine();
 
             sb.Append("INSERT INTO `quest_template` ");
-            sb.Append("(`ID`,`QuestType`,`LogTitle`,`QuestDescription`,`Objectives`,`MinLevel`,`QuestLevel`,`QuestInfoID`,`QuestSortID`,`Flags`,`AllowableRaces`,");
+            sb.Append("(`ID`,`QuestType`,`LogTitle`,`QuestDescription`,`Objectives`,`QuestCompletionLog`,`MinLevel`,`QuestLevel`,`QuestInfoID`,`QuestSortID`,`Flags`,`AllowableRaces`,");
             sb.Append("`RewardXPId`,`RewardMoney`,");
             sb.Append("`RequiredItemId1`,`RequiredItemId2`,`RequiredItemId3`,`RequiredItemId4`,`RequiredItemId5`,`RequiredItemId6`,");
             sb.Append("`RequiredItemCount1`,`RequiredItemCount2`,`RequiredItemCount3`,`RequiredItemCount4`,`RequiredItemCount5`,`RequiredItemCount6`,");
@@ -4150,9 +4151,13 @@ namespace AzerothCoreCreator
             string title = (QuestTitleBox?.Text ?? "").Trim();
             string details = (QuestDetailsBox?.Text ?? "").Trim();
             string objText = (QuestObjectivesBox?.Text ?? "").Trim();
+            string incompleteText = (QuestIncompleteTextBox?.Text ?? "").Trim();
 
             QuestPreviewTitle.Text = string.IsNullOrWhiteSpace(title) ? "(Quest Title)" : title;
             QuestPreviewDetails.Text = string.IsNullOrWhiteSpace(details) ? "(Quest Details)" : details;
+
+            if (QuestPreviewIncompleteText != null)
+                QuestPreviewIncompleteText.Text = string.IsNullOrWhiteSpace(incompleteText) ? "(Incomplete Text)" : incompleteText;
 
             // Build objectives: include the freeform objectives text + required items + required npc/go if present.
             var objSb = new StringBuilder();
