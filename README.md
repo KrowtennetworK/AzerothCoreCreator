@@ -27,6 +27,10 @@ Home of the Official AzerothCore Creator Tool!  Create Items/Creatures/Quests wi
   <img src="assets/CreatureTab.png" width="95%" />
 </p>
 
+<p align="center">
+  <img src="assets/dressingroom.png" width="95%" />
+</p>
+
 Build creatures the sane way.
 
 The Creature Editor provides structured support for AzerothCore’s `creature_template` table with beginner-friendly field grouping, role presets, faction handling, and clear flag toggles.
