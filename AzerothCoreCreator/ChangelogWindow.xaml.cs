@@ -15,7 +15,10 @@ namespace AzerothCoreCreator
 
             // Update this text when you release. Newest entries at top.
             ChangelogText =
-@"v0.2.0
+@"v0.2.1
+-  Added Dressing Room Tab
+
+v0.2.0
 - Fixed Double Changelog Popup
 - Added Item Quote field to Item Tab
 - Added Item Sockets section to Item tab

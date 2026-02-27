@@ -14,6 +14,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+using System.Threading.Tasks;
 using Microsoft.Win32;
 
 
@@ -3061,6 +3062,17 @@ namespace AzerothCoreCreator
                 if (MainTabControl?.SelectedItem is TabItem ti)
                 {
                     string header = ti.Header?.ToString() ?? "";
+
+                    // Hide SQL Preview on Dressing Room tab only
+                    // Dressing Room: hide SQL Preview and let the tab content use that space (row 2)
+                    bool isDressingRoom = header.Equals("Dressing Room", StringComparison.OrdinalIgnoreCase);
+
+                    if (SqlPreviewGroup != null)
+                        SqlPreviewGroup.Visibility = isDressingRoom ? Visibility.Collapsed : Visibility.Visible;
+
+                    // Only expand the TabControl into the SQL Preview row for Dressing Room
+                    if (MainTabControl != null)
+                        Grid.SetRowSpan(MainTabControl, isDressingRoom ? 2 : 1);
 
                     // Creature tab has dynamic flag checkbox building
                     if (header.Equals("Creature", StringComparison.OrdinalIgnoreCase))
@@ -62292,13 +62304,298 @@ Rank 3
             }
         }
 
-    } // <-- closes MainWindow
-      // Keep LookupEntry OUTSIDE MainWindow (but still inside the namespace)
-    public class LookupEntry
-    {
-        public int Id { get; set; }
-        public string Name { get; set; } = "";
 
-        public override string ToString() => $"{Id} - {Name}";
+
+        // ============================
+
+        // =========================
+        // Dressing Room (Wowhead)
+        // =========================
+
+        private const string DefaultDressingRoomUrl =
+            "https://www.wowhead.com/dressing-room#fc80z0zJ89c8t8se8x8sc8g8a08e8ah8wR8mvr8v8ax8sN8zBT8ws8mvA8zYG8dAD8Mt7MaG8MzR8aL8Mzg8at8Mc58ax8Mcn877wvXY87cvXQ87VvYh808vXU808vXZ808vYa808vYk87qz";
+
+        private object? _dressingRoomWebView;
+        private Type? _webView2WpfType;
+
+        private async void DressingRoomLoad_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                DressingRoomStatusText.Text = "";
+                await EnsureDressingRoomWebViewAsync();
+
+                if (_dressingRoomWebView == null)
+                {
+                    DressingRoomStatusText.Text = "WebView2 is not available on this machine.";
+                    return;
+                }
+
+                // Navigate
+                await WebViewNavigateAsync(_dressingRoomWebView, DefaultDressingRoomUrl);
+
+                // After navigation finishes, inject CSS/layout overrides.
+                AttachDressingRoomNavCompleted(_dressingRoomWebView);
+
+                DressingRoomStatusText.Text = "Loaded Wowhead Dressing Room.";
+            }
+            catch (Exception ex)
+            {
+                DressingRoomStatusText.Text = "Load failed: " + ex.Message;
+            }
+        }
+
+        private async Task EnsureDressingRoomWebViewAsync()
+        {
+            if (_dressingRoomWebView != null) return;
+
+            // Try to resolve WebView2 WPF control type at runtime (no XAML dependency).
+            _webView2WpfType ??= Type.GetType("Microsoft.Web.WebView2.Wpf.WebView2, Microsoft.Web.WebView2.Wpf");
+            if (_webView2WpfType == null)
+            {
+                return;
+            }
+
+            // Create control instance.
+            _dressingRoomWebView = Activator.CreateInstance(_webView2WpfType);
+            if (_dressingRoomWebView == null) return;
+
+            // Stretch to fill.
+            if (_dressingRoomWebView is FrameworkElement fe)
+            {
+                fe.HorizontalAlignment = HorizontalAlignment.Stretch;
+                fe.VerticalAlignment = VerticalAlignment.Stretch;
+            }
+
+            // Put into host.
+            DressingRoomHost.Content = _dressingRoomWebView;
+
+            // Ensure CoreWebView2 (overload-safe reflection)
+            await EnsureCoreWebView2Async(_dressingRoomWebView, _webView2WpfType);
+
+            // Set a reasonable default zoom (you can tweak this)
+            TrySetZoom(_dressingRoomWebView, _webView2WpfType, 0.55d);
+
+            // Keep popups inside the same view (best-effort)
+            try { AttachNewWindowHandler(_dressingRoomWebView, _webView2WpfType); } catch { }
+        }
+
+        private static async Task EnsureCoreWebView2Async(object webView, Type webView2Type)
+        {
+            // Try: EnsureCoreWebView2Async()
+            var m0 = webView2Type.GetMethod("EnsureCoreWebView2Async", Type.EmptyTypes);
+            if (m0 != null)
+            {
+                var t = m0.Invoke(webView, null);
+                if (t is Task task) { await task; return; }
+            }
+
+            // Try: EnsureCoreWebView2Async(object env)
+            var m1 = webView2Type.GetMethods()
+                .FirstOrDefault(mi => mi.Name == "EnsureCoreWebView2Async" && mi.GetParameters().Length == 1);
+            if (m1 != null)
+            {
+                var t = m1.Invoke(webView, new object?[] { null });
+                if (t is Task task) { await task; return; }
+            }
+
+            // Try: EnsureCoreWebView2Async(object env, object opts)
+            var m2 = webView2Type.GetMethods()
+                .FirstOrDefault(mi => mi.Name == "EnsureCoreWebView2Async" && mi.GetParameters().Length == 2);
+            if (m2 != null)
+            {
+                var t = m2.Invoke(webView, new object?[] { null, null });
+                if (t is Task task) { await task; return; }
+            }
+
+            // Fallback: setting Source to about:blank can force Core init
+            try
+            {
+                var src = webView2Type.GetProperty("Source");
+                if (src != null && src.CanWrite) src.SetValue(webView, new Uri("about:blank"));
+            }
+            catch { }
+        }
+
+        private static void TrySetZoom(object webView, Type webView2Type, double zoom)
+        {
+            // WebView2 WPF uses ZoomFactor (double)
+            try
+            {
+                var zp = webView2Type.GetProperty("ZoomFactor");
+                if (zp != null && zp.CanWrite) { zp.SetValue(webView, zoom); return; }
+            }
+            catch { }
+
+            // Some earlier patches used "ZoomFactor" via reflection already; nothing else to do.
+        }
+
+        private void AttachDressingRoomNavCompleted(object webView)
+        {
+            try
+            {
+                // Only attach once.
+                var key = "__acore_dr_nav_attached";
+                var tagProp = webView.GetType().GetProperty("Tag");
+                if (tagProp != null)
+                {
+                    var tag = tagProp.GetValue(webView) as string;
+                    if (tag == key) return;
+                    tagProp.SetValue(webView, key);
+                }
+
+                var evt = webView.GetType().GetEvent("NavigationCompleted");
+                if (evt == null) return;
+
+                // Handler signature: (object sender, CoreWebView2NavigationCompletedEventArgs e)
+                // We generate a delegate matching the event handler type at runtime, but we ignore sender/e.
+                Action OnNavCompleted = () =>
+                {
+                    _ = Dispatcher.InvokeAsync(async () =>
+                    {
+                        try
+                        {
+                            // Apply zoom again after first render.
+                            if (_dressingRoomWebView != null && _webView2WpfType != null)
+                                TrySetZoom(_dressingRoomWebView, _webView2WpfType, 0.55d);
+
+                            await Task.Delay(250);
+                            await InjectDressingRoomCssAsync();
+                            // Re-apply a couple times (dynamic page)
+                            await Task.Delay(800);
+                            await InjectDressingRoomCssAsync();
+                            await Task.Delay(1500);
+                            await InjectDressingRoomCssAsync();
+                        }
+                        catch { }
+                    });
+                };
+
+                // Create delegate for the event handler (build a compatible delegate at runtime)
+                var handlerType = evt.EventHandlerType!;
+                var invoke = handlerType.GetMethod("Invoke");
+                if (invoke == null) return;
+
+                var ps = invoke.GetParameters();
+                if (ps.Length != 2) return;
+
+                var senderParam = System.Linq.Expressions.Expression.Parameter(ps[0].ParameterType, "sender");
+                var argsParam = System.Linq.Expressions.Expression.Parameter(ps[1].ParameterType, "e");
+
+                // Call our callback Action
+                var body = System.Linq.Expressions.Expression.Invoke(
+                    System.Linq.Expressions.Expression.Constant(OnNavCompleted)
+                );
+
+                var del = System.Linq.Expressions.Expression
+                    .Lambda(handlerType, body, senderParam, argsParam)
+                    .Compile();
+
+                evt.AddEventHandler(webView, del);
+            }
+            catch { }
+        }
+
+        private async Task InjectDressingRoomCssAsync()
+        {
+            if (_dressingRoomWebView == null) return;
+
+            // Keep the page layout intact (so the mannequin / viewer can render),
+            // and only hide intrusive ads + cookie/consent overlays.
+            string js = @"
+(() => {
+  const css = `
+    /* ===== Cookie / consent / modal overlays ===== */
+    .qc-cmp2-container, .qc-cmp2-ui, .qc-cmp2-overlay,
+    #onetrust-consent-sdk, .ot-sdk-container, .ot-sdk-row,
+    .ot-overlay, .ot-modal-backdrop, .ot-floating-button,
+    .fc-consent-root, .fc-dialog, .fc-overlay,
+    [id*='consent'], [class*='consent'], [class*='cookie'][class*='banner'],
+    .modal-backdrop, .overlay, .lightbox, .popup, .pop-up, .interstitial {
+      display: none !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
     }
+
+    /* ===== Ads / rails / sticky units (best-effort) ===== */
+    .ad, .ads, .advertisement, .ad-unit, .adwrap, .ad-wrapper,
+    .wh-ad, .whads, .wowhead-ad, .display-ad,
+    [id^='ad_'], [id*='ad-'], [id*='ad_'], [id*='ads'], [class*='ad-'],
+    iframe[id*='google_ads'], iframe[src*='doubleclick'], iframe[src*='googlesyndication'],
+    .right-rail .ad, .left-rail .ad, #sidebar .ad, #rail .ad {
+      display: none !important;
+      visibility: hidden !important;
+      height: 0 !important;
+      min-height: 0 !important;
+      max-height: 0 !important;
+      overflow: hidden !important;
+    }
+
+    /* ===== Make sure we don't accidentally hide the model viewer ===== */
+    canvas, #modelviewer, .modelviewer, .model-viewer, .dressing-room, #dressing-room {
+      display: block !important;
+      visibility: visible !important;
+    }
+  `;
+
+  let style = document.getElementById('__acore_ads');
+  if (!style) {
+    style = document.createElement('style');
+    style.id = '__acore_ads';
+    document.head.appendChild(style);
+  }
+  style.textContent = css;
+})();";
+
+            await WebViewExecuteScriptAsync(_dressingRoomWebView, js);
+        }
+
+        private static async Task WebViewNavigateAsync(object webView, string url)
+        {
+            var t = webView.GetType();
+
+            // Prefer Source property (Uri)
+            var srcProp = t.GetProperty("Source");
+            if (srcProp != null && srcProp.CanWrite)
+            {
+                srcProp.SetValue(webView, new Uri(url));
+                await Task.CompletedTask;
+                return;
+            }
+
+            // Fallback Navigate(string)
+            var nav = t.GetMethod("Navigate", new[] { typeof(string) });
+            nav?.Invoke(webView, new object[] { url });
+            await Task.CompletedTask;
+        }
+
+        private static async Task WebViewExecuteScriptAsync(object webView, string js)
+        {
+            var t = webView.GetType();
+            var method = t.GetMethod("ExecuteScriptAsync", new[] { typeof(string) });
+            if (method == null) return;
+
+            var taskObj = method.Invoke(webView, new object[] { js });
+            if (taskObj is Task task) await task;
+        }
+
+        private static void AttachNewWindowHandler(object webView, Type webView2Type)
+        {
+            // NOTE: Intentionally disabled.
+            // The previous reflection-based handler was causing compile errors in some environments and
+            // is not required for the Dressing Room to display correctly.
+            // If you later want to re-enable popup suppression, we can implement a safe typed handler
+            // using Microsoft.Web.WebView2.Core directly.
+        }
+
+
+        class LookupEntry
+        {
+            public int Id { get; set; }
+            public string Name { get; set; } = "";
+
+            public override string ToString() => $"{Id} - {Name}";
+        }
+    }
+
 }

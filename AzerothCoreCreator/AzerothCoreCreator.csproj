@@ -10,7 +10,7 @@
 		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
 
 		<!-- Version displayed to users / used by Velopack releases -->
-		<Version>0.2.0-beta</Version>
+		<Version>0.3.0-beta</Version>
 
 		<!-- IMPORTANT: Keep PackageId stable across versions, or Velopack updates will not bridge -->
 		<PackageId>KrowtennetworK.AzerothCoreCreator</PackageId>
@@ -37,6 +37,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3800.47" />
 		<PackageReference Include="MySqlConnector" Version="2.5.0" />
 		<PackageReference Include="Velopack" Version="0.0.1298" />
 	</ItemGroup>
