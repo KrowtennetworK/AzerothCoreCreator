@@ -3680,6 +3680,15 @@ namespace AzerothCoreCreator
             int rewardXp = ParseInt(QuestRewardXpBox.Text, 0);
             int rewardMoney = ParseInt(QuestRewardMoneyBox.Text, 0);
 
+            // On quest start
+            int startItem = ParseInt(QuestStartItemBox.Text, 0);
+            int startItemCount = ParseInt(QuestStartItemCountBox.Text, 0);
+            int startSpell = ParseInt(QuestStartSpellBox.Text, 0);
+
+            // Required (extra)
+            int requiredPlayerKills = ParseInt(QuestRequiredPlayerKillsBox.Text, 0);
+            int timeAllowed = ParseInt(QuestTimeAllowedBox.Text, 0);
+
             int questInfoId = GetSelectedComboTagInt(QuestQuestTypeCombo, 0);
             int questType = GetSelectedComboTagInt(QuestQuestTypeCombo, 2);
             int qSort = ParseInt(QuestSortBox.Text, 0);
@@ -3743,7 +3752,7 @@ namespace AzerothCoreCreator
 
             sb.Append("INSERT INTO `quest_template` ");
             sb.Append("(`ID`,`QuestType`,`LogTitle`,`QuestDescription`,`Objectives`,`QuestCompletionLog`,`MinLevel`,`QuestLevel`,`QuestInfoID`,`QuestSortID`,`Flags`,`AllowableRaces`,");
-            sb.Append("`RewardXPId`,`RewardMoney`,");
+            sb.Append("`RewardXPId`,`RewardMoney`,`StartItem`,`RequiredPlayerKills`,`TimeAllowed`,");
             sb.Append("`RequiredItemId1`,`RequiredItemId2`,`RequiredItemId3`,`RequiredItemId4`,`RequiredItemId5`,`RequiredItemId6`,");
             sb.Append("`RequiredItemCount1`,`RequiredItemCount2`,`RequiredItemCount3`,`RequiredItemCount4`,`RequiredItemCount5`,`RequiredItemCount6`,");
             sb.Append("`RequiredNpcOrGo1`,`RequiredNpcOrGo2`,`RequiredNpcOrGo3`,`RequiredNpcOrGo4`,");
@@ -3756,8 +3765,8 @@ namespace AzerothCoreCreator
             sb.Append("`RewardFactionValue1`,`RewardFactionValue2`,`RewardFactionValue3`,`RewardFactionValue4`,`RewardFactionValue5`,");
             sb.Append("`RewardFactionOverride1`,`RewardFactionOverride2`,`RewardFactionOverride3`,`RewardFactionOverride4`,`RewardFactionOverride5`");
             sb.Append(") VALUES (");
-            sb.AppendFormat("@ID,{0},'{1}','{2}','{3}',{4},{5},{6},{7},{8},{9},{10},{11},",
-                questType, title, details, objectives, minLevel, questLevel, questInfoId, qSort, questFlags, allowableRaces, rewardXp, rewardMoney);
+            sb.AppendFormat("@ID,{0},'{1}','{2}','{3}',{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14},",
+                questType, title, details, objectives, minLevel, questLevel, questInfoId, qSort, questFlags, allowableRaces, rewardXp, rewardMoney, startItem, requiredPlayerKills, timeAllowed);
 
             sb.AppendFormat("{0},{1},{2},{3},{4},{5},", r1, r2, r3, r4, r5, r6);
             sb.AppendFormat("{0},{1},{2},{3},{4},{5},", rc1, rc2, rc3, rc4, rc5, rc6);
@@ -3781,9 +3790,14 @@ namespace AzerothCoreCreator
             sb.AppendLine();
             sb.AppendLine();
 
-            sb.AppendLine("INSERT INTO `quest_template_addon` (`ID`,`SpecialFlags`,`AllowableClasses`,`PrevQuestID`,`NextQuestID`,`RequiredMinRepFaction`,`RequiredMinRepValue`,`RequiredMaxRepFaction`,`RequiredMaxRepValue`) VALUES (@ID,"
+            sb.AppendLine("INSERT INTO `quest_template_addon` (" +
+                          "`ID`,`SpecialFlags`,`AllowableClasses`,`PrevQuestID`,`NextQuestID`," +
+                          "`RequiredMinRepFaction`,`RequiredMinRepValue`,`RequiredMaxRepFaction`,`RequiredMaxRepValue`," +
+                          "`SourceSpellID`,`ProvidedItemCount`" +
+                          ") VALUES (@ID,"
                           + specialFlags + "," + allowableClasses + "," + prevQuestId + "," + nextQuestId + ","
-                          + reqMinRepFaction + "," + reqMinRepValue + "," + reqMaxRepFaction + "," + reqMaxRepValue + ");");
+                          + reqMinRepFaction + "," + reqMinRepValue + "," + reqMaxRepFaction + "," + reqMaxRepValue + ","
+                          + startSpell + "," + startItemCount + ");");
             sb.AppendLine("COMMIT;");
             return sb.ToString();
         }
@@ -4572,7 +4586,9 @@ namespace AzerothCoreCreator
         private void QuestFindSpell_Click(object sender, RoutedEventArgs e)
         {
             // Spell lookup (spell_dbc: ID, Name_Lang_enUS)
-            OpenLookupWindow(LookupKind.Spell, QuestRewardSpellBox);
+            // Support multiple spell ID boxes (e.g., reward spell + on-start spell).
+            var target = ResolveLookupTargetFromSender(sender, _questLookupTarget) ?? QuestRewardSpellBox;
+            OpenLookupWindow(LookupKind.Spell, target);
         }
 
         private void QuestFindTitle_Click(object sender, RoutedEventArgs e)

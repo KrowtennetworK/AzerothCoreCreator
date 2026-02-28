@@ -1,7 +1,7 @@
 <Window x:Class="AzerothCoreCreator.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="AzerothCore Creator v0.4.0"
+        Title="AzerothCore Creator v0.5.0"
         Height="880" Width="1200"
         MinWidth="1200" MinHeight="780"
         Loaded="Window_Loaded"
@@ -1569,6 +1569,33 @@
                                 </Grid>
                             </GroupBox>
 
+                            <!-- On Quest Start (StartItem / ProvidedItemCount / SourceSpellID) -->
+                            <GroupBox Header="On Quest Start" Padding="10" Margin="0,10,0,0">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="170"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="70"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+
+                                    <TextBlock Text="Provided Item" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"/>
+                                    <TextBox x:Name="QuestStartItemBox" Grid.Row="0" Grid.Column="1" Text="0" GotFocus="QuestLookupTarget_GotFocus"/>
+                                    <Button Content="Find" Grid.Row="0" Grid.Column="2" Width="60" Height="24" Margin="8,0,0,0" Click="QuestFindItem_Click"/>
+
+                                    <TextBlock Text="Start Item amount" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Margin="0,6,0,0"/>
+                                    <TextBox x:Name="QuestStartItemCountBox" Grid.Row="1" Grid.Column="1" Text="0" Margin="0,6,0,0"/>
+
+                                    <TextBlock Text="Spell Cast" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Margin="0,6,0,0"/>
+                                    <TextBox x:Name="QuestStartSpellBox" Grid.Row="2" Grid.Column="1" Text="0" Margin="0,6,0,0" GotFocus="QuestLookupTarget_GotFocus"/>
+                                    <Button Content="Find" Grid.Row="2" Grid.Column="2" Width="60" Height="24" Margin="8,6,0,0" Click="QuestFindSpell_Click"/>
+                                </Grid>
+                            </GroupBox>
+
                             <CheckBox x:Name="QuestAdvancedToggle" Content="Show Advanced Fields" Margin="0,10,0,0"
                                   Checked="QuestAdvancedToggle_Changed" Unchecked="QuestAdvancedToggle_Changed"/>
 
@@ -1791,6 +1818,26 @@
 
                                             <Button Content="+ Add required item" HorizontalAlignment="Left" Width="170"
                 Click="QuestAddRow_Click" Tag="ReqItem" />
+
+                                            <!-- Player kills / Time allowed (quest_template) -->
+                                            <Grid Margin="0,10,0,0">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="170"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                </Grid.RowDefinitions>
+
+                                                <TextBlock Text="Player kills" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,6"/>
+                                                <TextBox x:Name="QuestRequiredPlayerKillsBox" Grid.Row="0" Grid.Column="1" Text="0" Margin="0,0,0,6"
+                                                         TextChanged="QuestRowValueChanged"/>
+
+                                                <TextBlock Text="Time limit (seconds)" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                <TextBox x:Name="QuestTimeAllowedBox" Grid.Row="1" Grid.Column="1" Text="0"
+                                                         TextChanged="QuestRowValueChanged"/>
+                                            </Grid>
                                         </StackPanel>
                                     </GroupBox>
 

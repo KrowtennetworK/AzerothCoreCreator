@@ -15,7 +15,12 @@ namespace AzerothCoreCreator
 
             // Update this text when you release. Newest entries at top.
             ChangelogText =
-@"v0.4.0
+@"v0.5.0
+- Added ""On Quest Start"" section to Quest Tab
+- Added Player Kills to Quest Requirements
+- Added Time Limit (seconds) to Quest Requirements
+
+v0.4.0
 - Added WoW Font to Quest Preview
 - Added Incomplete Quest Text Field to Quest Tab
 - Resized Default dimensions of the app
