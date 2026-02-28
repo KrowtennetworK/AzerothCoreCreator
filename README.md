@@ -92,7 +92,7 @@ Less alt-tabbing. More building.
 ### 📜 Quest Editor with Live Preview
 
 <p align="center">
-  <img src="assets/AzerothcorecreatorQUEST.png" width="95%" />
+  <img src="assets/NewQuest.png" width="95%" />
 </p>
 
 Structured support for `quest_template` with organized reward handling, requirement configuration, and a live quest preview panel.
