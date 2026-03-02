@@ -15,7 +15,11 @@ namespace AzerothCoreCreator
 
             // Update this text when you release. Newest entries at top.
             ChangelogText =
-@"v0.5.0
+@"v0.6.0
+- Added Mount DisplayID to creature tab
+- Added Repeat Emote to creature tab
+
+v0.5.0
 - Added ""On Quest Start"" section to Quest Tab
 - Added Player Kills to Quest Requirements
 - Added Time Limit (seconds) to Quest Requirements

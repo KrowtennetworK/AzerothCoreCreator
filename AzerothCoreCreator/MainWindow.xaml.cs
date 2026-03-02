@@ -2540,6 +2540,8 @@ namespace AzerothCoreCreator
             CreatureTypeCombo.SelectedIndex = 0;
             CreatureFamilyCombo.SelectedIndex = 0;
             CreatureDisplayIdBox.Text = "0";
+            CreatureMountDisplayIdBox.Text = "0";
+            CreatureRepeatEmoteBox.Text = "0";
 
             // movement defaults
             if (CreatureWalkSpeedBox != null) CreatureWalkSpeedBox.Text = "1.1";
@@ -2699,6 +2701,16 @@ namespace AzerothCoreCreator
 
         private void FindEmote_Click(object sender, RoutedEventArgs e)
         {
+            ShowFindEmoteWindow(SpeechEmoteBox);
+        }
+
+        private void FindRepeatEmote_Click(object sender, RoutedEventArgs e)
+        {
+            ShowFindEmoteWindow(CreatureRepeatEmoteBox);
+        }
+
+        private void ShowFindEmoteWindow(TextBox targetBox)
+        {
             try
             {
                 var win = new Window
@@ -2765,7 +2777,7 @@ namespace AzerothCoreCreator
                 {
                     if (list.SelectedItem is EmoteEntry ee)
                     {
-                        SpeechEmoteBox.Text = ee.Id.ToString(CultureInfo.InvariantCulture);
+                        targetBox.Text = ee.Id.ToString(CultureInfo.InvariantCulture);
                         win.DialogResult = true;
                         win.Close();
                     }
@@ -2796,7 +2808,7 @@ namespace AzerothCoreCreator
                 };
 
                 // Preselect current emote if possible
-                if (int.TryParse(SpeechEmoteBox.Text, out int currentId))
+                if (int.TryParse(targetBox.Text, out int currentId))
                 {
                     var found = _emoteList.FirstOrDefault(x => x.Id == currentId);
                     if (found != null)
@@ -2883,6 +2895,9 @@ namespace AzerothCoreCreator
             int family = ComboTagInt(CreatureFamilyCombo);
 
             int displayId = ParseInt(CreatureDisplayIdBox.Text, 0);
+
+            int mountDisplayId = ParseInt(CreatureMountDisplayIdBox?.Text ?? "0", 0);
+            int repeatEmote = ParseInt(CreatureRepeatEmoteBox?.Text ?? "0", 0);
 
             // Stats
             int rank = ComboTagInt(CreatureRankCombo);
@@ -2974,6 +2989,17 @@ namespace AzerothCoreCreator
                 movementType,
                 hoverHeight.ToString(CultureInfo.InvariantCulture));
             sb.AppendLine();
+
+            // creature_template_addon (mount / repeat emote)
+            if (mountDisplayId != 0 || repeatEmote != 0)
+            {
+                sb.AppendLine();
+                sb.AppendLine("DELETE FROM `creature_template_addon` WHERE `entry`=@ENTRY;");
+                sb.Append("INSERT INTO `creature_template_addon` ");
+                sb.Append("(`entry`,`path_id`,`mount`,`bytes1`,`bytes2`,`emote`,`aiAnimKit`,`movementAnimKit`,`meleeAnimKit`,`visibilityDistanceType`,`auras`) VALUES ");
+                sb.AppendFormat("(@ENTRY,0,{0},0,0,{1},0,0,0,0,'');", mountDisplayId, repeatEmote);
+                sb.AppendLine();
+            }
 
             sb.AppendLine("-- Inhabit Type (creature_template_movement)");
             sb.Append("INSERT INTO `creature_template_movement` (`CreatureId`,`Ground`,`Swim`,`Flight`) VALUES ");
