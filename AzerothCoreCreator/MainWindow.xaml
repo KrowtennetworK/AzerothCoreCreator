@@ -1,7 +1,7 @@
 <Window x:Class="AzerothCoreCreator.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="AzerothCore Creator v0.6.0"
+        Title="AzerothCore Creator v0.7.0"
         Height="880" Width="1200"
         MinWidth="1200" MinHeight="780"
         Loaded="Window_Loaded"
@@ -250,34 +250,223 @@
                         </GroupBox>
 
                         <GroupBox Header="Flags (Beginner Friendly)" Padding="10" Margin="0,10,0,0">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
 
-                                <StackPanel>
-                                    <TextBlock Text="NPC Flags" FontWeight="Bold" Margin="0,0,0,6"/>
-                                    <WrapPanel x:Name="NpcFlagWrap"/>
-                                </StackPanel>
+                                    <StackPanel>
+                                        <TextBlock Text="NPC Flags" FontWeight="Bold" Margin="0,0,0,6"/>
+                                        <WrapPanel x:Name="NpcFlagWrap"/>
+                                    </StackPanel>
 
-                                <StackPanel Grid.Column="1">
-                                    <TextBlock Text="Unit Flags" FontWeight="Bold" Margin="0,0,0,6"/>
-                                    <WrapPanel x:Name="UnitFlagsWrap"/>
-                                </StackPanel>
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Text="Unit Flags" FontWeight="Bold" Margin="0,0,0,6"/>
+                                        <WrapPanel x:Name="UnitFlagsWrap"/>
+                                    </StackPanel>
 
-                                <StackPanel Grid.Column="2">
-                                    <TextBlock Text="Unit Flags 2" FontWeight="Bold" Margin="0,0,0,6"/>
-                                    <WrapPanel x:Name="UnitFlags2Wrap"/>
-                                </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Unit Flags 2" FontWeight="Bold" Margin="0,0,0,6"/>
+                                        <WrapPanel x:Name="UnitFlags2Wrap"/>
+                                    </StackPanel>
 
-                                <StackPanel Grid.Column="3">
-                                    <TextBlock Text="Extra Flags" FontWeight="Bold" Margin="0,0,0,6"/>
-                                    <WrapPanel x:Name="FlagsExtraWrap"/>
-                                </StackPanel>
-                            </Grid>
+                                    <StackPanel Grid.Column="3">
+                                        <TextBlock Text="Extra Flags" FontWeight="Bold" Margin="0,0,0,6"/>
+                                        <WrapPanel x:Name="FlagsExtraWrap"/>
+                                    </StackPanel>
+                                </Grid>
+
+
+                                <!-- Extra Options -->
+                                <GroupBox Header="Extra Options" Padding="10" Margin="0,10,0,0">
+                                    <StackPanel>
+                                        <WrapPanel>
+                                            <CheckBox x:Name="CreatureExtraAddSpellsCheck" Content="Add Spells" Margin="0,0,14,6"
+                                              Checked="CreatureExtraOption_Checked" Unchecked="CreatureExtraOption_Unchecked"/>
+                                            <CheckBox x:Name="CreatureExtraAddAurasCheck" Content="Add Auras" Margin="0,0,14,6"
+                                              Checked="CreatureExtraOption_Checked" Unchecked="CreatureExtraOption_Unchecked"/>
+                                            <CheckBox x:Name="CreatureExtraAddResistancesCheck" Content="Add resistances" Margin="0,0,14,6"
+                                              Checked="CreatureExtraOption_Checked" Unchecked="CreatureExtraOption_Unchecked"/>
+                                            <CheckBox x:Name="CreatureExtraAddImmunitiesCheck" Content="Add immunities" Margin="0,0,14,6"
+                                              Checked="CreatureExtraOption_Checked" Unchecked="CreatureExtraOption_Unchecked"/>
+                                            <CheckBox x:Name="CreatureExtraModifyAutoStatsCheck" Content="Modify automatic stats" Margin="0,0,14,6"
+                                              Checked="CreatureExtraOption_Checked" Unchecked="CreatureExtraOption_Unchecked"/>
+                                        </WrapPanel>
+
+                                        <!-- Spells -->
+                                        <GroupBox x:Name="CreatureSpellsGroup" Header="Spells" Padding="10" Margin="0,8,0,0" Visibility="Collapsed">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="140"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                </Grid.RowDefinitions>
+
+                                                <TextBlock Text="Spell1" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,6"/>
+                                                <TextBox x:Name="CreatureSpell1Box" Grid.Row="0" Grid.Column="1" Text="0" Margin="0,0,0,6"/>
+
+                                                <TextBlock Text="Spell2" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,6"/>
+                                                <TextBox x:Name="CreatureSpell2Box" Grid.Row="1" Grid.Column="1" Text="0" Margin="0,0,0,6"/>
+
+                                                <TextBlock Text="Spell3" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,6"/>
+                                                <TextBox x:Name="CreatureSpell3Box" Grid.Row="2" Grid.Column="1" Text="0" Margin="0,0,0,6"/>
+
+                                                <TextBlock Text="Spell4" Grid.Row="3" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,6"/>
+                                                <TextBox x:Name="CreatureSpell4Box" Grid.Row="3" Grid.Column="1" Text="0" Margin="0,0,0,6"/>
+
+                                                <TextBlock Text="Spell5" Grid.Row="4" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,6"/>
+                                                <TextBox x:Name="CreatureSpell5Box" Grid.Row="4" Grid.Column="1" Text="0" Margin="0,0,0,6"/>
+
+                                                <TextBlock Text="Spell6" Grid.Row="5" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,6"/>
+                                                <TextBox x:Name="CreatureSpell6Box" Grid.Row="5" Grid.Column="1" Text="0" Margin="0,0,0,6"/>
+
+                                                <TextBlock Text="Spell7" Grid.Row="6" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,6"/>
+                                                <TextBox x:Name="CreatureSpell7Box" Grid.Row="6" Grid.Column="1" Text="0" Margin="0,0,0,6"/>
+
+                                                <TextBlock Text="Spell8" Grid.Row="7" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                <TextBox x:Name="CreatureSpell8Box" Grid.Row="7" Grid.Column="1" Text="0"/>
+                                            </Grid>
+                                        </GroupBox>
+
+                                        <!-- Auras -->
+                                        <GroupBox x:Name="CreatureAurasGroup" Header="Auras" Padding="10" Margin="0,10,0,0" Visibility="Collapsed">
+                                            <StackPanel>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="140"/>
+                                                        <ColumnDefinition Width="160"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+
+                                                    <ComboBox Grid.Column="0" IsEnabled="False" SelectedIndex="0">
+                                                        <ComboBoxItem Content="Spell"/>
+                                                    </ComboBox>
+                                                    <TextBox x:Name="CreatureAuraAddBox" Grid.Column="1" Text="0" Margin="8,0,0,0"/>
+                                                    <Button Grid.Column="2" Content="Add" Margin="10,0,0,0" Padding="14,6"
+                                                    Click="CreatureAuraAdd_Click"/>
+                                                </Grid>
+
+                                                <ItemsControl x:Name="CreatureAurasItems" Margin="0,10,0,0">
+                                                    <ItemsControl.ItemsPanel>
+                                                        <ItemsPanelTemplate>
+                                                            <StackPanel/>
+                                                        </ItemsPanelTemplate>
+                                                    </ItemsControl.ItemsPanel>
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Grid Margin="0,0,0,6">
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="140"/>
+                                                                    <ColumnDefinition Width="160"/>
+                                                                    <ColumnDefinition Width="Auto"/>
+                                                                </Grid.ColumnDefinitions>
+
+                                                                <ComboBox Grid.Column="0" IsEnabled="False" SelectedIndex="0">
+                                                                    <ComboBoxItem Content="Spell"/>
+                                                                </ComboBox>
+
+                                                                <TextBox Grid.Column="1" Text="{Binding AuraId}" Margin="8,0,0,0"/>
+                                                                <Button Grid.Column="2" Content="✖" Width="28" Height="24" Margin="10,0,0,0"
+                                                                ToolTip="Remove" Click="CreatureAuraRemove_Click"/>
+                                                            </Grid>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+                                        </GroupBox>
+
+                                        <!-- Resistances -->
+                                        <GroupBox x:Name="CreatureResistancesGroup" Header="Resistances" Padding="10" Margin="0,10,0,0" Visibility="Collapsed">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="140"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                </Grid.RowDefinitions>
+
+                                                <TextBlock Text="Holy" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,6"/>
+                                                <TextBox x:Name="CreatureResistHolyBox" Grid.Row="0" Grid.Column="1" Text="0" Margin="0,0,0,6"/>
+
+                                                <TextBlock Text="Fire" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,6"/>
+                                                <TextBox x:Name="CreatureResistFireBox" Grid.Row="1" Grid.Column="1" Text="0" Margin="0,0,0,6"/>
+
+                                                <TextBlock Text="Nature" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,6"/>
+                                                <TextBox x:Name="CreatureResistNatureBox" Grid.Row="2" Grid.Column="1" Text="0" Margin="0,0,0,6"/>
+
+                                                <TextBlock Text="Frost" Grid.Row="3" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,6"/>
+                                                <TextBox x:Name="CreatureResistFrostBox" Grid.Row="3" Grid.Column="1" Text="0" Margin="0,0,0,6"/>
+
+                                                <TextBlock Text="Shadow" Grid.Row="4" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,6"/>
+                                                <TextBox x:Name="CreatureResistShadowBox" Grid.Row="4" Grid.Column="1" Text="0" Margin="0,0,0,6"/>
+
+                                                <TextBlock Text="Arcane" Grid.Row="5" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                <TextBox x:Name="CreatureResistArcaneBox" Grid.Row="5" Grid.Column="1" Text="0"/>
+                                            </Grid>
+                                        </GroupBox>
+
+                                        <!-- Immunities -->
+                                        <GroupBox x:Name="CreatureImmunitiesGroup" Header="Immunities" Padding="10" Margin="0,10,0,0" Visibility="Collapsed">
+                                            <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="260">
+                                                <WrapPanel x:Name="CreatureImmunitiesWrap"/>
+                                            </ScrollViewer>
+                                        </GroupBox>
+
+                                        <!-- Stat modifiers -->
+                                        <GroupBox x:Name="CreatureStatModifiersGroup" Header="Stat modifiers" Padding="10" Margin="0,10,0,0" Visibility="Collapsed">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="170"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                </Grid.RowDefinitions>
+
+                                                <TextBlock Text="Health Modifier" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,6"/>
+                                                <TextBox x:Name="CreatureHealthModifierBox" Grid.Row="0" Grid.Column="1" Text="1" Margin="0,0,0,6"/>
+
+                                                <TextBlock Text="Mana Modifier" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,6"/>
+                                                <TextBox x:Name="CreatureManaModifierBox" Grid.Row="1" Grid.Column="1" Text="1" Margin="0,0,0,6"/>
+
+                                                <TextBlock Text="Damage Modifier" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,6"/>
+                                                <TextBox x:Name="CreatureDamageModifierBox" Grid.Row="2" Grid.Column="1" Text="1" Margin="0,0,0,6"/>
+
+                                                <TextBlock Text="Armor Modifier" Grid.Row="3" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,6"/>
+                                                <TextBox x:Name="CreatureArmorModifierBox" Grid.Row="3" Grid.Column="1" Text="1" Margin="0,0,0,6"/>
+
+                                                <TextBlock Text="Experience Modifier" Grid.Row="4" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                <TextBox x:Name="CreatureExperienceModifierBox" Grid.Row="4" Grid.Column="1" Text="1"/>
+                                            </Grid>
+                                        </GroupBox>
+
+                                    </StackPanel>
+                                </GroupBox>
+
+                            </StackPanel>
                         </GroupBox>
 
                         <!-- Flags -->
@@ -715,16 +904,16 @@
 
                                 <!-- Loot IDs -->
                                 <TextBlock Text="Loot ID" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,6"/>
-                                <TextBox x:Name="CreatureLootIdBox" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="6" Text="0" Margin="0,0,8,6"/>
-                                <Button Grid.Row="2" Grid.Column="7" Content="Create Loot" Width="100" Click="CreatureCreateLoot_Click" Tag="Creature" Margin="0,0,0,6"/>
+                                <TextBox x:Name="CreatureLootIdBox" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="6" Text="0" Margin="0,0,725,6"/>
+                                <Button Grid.Row="2" Grid.Column="5" Content="Create Loot" Width="100" Click="CreatureCreateLoot_Click" Tag="Creature" Margin="0,0,-30,6"/>
 
                                 <TextBlock Text="Pickpocket Loot ID" Grid.Row="3" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,6"/>
-                                <TextBox x:Name="CreaturePickpocketLootIdBox" Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="6" Text="0" Margin="0,0,8,6"/>
-                                <Button Grid.Row="3" Grid.Column="7" Content="Create Loot" Width="100" Click="CreatureCreateLoot_Click" Tag="Pickpocketing" Margin="0,0,0,6"/>
+                                <TextBox x:Name="CreaturePickpocketLootIdBox" Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="6" Text="0" Margin="0,0,725,6"/>
+                                <Button Grid.Row="3" Grid.Column="5" Content="Create Loot" Width="100" Click="CreatureCreateLoot_Click" Tag="Pickpocketing" Margin="0,0,-30,6"/>
 
                                 <TextBlock Text="Skinning Loot ID" Grid.Row="4" Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                <TextBox x:Name="CreatureSkinningLootIdBox" Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="6" Text="0" Margin="0,0,8,0"/>
-                                <Button Grid.Row="4" Grid.Column="7" Content="Create Loot" Width="100" Click="CreatureCreateLoot_Click" Tag="Skinning"/>
+                                <TextBox x:Name="CreatureSkinningLootIdBox" Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="6" Text="0" Margin="0,0,725,0"/>
+                                <Button Grid.Row="4" Grid.Column="5" Content="Create Loot" Width="100" Click="CreatureCreateLoot_Click" Tag="Skinning" Margin="0,0,-30,0"/>
                             </Grid>
                         </GroupBox>
 

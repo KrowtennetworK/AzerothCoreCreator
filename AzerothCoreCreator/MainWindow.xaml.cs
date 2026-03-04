@@ -2,6 +2,7 @@ using MySqlConnector;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -77,6 +78,31 @@ namespace AzerothCoreCreator
         private Dictionary<CheckBox, uint> _unitFlags = new Dictionary<CheckBox, uint>();
         private Dictionary<CheckBox, uint> _unitFlags2 = new Dictionary<CheckBox, uint>();
         private Dictionary<CheckBox, uint> _extraFlags = new Dictionary<CheckBox, uint>();
+
+        // Creature - Extra Options
+        private bool _creatureExtrasBuilt = false;
+        private readonly ObservableCollection<CreatureAuraRow> _creatureAuraRows = new ObservableCollection<CreatureAuraRow>();
+        private Dictionary<CheckBox, uint> _mechanicImmuneFlags = new Dictionary<CheckBox, uint>();
+
+        private sealed class CreatureAuraRow : System.ComponentModel.INotifyPropertyChanged
+        {
+            private int _auraId;
+            public int AuraId
+            {
+                get => _auraId;
+                set
+                {
+                    if (_auraId != value)
+                    {
+                        _auraId = value;
+                        PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(AuraId)));
+                    }
+                }
+            }
+
+            public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
+        }
+
 
         // speech lines
         private class SpeechLine
@@ -906,9 +932,118 @@ namespace AzerothCoreCreator
                 return;
 
             BuildFlagCheckboxes();
+            EnsureCreatureExtrasBuilt();
             _flagsBuilt = true;
         }
 
+
+
+        private void EnsureCreatureExtrasBuilt()
+        {
+            if (_creatureExtrasBuilt) return;
+
+            try
+            {
+                // Auras list binding
+                CreatureAurasItems = (ItemsControl)(this.FindName("CreatureAurasItems") ?? CreatureAurasItems);
+                if (CreatureAurasItems != null && CreatureAurasItems.ItemsSource == null)
+                    CreatureAurasItems.ItemsSource = _creatureAuraRows;
+
+                // Immunities checkboxes
+                CreatureImmunitiesWrap = (WrapPanel)(this.FindName("CreatureImmunitiesWrap") ?? CreatureImmunitiesWrap);
+                if (CreatureImmunitiesWrap != null && CreatureImmunitiesWrap.Children.Count == 0)
+                    BuildMechanicImmuneCheckboxes();
+
+                _creatureExtrasBuilt = true;
+            }
+            catch
+            {
+                // never block UI init
+            }
+        }
+
+        private void BuildMechanicImmuneCheckboxes()
+        {
+            if (CreatureImmunitiesWrap == null) return;
+
+            var list = new (string Label, int MechanicId)[]
+            {
+        ("Charm", 1),
+        ("Disorient", 2),
+        ("Disarm", 3),
+        ("Distract", 4),
+        ("Fear", 5),
+        ("Grip", 6),
+        ("Root", 7),
+        ("Pacify", 8), // MECHANIC_SLOW_ATTACK
+        ("Silence", 9),
+        ("Sleep", 10),
+        ("Snare", 11),
+        ("Stun", 12),
+        ("Freeze", 13),
+        ("Knockout", 14),
+        ("Bleed", 15),
+        ("Bandage", 16),
+        ("Polymorph", 17),
+        ("Banish", 18),
+        ("Shield", 19),
+        ("Shackle (undead)", 20),
+        ("Mount", 21),
+        ("Infected", 22),
+        ("Turn Evil", 23), // MECHANIC_TURN
+        ("Horror", 24),
+        ("Invulnerability (Forbearance, Nether Protection, Diplomatic Immunity only)", 25),
+        ("Interrupt", 26),
+        ("Daze", 27),
+        ("Discovery (create item effect)", 28),
+        ("Immune shield", 29),
+        ("Sapped", 30),
+        ("Enraged", 31),
+            };
+
+            foreach (var it in list)
+            {
+                uint bit = (it.MechanicId <= 0 || it.MechanicId > 31) ? 0u : (1u << (it.MechanicId - 1));
+                if (bit == 0) continue;
+
+                var cb = new CheckBox
+                {
+                    Content = it.Label,
+                    Margin = new Thickness(0, 0, 16, 6),
+                    ToolTip = $"Mechanic {it.MechanicId} (bit {bit})"
+                };
+
+                CreatureImmunitiesWrap.Children.Add(cb);
+                _mechanicImmuneFlags[cb] = bit;
+            }
+        }
+
+        private void CreatureExtraOption_Checked(object sender, RoutedEventArgs e) => UpdateCreatureOptionalSectionsVisibility();
+        private void CreatureExtraOption_Unchecked(object sender, RoutedEventArgs e) => UpdateCreatureOptionalSectionsVisibility();
+
+        private void CreatureAuraAdd_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (CreatureAuraAddBox == null) return;
+                int auraId = ParseInt(CreatureAuraAddBox.Text, 0);
+                if (auraId <= 0) return;
+
+                _creatureAuraRows.Add(new CreatureAuraRow { AuraId = auraId });
+                CreatureAuraAddBox.Text = "0";
+            }
+            catch { }
+        }
+
+        private void CreatureAuraRemove_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (sender is Button btn && btn.DataContext is CreatureAuraRow row)
+                    _creatureAuraRows.Remove(row);
+            }
+            catch { }
+        }
 
         private static void SelectComboItemByTagInt(ComboBox combo, int tagValue, int fallbackIndex = 0)
         {
@@ -944,6 +1079,36 @@ namespace AzerothCoreCreator
 
             if (speechPanel != null && speechEnable != null)
                 speechPanel.Visibility = (speechEnable.IsChecked == true) ? Visibility.Visible : Visibility.Collapsed;
+
+            // Extra Options sections
+            EnsureCreatureExtrasBuilt();
+
+            var spellsGroup = this.FindName("CreatureSpellsGroup") as FrameworkElement;
+            var aurasGroup = this.FindName("CreatureAurasGroup") as FrameworkElement;
+            var resGroup = this.FindName("CreatureResistancesGroup") as FrameworkElement;
+            var immGroup = this.FindName("CreatureImmunitiesGroup") as FrameworkElement;
+            var statGroup = this.FindName("CreatureStatModifiersGroup") as FrameworkElement;
+
+            var addSpells = this.FindName("CreatureExtraAddSpellsCheck") as CheckBox;
+            var addAuras = this.FindName("CreatureExtraAddAurasCheck") as CheckBox;
+            var addRes = this.FindName("CreatureExtraAddResistancesCheck") as CheckBox;
+            var addImm = this.FindName("CreatureExtraAddImmunitiesCheck") as CheckBox;
+            var modStats = this.FindName("CreatureExtraModifyAutoStatsCheck") as CheckBox;
+
+            if (spellsGroup != null && addSpells != null)
+                spellsGroup.Visibility = (addSpells.IsChecked == true) ? Visibility.Visible : Visibility.Collapsed;
+
+            if (aurasGroup != null && addAuras != null)
+                aurasGroup.Visibility = (addAuras.IsChecked == true) ? Visibility.Visible : Visibility.Collapsed;
+
+            if (resGroup != null && addRes != null)
+                resGroup.Visibility = (addRes.IsChecked == true) ? Visibility.Visible : Visibility.Collapsed;
+
+            if (immGroup != null && addImm != null)
+                immGroup.Visibility = (addImm.IsChecked == true) ? Visibility.Visible : Visibility.Collapsed;
+
+            if (statGroup != null && modStats != null)
+                statGroup.Visibility = (modStats.IsChecked == true) ? Visibility.Visible : Visibility.Collapsed;
         }
 
         private void CreatureSpawnEnable_Checked(object sender, RoutedEventArgs e) => UpdateCreatureOptionalSectionsVisibility();
@@ -2899,6 +3064,56 @@ namespace AzerothCoreCreator
             int mountDisplayId = ParseInt(CreatureMountDisplayIdBox?.Text ?? "0", 0);
             int repeatEmote = ParseInt(CreatureRepeatEmoteBox?.Text ?? "0", 0);
 
+            // Extra Options
+            bool extraAddSpells = (CreatureExtraAddSpellsCheck?.IsChecked == true);
+            bool extraAddAuras = (CreatureExtraAddAurasCheck?.IsChecked == true);
+            bool extraAddResistances = (CreatureExtraAddResistancesCheck?.IsChecked == true);
+            bool extraAddImmunities = (CreatureExtraAddImmunitiesCheck?.IsChecked == true);
+            bool extraModifyAutoStats = (CreatureExtraModifyAutoStatsCheck?.IsChecked == true);
+
+            // Spells (creature_template_spell) - indices 0..7
+            int spell1 = ParseInt(CreatureSpell1Box?.Text ?? "0", 0);
+            int spell2 = ParseInt(CreatureSpell2Box?.Text ?? "0", 0);
+            int spell3 = ParseInt(CreatureSpell3Box?.Text ?? "0", 0);
+            int spell4 = ParseInt(CreatureSpell4Box?.Text ?? "0", 0);
+            int spell5 = ParseInt(CreatureSpell5Box?.Text ?? "0", 0);
+            int spell6 = ParseInt(CreatureSpell6Box?.Text ?? "0", 0);
+            int spell7 = ParseInt(CreatureSpell7Box?.Text ?? "0", 0);
+            int spell8 = ParseInt(CreatureSpell8Box?.Text ?? "0", 0);
+
+            // Auras (creature_template_addon.auras) - space separated spell IDs
+            string auraString = "";
+            if (extraAddAuras)
+            {
+                EnsureCreatureExtrasBuilt();
+                var auraIds = _creatureAuraRows
+                    .Select(r => r?.AuraId ?? 0)
+                    .Where(id => id > 0)
+                    .Distinct()
+                    .ToList();
+
+                auraString = string.Join(" ", auraIds);
+            }
+
+            // Resistances (creature_template_resistance)
+            int resistHoly = ParseInt(CreatureResistHolyBox?.Text ?? "0", 0);
+            int resistFire = ParseInt(CreatureResistFireBox?.Text ?? "0", 0);
+            int resistNature = ParseInt(CreatureResistNatureBox?.Text ?? "0", 0);
+            int resistFrost = ParseInt(CreatureResistFrostBox?.Text ?? "0", 0);
+            int resistShadow = ParseInt(CreatureResistShadowBox?.Text ?? "0", 0);
+            int resistArcane = ParseInt(CreatureResistArcaneBox?.Text ?? "0", 0);
+
+            // Immunities (creature_template.mechanic_immune_mask)
+            uint mechanicImmuneMask = extraAddImmunities ? SumFlags(_mechanicImmuneFlags) : 0u;
+
+            // Stat modifiers (creature_template)
+            double healthModifier = ParseDouble(CreatureHealthModifierBox?.Text ?? "1", 1);
+            double manaModifier = ParseDouble(CreatureManaModifierBox?.Text ?? "1", 1);
+            double damageModifier = ParseDouble(CreatureDamageModifierBox?.Text ?? "1", 1);
+            double armorModifier = ParseDouble(CreatureArmorModifierBox?.Text ?? "1", 1);
+            double experienceModifier = ParseDouble(CreatureExperienceModifierBox?.Text ?? "1", 1);
+
+
             // Stats
             int rank = ComboTagInt(CreatureRankCombo);
             int dmgSchool = ComboTagInt(CreatureDamageSchoolCombo);
@@ -2990,14 +3205,18 @@ namespace AzerothCoreCreator
                 hoverHeight.ToString(CultureInfo.InvariantCulture));
             sb.AppendLine();
 
-            // creature_template_addon (mount / repeat emote)
-            if (mountDisplayId != 0 || repeatEmote != 0)
+
+            // creature_template_addon (mount / repeat emote / auras)
+            if (mountDisplayId != 0 || repeatEmote != 0 || !string.IsNullOrWhiteSpace(auraString))
             {
                 sb.AppendLine();
                 sb.AppendLine("DELETE FROM `creature_template_addon` WHERE `entry`=@ENTRY;");
                 sb.Append("INSERT INTO `creature_template_addon` ");
                 sb.Append("(`entry`,`path_id`,`mount`,`bytes1`,`bytes2`,`emote`,`aiAnimKit`,`movementAnimKit`,`meleeAnimKit`,`visibilityDistanceType`,`auras`) VALUES ");
-                sb.AppendFormat("(@ENTRY,0,{0},0,0,{1},0,0,0,0,'');", mountDisplayId, repeatEmote);
+                sb.AppendFormat("(@ENTRY,0,{0},0,0,{1},0,0,0,0,'{2}');",
+                    mountDisplayId,
+                    repeatEmote,
+                    SqlEscape(auraString));
                 sb.AppendLine();
             }
 
@@ -3071,6 +3290,82 @@ namespace AzerothCoreCreator
                     nextLineId++;
                 }
                 sb.AppendLine();
+            }
+
+
+            // Extra Options - Spells
+            if (extraAddSpells)
+            {
+                sb.AppendLine();
+                sb.AppendLine("-- Spells (creature_template_spell)");
+                sb.AppendLine("DELETE FROM `creature_template_spell` WHERE `CreatureID`=@ENTRY;");
+
+                int[] spells = new[] { spell1, spell2, spell3, spell4, spell5, spell6, spell7, spell8 };
+                for (int i = 0; i < spells.Length; i++)
+                {
+                    if (spells[i] <= 0) continue;
+                    sb.Append("INSERT INTO `creature_template_spell` (`CreatureID`,`Index`,`Spell`,`VerifiedBuild`) VALUES ");
+                    sb.AppendFormat("(@ENTRY,{0},{1},0);", i, spells[i]);
+                    sb.AppendLine();
+                }
+            }
+
+            // Extra Options - Resistances
+            if (extraAddResistances)
+            {
+                sb.AppendLine();
+                sb.AppendLine("-- Resistances (creature_template_resistance)");
+                sb.AppendLine("DELETE FROM `creature_template_resistance` WHERE `CreatureID`=@ENTRY;");
+
+                // School values: 1=Holy,2=Fire,3=Nature,4=Frost,5=Shadow,6=Arcane
+                var res = new (int School, int Value)[]
+                {
+        (1, resistHoly),
+        (2, resistFire),
+        (3, resistNature),
+        (4, resistFrost),
+        (5, resistShadow),
+        (6, resistArcane),
+                };
+
+                foreach (var r in res)
+                {
+                    if (r.Value == 0) continue;
+                    sb.Append("INSERT INTO `creature_template_resistance` (`CreatureID`,`School`,`Resistance`,`VerifiedBuild`) VALUES ");
+                    sb.AppendFormat("(@ENTRY,{0},{1},0);", r.School, r.Value);
+                    sb.AppendLine();
+                }
+            }
+
+            // Extra Options - Stat modifiers / Mechanic immunities (creature_template)
+            if (extraModifyAutoStats || extraAddImmunities)
+            {
+                sb.AppendLine();
+                sb.AppendLine("-- Stat modifiers / Immunities (creature_template)");
+
+                // Build a single UPDATE with only the fields requested.
+                var setParts = new List<string>();
+
+                if (extraModifyAutoStats)
+                {
+                    setParts.Add("`HealthModifier`=" + healthModifier.ToString(CultureInfo.InvariantCulture));
+                    setParts.Add("`ManaModifier`=" + manaModifier.ToString(CultureInfo.InvariantCulture));
+                    setParts.Add("`DamageModifier`=" + damageModifier.ToString(CultureInfo.InvariantCulture));
+                    setParts.Add("`ArmorModifier`=" + armorModifier.ToString(CultureInfo.InvariantCulture));
+                    setParts.Add("`ExperienceModifier`=" + experienceModifier.ToString(CultureInfo.InvariantCulture));
+                }
+
+                if (extraAddImmunities)
+                {
+                    setParts.Add("`mechanic_immune_mask`=" + mechanicImmuneMask.ToString(CultureInfo.InvariantCulture));
+                }
+
+                if (setParts.Count > 0)
+                {
+                    sb.Append("UPDATE `creature_template` SET ");
+                    sb.Append(string.Join(",", setParts));
+                    sb.AppendLine(" WHERE `entry`=@ENTRY;");
+                }
             }
 
             sb.AppendLine("COMMIT;");

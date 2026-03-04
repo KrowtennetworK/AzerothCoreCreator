@@ -15,7 +15,15 @@ namespace AzerothCoreCreator
 
             // Update this text when you release. Newest entries at top.
             ChangelogText =
-@"v0.6.0
+@"v0.7.0
+- Added Extra Options Checkboxes to Creature Tab
+- Added Spells Secion to Creature Tab
+- Added Auras Section to Creature Tab
+- Added Resistances Section to Creature Tab
+- Added Immunities Section to Creature Tab
+- Added Stat Modifiers Section to Creature Tab
+
+v0.6.0
 - Added Mount DisplayID to creature tab
 - Added Repeat Emote to creature tab
 
