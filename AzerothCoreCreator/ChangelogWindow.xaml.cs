@@ -19,6 +19,7 @@ namespace AzerothCoreCreator
 - Added Extra Options Checkboxes to Creature Tab
 - Added Spells Secion to Creature Tab
 - Added Auras Section to Creature Tab
+- Added Find Aura Button (Filters Spells w/ Auras Only)
 - Added Resistances Section to Creature Tab
 - Added Immunities Section to Creature Tab
 - Added Stat Modifiers Section to Creature Tab

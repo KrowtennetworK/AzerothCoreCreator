@@ -1035,6 +1035,12 @@ namespace AzerothCoreCreator
             catch { }
         }
 
+        private void CreatureAuraFindSpell_Click(object sender, RoutedEventArgs e)
+        {
+            // Reuse the existing Find Spell lookup window for the aura add box.
+            OpenLookupWindow(LookupKind.Spell, CreatureAuraAddBox);
+        }
+
         private void CreatureAuraRemove_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -4982,16 +4988,38 @@ namespace AzerothCoreCreator
             root.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
             root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
+            bool auraOnlySpells = false;
+
             var top = new DockPanel { LastChildFill = true };
             var searchBox = new TextBox { MinWidth = 360, Margin = new Thickness(0, 0, 8, 0) };
+
+            var rightPanel = new StackPanel
+            {
+                Orientation = Orientation.Vertical,
+                HorizontalAlignment = HorizontalAlignment.Right
+            };
+
             var hint = new TextBlock
             {
                 Foreground = Brushes.Gray,
                 VerticalAlignment = VerticalAlignment.Center,
                 Text = "Type at least 2 characters (or an ID)"
             };
-            DockPanel.SetDock(hint, Dock.Right);
-            top.Children.Add(hint);
+            rightPanel.Children.Add(hint);
+
+            CheckBox auraOnlyCb = null;
+            if (kind == LookupKind.Spell)
+            {
+                auraOnlyCb = new CheckBox
+                {
+                    Content = "Aura spells only",
+                    Margin = new Thickness(0, 6, 0, 0)
+                };
+                rightPanel.Children.Add(auraOnlyCb);
+            }
+
+            DockPanel.SetDock(rightPanel, Dock.Right);
+            top.Children.Add(rightPanel);
             top.Children.Add(searchBox);
 
             var list = new DataGrid
@@ -5026,7 +5054,7 @@ namespace AzerothCoreCreator
                 timer.Stop();
                 try
                 {
-                    list.ItemsSource = RunLookup(kind, searchBox.Text.Trim());
+                    list.ItemsSource = RunLookup(kind, searchBox.Text.Trim(), auraOnlySpells);
                 }
                 catch (Exception ex)
                 {
@@ -5039,6 +5067,22 @@ namespace AzerothCoreCreator
                 timer.Stop();
                 timer.Start();
             };
+
+            if (auraOnlyCb != null)
+            {
+                auraOnlyCb.Checked += (s, e) =>
+                {
+                    auraOnlySpells = true;
+                    timer.Stop();
+                    timer.Start();
+                };
+                auraOnlyCb.Unchecked += (s, e) =>
+                {
+                    auraOnlySpells = false;
+                    timer.Stop();
+                    timer.Start();
+                };
+            }
 
             void acceptSelection()
             {
@@ -5064,7 +5108,7 @@ namespace AzerothCoreCreator
             // Populate immediately so users see results as soon as they click a Find button.
             try
             {
-                list.ItemsSource = RunLookup(kind, seed);
+                list.ItemsSource = RunLookup(kind, seed, auraOnlySpells);
             }
             catch (Exception ex)
             {
@@ -62133,7 +62177,7 @@ Rank 3
 
 
 
-        private List<LookupRow> RunLookup(LookupKind kind, string term)
+        private List<LookupRow> RunLookup(LookupKind kind, string term, bool auraOnlySpells = false)
         {
             var results = new List<LookupRow>();
             if (term == null) term = string.Empty;
@@ -62191,9 +62235,68 @@ Rank 3
             }
 
 
-            // Spell lookup uses built-in spell data (no DB required)
+            // Spell lookup normally uses built-in spell data (no DB required).
+            // If "Aura spells only" is enabled, we query the DB so we can filter by Effect columns.
             if (kind == LookupKind.Spell)
             {
+                if (auraOnlySpells)
+                {
+                    if (!_connected)
+                        throw new Exception("Connect to the database to use the 'Aura spells only' filter.");
+
+                    // spell_dbc: ID, Name_Lang_enUS, Effect1/2/3
+                    bool auraIsId = long.TryParse(term.Trim(), out long auraId);
+                    bool auraHasText = !auraIsId && term.Trim().Length >= 2;
+
+                    string auraWhereCore = "((`Effect_1` IN (6,35,65)) OR (`Effect_2` IN (6,35,65)) OR (`Effect_3` IN (6,35,65)))";
+                    string auraWhere;
+                    if (auraIsId)
+                        auraWhere = auraWhereCore + " AND `ID` = @id";
+                    else if (auraHasText)
+                        auraWhere = auraWhereCore + " AND (`Name_Lang_enUS` LIKE @like OR CAST(`ID` AS CHAR) LIKE @like)";
+                    else
+                        auraWhere = auraWhereCore;
+
+                    string auraCmdText = "SELECT `ID` AS Id, `Name_Lang_enUS` AS Name FROM `spell_dbc` WHERE " + auraWhere + " ORDER BY `ID` DESC LIMIT 200;";
+
+                    using (var conn = new MySqlConnection(BuildConnString()))
+                    {
+                        conn.Open();
+
+                        // Defensive: if the table schema differs, fail with a clear message.
+                        if (!TableExists(conn, "spell_dbc"))
+                            throw new Exception("Table 'spell_dbc' was not found in the connected world database.");
+
+                        if (!ColumnExists(conn, "spell_dbc", "Effect_1") || !ColumnExists(conn, "spell_dbc", "Effect_2") || !ColumnExists(conn, "spell_dbc", "Effect_3"))
+                            throw new Exception("Table 'spell_dbc' does not contain Effect1/Effect2/Effect3 columns required for aura filtering.");
+
+                        if (!ColumnExists(conn, "spell_dbc", "Name_Lang_enUS"))
+                            throw new Exception("Table 'spell_dbc' does not contain 'Name_Lang_enUS'. (Expected AzerothCore DBC schema.)");
+
+                        using (var cmd = new MySqlCommand(auraCmdText, conn))
+                        {
+                            if (auraIsId)
+                                cmd.Parameters.AddWithValue("@id", auraId);
+                            else if (auraHasText)
+                                cmd.Parameters.AddWithValue("@like", "%" + term.Trim() + "%");
+
+                            using (var r = cmd.ExecuteReader())
+                            {
+                                while (r.Read())
+                                {
+                                    results.Add(new LookupRow
+                                    {
+                                        Id = r.IsDBNull(0) ? 0 : Convert.ToInt64(r.GetValue(0)),
+                                        Name = r.IsDBNull(1) ? "" : r.GetString(1)
+                                    });
+                                }
+                            }
+                        }
+                    }
+
+                    return results;
+                }
+
                 EnsureSpellCache();
                 if (_spellCache == null || _spellCache.Count == 0)
                 {
