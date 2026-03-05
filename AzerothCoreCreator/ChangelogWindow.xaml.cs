@@ -15,7 +15,10 @@ namespace AzerothCoreCreator
 
             // Update this text when you release. Newest entries at top.
             ChangelogText =
-@"v0.7.0
+@"v0.7.9
+- Emergency Hotfix for Broken SQL Inserts
+
+v0.7.0
 - Added Extra Options Checkboxes to Creature Tab
 - Added Spells Secion to Creature Tab
 - Added Auras Section to Creature Tab

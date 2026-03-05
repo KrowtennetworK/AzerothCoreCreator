@@ -3197,7 +3197,9 @@ namespace AzerothCoreCreator
 
             sb.Append("INSERT INTO `creature_template` ");
             sb.Append("(`entry`,`name`,`subname`,`minlevel`,`maxlevel`,`faction`,`npcflag`,`speed_walk`,`speed_run`,`unit_flags`,`unit_flags2`,`type`,`family`,`flags_extra`,`modelid1`,`equipment_id`,`rank`,`dmgschool`,`baseattacktime`,`rangeattacktime`,`unit_class`,`racialleader`,`regeneratehealth`,`minhealth`,`maxhealth`,`minmana`,`maxmana`,`mindmg`,`maxdmg`,`minrangedmg`,`maxrangedmg`,`attackpower`,`rangedattackpower`,`armor`,`lootid`,`pickpocketloot`,`skinloot`,`mingold`,`maxgold`,`MovementType`,`HoverHeight`) VALUES ");
-            sb.AppendFormat("(@ENTRY,'{0}','{1}',{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15},{16},{17},{18},{19},{20},{21},{22},{23},{24},{25},{26},{27},{28},{29},{30},{31},{32},{33},{34},{35},{36},{37},{38},{39},{40});",
+            // NOTE: Keep placeholder indices aligned with arguments.
+            // This VALUES list ends with MovementType ({38}) and HoverHeight ({39}).
+            sb.AppendFormat("(@ENTRY,'{0}','{1}',{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15},{16},{17},{18},{19},{20},{21},{22},{23},{24},{25},{26},{27},{28},{29},{30},{31},{32},{33},{34},{35},{36},{37},{38},{39});",
                 name, subname, minLevel, maxLevel, faction, npcflag,
                 speedWalk.ToString(CultureInfo.InvariantCulture),
                 speedRun.ToString(CultureInfo.InvariantCulture),
